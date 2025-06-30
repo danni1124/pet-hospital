@@ -16,9 +16,9 @@
         <router-link to="/manage" class="nav-btn" active-class="active">
           <i class="fas fa-tasks"></i> 管理
         </router-link>
-        <button class="nav-btn">
-            <i class="fas fa-chart-bar"></i> 统计
-          </button>
+         <router-link to="/department" class="nav-btn" active-class="active">
+            <i class="fas fa-chart-bar"></i> 预约
+         </router-link>
           <button class="nav-btn">
             <i class="fas fa-users"></i> 用户
           </button>
