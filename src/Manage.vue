@@ -613,9 +613,9 @@
   
   <style scoped>
   .pet-management {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
   
