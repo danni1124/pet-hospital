@@ -4,7 +4,7 @@
       <h1><i class="fas fa-hospital-alt"></i> 医院科室导航系统</h1>
       <p>请点击下方科室进行选择，系统将带您进入相应区域</p>
     </div>
-    
+    <button @click="tiaozhuan">跳转</button> 
     <div class="department-container">
       <div 
         v-for="dept in departments" 
@@ -73,7 +73,9 @@ const selectDepartment = (dept) => {
     name: 'AppointmentView',
     params: { departmentId: dept.id }
   }); 
-
+};
+const tiaozhuan = () => {
+  router.push({ path: '/shopment' });
 };
 </script>
 
