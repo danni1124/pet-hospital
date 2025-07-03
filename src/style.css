@@ -1,7 +1,7 @@
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 2;
-  font-weight: 405;
+  line-height: 1;
+  font-weight: 400;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -62,7 +62,7 @@ button:focus-visible {
 }
 
 #app {
-  max-width: 100%;
+  max-width: 1028px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;

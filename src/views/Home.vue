@@ -205,10 +205,8 @@
   
         /* 主内容区域样式 */
         .main-content {
-          display: flex;
-          min-height: calc(100vh - 60px);
-          padding: 20px;
-          margin-top: 60px;
+          padding: 0 20px; /* 仅保留左右内边距 */
+          margin-top: 0; /* 移除顶部边距 */
         }
   
         .left-panel {
