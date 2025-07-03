@@ -55,10 +55,9 @@
       }
 
       body {
-        font-family: 'Roboto', sans-serif;
-        background: #f0f2f5;
-        color: #333;
-        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+        padding-top: 40px; /* 为固定导航栏留出空间 */
       }
 
       /* 顶部导航栏样式 */
