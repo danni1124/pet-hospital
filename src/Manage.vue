@@ -64,7 +64,7 @@
           <button class="btn primary" @click="addNewPet" :disabled="loading">
             <i class="fas fa-plus"></i> 添加新宠物
           </button>
-          <button class="btn secondary" :disabled="loading">
+          <button class="btn secondary" @click="exportToExcel" :disabled="loading">
             <i class="fas fa-download"></i> 导出数据
           </button>
         </div>
@@ -318,6 +318,9 @@
             </div>
             
             <div class="form-actions">
+              <button class="btn secondary" @click="importFromExcel">
+                <i class="fas fa-file-import"></i> 导入数据
+              </button>
               <button class="btn primary" @click="addToBatchList">
                 <i class="fas fa-plus"></i> 添加到列表
               </button>
@@ -378,7 +381,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
-
+import * as XLSX from 'xlsx';
 // 模拟API服务
 const petService = {
   async getPets() {
@@ -864,6 +867,193 @@ export default {
     // 初始化加载数据
     onMounted(loadPets);
     
+    // 导出功能
+    const exportToExcel = () => {
+      try {
+        loading.value = true;
+        
+        // 准备Excel数据
+        const excelData = filteredPets.value.map(pet => {
+          const baseInfo = {
+            '编号': pet.id,
+            '宠物姓名': pet.name,
+            '宠物年龄': pet.age,
+            '宠物病症': pet.disease || '无',
+            '领养状态': getStatusText(pet.adoptionStatus)
+          };
+          
+          if (pet.owner) {
+            return {
+              ...baseInfo,
+              '主人姓名': pet.owner.name,
+              '性别': pet.owner.gender,
+              '联系电话': pet.owner.phone,
+              '地址': pet.owner.address || '无'
+            };
+          } else {
+            return {
+              ...baseInfo,
+              '主人姓名': '',
+              '性别': '',
+              '联系电话': '',
+              '地址': ''
+            };
+          }
+        });
+        
+        // 创建工作簿
+        const wb = XLSX.utils.book_new();
+        
+        // 创建工作表
+        const ws = XLSX.utils.json_to_sheet(excelData, {
+          header: [
+            '编号', '宠物姓名', '宠物年龄', '宠物病症', '领养状态', 
+            '主人姓名', '性别', '联系电话', '地址'
+          ]
+        });
+        
+        // 设置列宽
+        const colWidths = [
+          { wch: 8 },  // 编号
+          { wch: 12 }, // 宠物姓名
+          { wch: 8 },  // 宠物年龄
+          { wch: 20 }, // 宠物病症
+          { wch: 10 }, // 领养状态
+          { wch: 12 }, // 主人姓名
+          { wch: 6 },  // 性别
+          { wch: 15 }, // 联系电话
+          { wch: 25 }  // 地址
+        ];
+        ws['!cols'] = colWidths;
+        
+        // 添加工作表到工作簿
+        XLSX.utils.book_append_sheet(wb, ws, '宠物数据');
+        
+        // 生成Excel文件并下载
+        const date = new Date();
+        const dateStr = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+        XLSX.writeFile(wb, `宠物医院数据_${dateStr}.xlsx`);
+        
+        success.value = '数据导出成功！文件已开始下载';
+      } catch (err) {
+        error.value = '导出失败: ' + (err.message || '未知错误');
+        console.error('导出失败:', err);
+      } finally {
+        loading.value = false;
+        setTimeout(() => success.value = null, 5000);
+      }
+    };
+    
+    // 导入Excel功能
+    const importFromExcel = () => {
+      // 创建隐藏的文件输入元素
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.xlsx, .xls';
+      fileInput.style.display = 'none';
+      
+      // 添加事件监听器
+      fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        try {
+          loading.value = true;
+          
+          // 读取Excel文件
+          const data = await readExcelFile(file);
+          
+          // 解析Excel数据
+          const importedPets = parseExcelData(data);
+          
+          // 添加到待添加列表
+          batchPets.value = [...batchPets.value, ...importedPets];
+          
+          success.value = `成功导入 ${importedPets.length} 条宠物数据`;
+        } catch (err) {
+          error.value = '导入失败: ' + (err.message || '未知错误');
+          console.error('导入失败:', err);
+        } finally {
+          loading.value = false;
+          // 5秒后清除消息
+          setTimeout(() => {
+            success.value = null;
+            error.value = null;
+          }, 5000);
+          
+          // 清理文件输入
+          document.body.removeChild(fileInput);
+        }
+      });
+      
+      // 触发文件选择
+      document.body.appendChild(fileInput);
+      fileInput.click();
+    };
+    
+    // 读取Excel文件
+    const readExcelFile = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // 获取第一个工作表
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            
+            // 转换为JSON
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            resolve(jsonData);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        
+        reader.onerror = (error) => reject(error);
+        reader.readAsArrayBuffer(file);
+      });
+    };
+    
+    // 解析Excel数据为宠物对象
+    const parseExcelData = (excelData) => {
+      return excelData.map((row, index) => {
+        // 转换领养状态文本为状态值
+        const statusMap = {
+          '有主人': 'owned',
+          '待领养': 'forAdoption',
+          '已领养': 'adopted'
+        };
+        
+        const adoptionStatus = statusMap[row['领养状态']] || 'forAdoption';
+        
+        // 创建宠物对象
+        const pet = {
+          name: row['宠物姓名'] || `未命名宠物${index + 1}`,
+          age: parseInt(row['宠物年龄']) || 1,
+          disease: row['宠物病症'] || '',
+          image: null,
+          adoptionStatus: adoptionStatus
+        };
+        
+        // 如果有主人信息
+        if (adoptionStatus !== 'forAdoption' && row['主人姓名']) {
+          pet.owner = {
+            name: row['主人姓名'] || '',
+            gender: row['性别'] || '男',
+            phone: row['联系电话'] || '',
+            address: row['地址'] || ''
+          };
+        } else {
+          pet.owner = null;
+        }
+        
+        return pet;
+      });
+    };
+
     return {
       filters,
       pets,
@@ -890,7 +1080,9 @@ export default {
       removeFromBatchList,
       submitBatchPets,
       onStatusChange,
-      onNewPetStatusChange
+      onNewPetStatusChange,
+      exportToExcel,
+      importFromExcel
     };
   }
 };
@@ -1041,12 +1233,12 @@ export default {
 }
 
 .btn.secondary {
-  background: #e0e0e0;
-  color: #333;
+  background: #95a5a6;
+  color: white;
 }
 
 .btn.secondary:hover:not(:disabled) {
-  background: #d0d0d0;
+  background: #7f8c8d;
 }
 
 .loading-state {
@@ -1140,7 +1332,7 @@ export default {
   font-weight: bold;
   margin-bottom: 5px;
   padding: 5px;
-  width: 100%;
+  width: 40%;
   box-sizing: border-box;
 }
 
@@ -1203,7 +1395,7 @@ export default {
 
 .detail-row {
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   align-items: flex-start;
 }
 
@@ -1242,11 +1434,11 @@ export default {
 }
 
 .edit-input, .edit-select {
-  flex: 1;
   padding: 5px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 0.95rem;
+  font-size: 15px;
+  margin: 0px;
 }
 
 .edit-input:focus, .edit-select:focus {
@@ -1467,8 +1659,10 @@ export default {
 }
 
 .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
   margin-top: 15px;
-  text-align: center;
 }
 
 /* 批量列表样式 */
