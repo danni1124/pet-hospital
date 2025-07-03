@@ -1,4 +1,5 @@
 <template>
+  <div class="main-container">
   <div class="pet-management">
     <!-- 头部区域 -->
     <div class="header">
@@ -64,7 +65,7 @@
           <button class="btn primary" @click="addNewPet" :disabled="loading">
             <i class="fas fa-plus"></i> 添加新宠物
           </button>
-          <button class="btn secondary" :disabled="loading">
+          <button class="btn secondary" @click="exportToExcel" :disabled="loading">
             <i class="fas fa-download"></i> 导出数据
           </button>
         </div>
@@ -374,10 +375,13 @@
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+// 导入SheetJS库
+import * as XLSX from 'xlsx';
 
 // 模拟API服务
 const petService = {
@@ -390,7 +394,7 @@ const petService = {
             name: '小白',
             age: 3,
             disease: '感冒，流鼻涕',
-            image: null,
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
             adoptionStatus: 'owned',
             owner: {
               name: '张先生',
@@ -404,7 +408,7 @@ const petService = {
             name: '喵喵',
             age: 1,
             disease: '肠胃不适',
-            image: null,
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
             adoptionStatus: 'forAdoption',
             owner: null
           },
@@ -413,7 +417,7 @@ const petService = {
             name: '旺财',
             age: 5,
             disease: '皮肤病',
-            image: null,
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
             adoptionStatus: 'adopted',
             owner: {
               name: '张先生',
@@ -427,7 +431,7 @@ const petService = {
             name: '球球',
             age: 2,
             disease: '耳螨',
-            image: null,
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
             adoptionStatus: 'owned',
             owner: {
               name: '李女士',
@@ -441,7 +445,7 @@ const petService = {
             name: '豆豆',
             age: 4,
             disease: '骨折恢复期',
-            image: null,
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
             adoptionStatus: 'forAdoption',
             owner: null
           },
@@ -450,7 +454,7 @@ const petService = {
             name: '布丁',
             age: 7,
             disease: '老年犬关节炎',
-            image: null,
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
             adoptionStatus: 'owned',
             owner: {
               name: '王先生',
@@ -592,7 +596,7 @@ export default {
     
     // 获取宠物图片
     const petImage = (pet) => {
-      return pet.image || 'https://via.placeholder.com/100?text=Pet+Image';
+      return pet.image;
     };
     
     // 开始编辑宠物信息
@@ -863,6 +867,82 @@ export default {
     
     // 初始化加载数据
     onMounted(loadPets);
+    // 新增导出功能
+    const exportToExcel = () => {
+      try {
+        loading.value = true;
+        
+        // 准备Excel数据
+        const excelData = filteredPets.value.map(pet => {
+          const baseInfo = {
+            '编号': pet.id,
+            '宠物姓名': pet.name,
+            '宠物年龄': pet.age,
+            '宠物病症': pet.disease || '无',
+            '领养状态': getStatusText(pet.adoptionStatus)
+          };
+          
+          if (pet.owner) {
+            return {
+              ...baseInfo,
+              '主人姓名': pet.owner.name,
+              '性别': pet.owner.gender,
+              '联系电话': pet.owner.phone,
+              '地址': pet.owner.address || '无'
+            };
+          } else {
+            return {
+              ...baseInfo,
+              '主人姓名': '',
+              '性别': '',
+              '联系电话': '',
+              '地址': ''
+            };
+          }
+        });
+        
+        // 创建工作簿
+        const wb = XLSX.utils.book_new();
+        
+        // 创建工作表
+        const ws = XLSX.utils.json_to_sheet(excelData, {
+          header: [
+            '编号', '宠物姓名', '宠物年龄', '宠物病症', '领养状态', 
+            '主人姓名', '性别', '联系电话', '地址'
+          ]
+        });
+        
+        // 设置列宽
+        const colWidths = [
+          { wch: 8 },  // 编号
+          { wch: 12 }, // 宠物姓名
+          { wch: 8 },  // 宠物年龄
+          { wch: 20 }, // 宠物病症
+          { wch: 10 }, // 领养状态
+          { wch: 12 }, // 主人姓名
+          { wch: 6 },  // 性别
+          { wch: 15 }, // 联系电话
+          { wch: 25 }  // 地址
+        ];
+        ws['!cols'] = colWidths;
+        
+        // 添加工作表到工作簿
+        XLSX.utils.book_append_sheet(wb, ws, '宠物数据');
+        
+        // 生成Excel文件并下载
+        const date = new Date();
+        const dateStr = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+        XLSX.writeFile(wb, `宠物医院数据_${dateStr}.xlsx`);
+        
+        success.value = '数据导出成功！文件已开始下载';
+      } catch (err) {
+        error.value = '导出失败: ' + (err.message || '未知错误');
+        console.error('导出失败:', err);
+      } finally {
+        loading.value = false;
+        setTimeout(() => success.value = null, 5000);
+      }
+    };
     
     return {
       filters,
@@ -890,7 +970,8 @@ export default {
       removeFromBatchList,
       submitBatchPets,
       onStatusChange,
-      onNewPetStatusChange
+      onNewPetStatusChange,
+      exportToExcel // 添加导出方法
     };
   }
 };
@@ -899,10 +980,31 @@ export default {
 <style scoped>
 .pet-management {
   width: 100%;
+  max-width: 1920px;
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
+}
+@media (min-width: 1200px) {
+  .filter-section, 
+  .pet-container {
+    margin: 0 2%; /* 使用百分比边距 */
+  }
+}
+
+@media (min-width: 1600px) {
+  .filter-section, 
+  .pet-container {
+    margin: 0 5%; /* 在大屏幕上增加边距 */
+  }
+}
+.filter-section {
+  margin: 0 2% 20px; /* 左右2%边距 */
+}
+
+.pet-container {
+  margin: 0 2%; /* 左右2%边距 */
 }
 
 .header {
