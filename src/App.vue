@@ -28,6 +28,12 @@
           <button class="nav-btn">
             <i class="fas fa-question-circle"></i> 帮助
           </button>
+          <router-link to="/forum" class="nav-btn" active-class="active" exact>
+            <i class="fas fa-forum"></i>论坛
+          </router-link>
+          <router-link to="/introduction" class="nav-btn" active-class="active" exact>
+            <i class="fas fa-info"></i>概况
+          </router-link>
       </div>
       
       <div class="user-profile">
