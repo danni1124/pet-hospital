@@ -4,6 +4,8 @@ import Manage from '@/Manage.vue';
 import DepartmentSelection from '@/DepartmentSelection.vue'
 import AppointmentView from '@/AppointmentView.vue'
 import QuestionnaireView from '../QuestionnaireView.vue'
+import Forum from '@/Forum.vue'
+import Introduction from '@/Introduction.vue'
 const routes = [
   {
     path: '/',
@@ -31,6 +33,21 @@ const routes = [
     name: 'QuestionnaireView',
     component: QuestionnaireView
   }
+    props: true 
+  },
+  {
+    path: '/forum',
+    name: 'Forum',
+    component: Forum,
+    props: true 
+  },
+  {
+    path: '/introduction',
+    name: 'Introduction',
+    component: Introduction,
+    props: true 
+  },
+
 ];
 
 const router = createRouter({

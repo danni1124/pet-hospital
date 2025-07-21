@@ -2,11 +2,18 @@
 
 
 </template>
+  
+<script setup>
+    
 
-
-<style scoped>
-
+    
+</script>
+  
+<style>
+  
 </style>
+  
+
   
   
   
