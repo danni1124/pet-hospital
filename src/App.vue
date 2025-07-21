@@ -19,6 +19,9 @@
          <router-link to="/department" class="nav-btn" active-class="active">
             <i class="fas fa-chart-bar"></i> 预约
          </router-link>
+        <router-link to="/questionnaire" class="nav-btn" active-class="active">
+          <i class="fas fa-question"></i> 问卷
+        </router-link>
           <button class="nav-btn">
             <i class="fas fa-users"></i> 用户
           </button>
@@ -38,10 +41,9 @@
     </header>
     
     <!-- 路由视图容器 -->
-    <router-view></router-view>
+        <router-view></router-view>
   </div>
 </template>
-
 
 <script setup>
 // 这里不需要路由跳转逻辑，因为使用了 router-link
@@ -57,10 +59,11 @@
       body {
         margin: 0;
         padding: 0;
-        padding-top: 40px; /* 为固定导航栏留出空间 */
-        /* width: 100vw;
+        padding: 0 !important;/* 与导航栏高度一致 */
+        width: 100vw;
+        height: 100%;
         min-height: 100vh;
-        overflow-x: hidden; */
+        overflow-x: hidden;
       }
 
       /* 顶部导航栏样式 */
@@ -68,7 +71,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 160px;
+        height: 100px;
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         color: white;
         padding: 0 20px;
@@ -152,9 +155,6 @@
         font-size: 18px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
       }
-
-      /* 主内容区域样式 */
-     
     </style>
 
 

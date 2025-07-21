@@ -3,7 +3,7 @@ import Home from '@/views/Home.vue'; // 需要创建这个文件
 import Manage from '@/Manage.vue';
 import DepartmentSelection from '@/DepartmentSelection.vue'
 import AppointmentView from '@/AppointmentView.vue'
-
+import QuestionnaireView from '../QuestionnaireView.vue'
 const routes = [
   {
     path: '/',
@@ -24,7 +24,12 @@ const routes = [
     path: '/appointment',
     name: 'AppointmentView',
     component: AppointmentView,
-    props: true 
+    props: true
+  },
+  {
+    path: '/questionnaire',
+    name: 'QuestionnaireView',
+    component: QuestionnaireView
   }
 ];
 
