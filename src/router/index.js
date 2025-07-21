@@ -3,9 +3,9 @@ import Home from '@/views/Home.vue'; // 需要创建这个文件
 import Manage from '@/Manage.vue';
 import DepartmentSelection from '@/DepartmentSelection.vue'
 import AppointmentView from '@/AppointmentView.vue'
+import QuestionnaireView from '../QuestionnaireView.vue'
 import Forum from '@/Forum.vue'
 import Introduction from '@/Introduction.vue'
-
 const routes = [
   {
     path: '/',
@@ -26,6 +26,13 @@ const routes = [
     path: '/appointment',
     name: 'AppointmentView',
     component: AppointmentView,
+    props: true
+  },
+  {
+    path: '/questionnaire',
+    name: 'QuestionnaireView',
+    component: QuestionnaireView
+  }
     props: true 
   },
   {
@@ -40,7 +47,7 @@ const routes = [
     component: Introduction,
     props: true 
   },
-  
+
 ];
 
 const router = createRouter({

@@ -1,4 +1,5 @@
 <template>
+  <div class="main-container">
   <div class="pet-management">
     <!-- 头部区域 -->
     <div class="header">
@@ -569,6 +570,7 @@
       <i :class="toast.icon"></i> {{ toast.message }}
     </div>
   </div>
+</div>
 </template>
 
 <script>
@@ -588,7 +590,8 @@ const petService = {
             gender: '男',
             weight: 5.2,
             disease: '感冒，流鼻涕',
-            image: 'https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&w=800&q=80',
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
+
             adoptionStatus: 'owned',
             owner: {
               name: '张先生',
@@ -606,7 +609,7 @@ const petService = {
             gender: '女',
             weight: 3.8,
             disease: '肠胃不适',
-            image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80',
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
             adoptionStatus: 'forAdoption',
             owner: null,
             description: '温顺友好的布偶猫，已绝育，喜欢和人玩耍，特别适合有孩子的家庭。'
@@ -637,7 +640,7 @@ const petService = {
             gender: '女',
             weight: 4.1,
             disease: '耳螨',
-            image: null,
+            image: 'https://randomuser.me/api/portraits/men/32.jpg',
             adoptionStatus: 'owned',
             owner: {
               name: '李女士',
@@ -1037,7 +1040,7 @@ export default {
     
     // 获取宠物图片
     const petImage = (pet) => {
-      return pet.image || 'https://via.placeholder.com/100?text=Pet+Image';
+      return pet.image;
     };
     
     // 开始编辑宠物信息
@@ -1329,17 +1332,26 @@ export default {
       }
     };
     
+    // 初始化加载数据
+    onMounted(loadPets);
+    // 新增导出功能
+    const exportToExcel = () => {
+      try {
+        loading.value = true;
     // 导出功能
     const exportToExcel = () => {
       try {
         loading.value = true;
-        showToast('正在导出数据...', 'loading');
+        showToast('正在导出数据...', 'loading');r
         
         // 准备Excel数据
         const excelData = filteredPets.value.map(pet => {
           const baseInfo = {
             '编号': pet.id,
             '宠物姓名': pet.name,
+            '宠物年龄': pet.age,
+            '宠物病症': pet.disease || '无',
+            '领养状态': getStatusText(pet.adoptionStatus)
             '宠物类型': pet.type === 'dog' ? '狗狗' : '猫咪',
             '宠物性别': pet.gender,
             '宠物年龄': pet.age,
@@ -1347,6 +1359,7 @@ export default {
             '宠物病症': pet.disease || '无',
             '领养状态': getStatusText(pet.adoptionStatus),
             '宠物描述': pet.description || ''
+
           };
           
           if (pet.owner) {
@@ -1573,6 +1586,7 @@ export default {
       submitBatchPets,
       onStatusChange,
       onNewPetStatusChange,
+
       exportToExcel,
       importFromExcel
     };
@@ -1583,10 +1597,31 @@ export default {
 <style scoped>
 .pet-management {
   width: 100%;
+  max-width: 1920px;
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
+}
+@media (min-width: 1200px) {
+  .filter-section, 
+  .pet-container {
+    margin: 0 2%; /* 使用百分比边距 */
+  }
+}
+
+@media (min-width: 1600px) {
+  .filter-section, 
+  .pet-container {
+    margin: 0 5%; /* 在大屏幕上增加边距 */
+  }
+}
+.filter-section {
+  margin: 0 2% 20px; /* 左右2%边距 */
+}
+
+.pet-container {
+  margin: 0 2%; /* 左右2%边距 */
 }
 
 .header {
