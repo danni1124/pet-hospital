@@ -98,6 +98,7 @@ const newsItems = ref([
 const modules = [Pagination, Navigation, Autoplay];
 </script>
 
+
 <style scoped>
 .home-container {
   display: flex;
