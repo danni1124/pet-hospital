@@ -62,10 +62,11 @@ body {
 }
 
 #app {
+
   max-width: 1328px;
   margin: 0 auto;
   padding: 2rem;
-  
+
 }
 
 @media (prefers-color-scheme: light) {
