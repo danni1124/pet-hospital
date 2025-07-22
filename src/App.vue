@@ -63,7 +63,7 @@
     
     <!-- 路由视图容器 -->
         <router-view></router-view>
-  </div>
+  
 </template>
 
 <script setup>

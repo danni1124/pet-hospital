@@ -1335,9 +1335,13 @@ export default {
     // 初始化加载数据
     onMounted(loadPets);
     // 新增导出功能
-    const exportToExcel = () => {
-      try {
-        loading.value = true;
+    // const exportToExcel = () => {
+    //   try {
+    //     loading.value = true;
+    //   }catch(err){
+
+    //   }
+    // };
     // 导出功能
     const exportToExcel = () => {
       try {
@@ -1351,7 +1355,7 @@ export default {
             '宠物姓名': pet.name,
             '宠物年龄': pet.age,
             '宠物病症': pet.disease || '无',
-            '领养状态': getStatusText(pet.adoptionStatus)
+            '领养状态': getStatusText(pet.adoptionStatus),
             '宠物类型': pet.type === 'dog' ? '狗狗' : '猫咪',
             '宠物性别': pet.gender,
             '宠物年龄': pet.age,

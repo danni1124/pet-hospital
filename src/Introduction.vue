@@ -15,7 +15,7 @@
         
         <div class="intro-container">
           <div class="intro-image-wrapper">
-            <img src="/src/assets/cat.jpg"
+            <img src="../src/assets/cat.jpg"
                  alt="医院外观" class="intro-image">
             <div class="intro-overlay"></div>
           </div>
@@ -88,19 +88,20 @@
                       v-for="doctor in filteredDoctors" 
                       :key="doctor.name">
                     <div class="doctor-card-content">
-                      <div class="doctor-avatar">
-                        <img :src="doctor.avatar || defaultAvatar" :alt="doctor.name">
-                      </div>
-                      <div class="doctor-info">
-                        <h4>{{ doctor.name }} <span class="title">{{ doctor.title }}</span></h4>
-                        <p class="doctor-intro">{{ doctor.introduction || doctor.education }}</p>
-                        <div class="doctor-tags" v-if="doctor.tags">
+                      <div class="doctor-avatar-container">
+                        <div class="doctor-avatar">
+                          <img :src="doctor.avatar || defaultAvatar" :alt="doctor.name">
+                        </div>
+                        <div class="doctor-tags">
                           <span v-for="tag in doctor.tags" :key="tag">{{ tag }}</span>
                         </div>
+                      </div>
+                      <div class="doctor-info">
+                        <h4>{{ doctor.name }}</h4>
+                        <p class="title">{{ doctor.title }}</p>
+                        <p class="doctor-intro">{{ doctor.introduction || doctor.education }}</p>
                         <div class="doctor-action">
-                          <button 
-                            class="detail-btn"
-                            @click="openDoctorModal(doctor)">
+                          <button class="detail-btn" @click="openDoctorModal(doctor)">
                             <i class="fas fa-user-md"></i> 查看详情
                           </button>
                         </div>
@@ -142,18 +143,19 @@
         <button class="close-btn" @click="closeModal">
           <i class="fas fa-times"></i>
         </button>
-        <div class="modal-header">
-          <div class="modal-avatar">
-            <img :src="selectedDoctor.avatar || defaultAvatar" :alt="selectedDoctor.name">
-          </div>
-          <div class="modal-title">
-            <h3>{{ selectedDoctor.name }}</h3>
-            <p class="doctor-title">{{ selectedDoctor.title }}</p>
-            <div class="doctor-tags">
-              <span v-for="tag in selectedDoctor.tags" :key="tag">{{ tag }}</span>
+          <div class="modal-header">
+            <div class="modal-avatar">
+              <img :src="selectedDoctor.avatar || defaultAvatar" :alt="selectedDoctor.name">
+            </div>
+            <div class="modal-title">
+              <h3>{{ selectedDoctor.name }}</h3>
+              <p class="doctor-title">{{ selectedDoctor.title }}</p>
+              <!-- 这里是修改后的tags部分 -->
+              <div class="doctor-tags">
+                <span v-for="tag in selectedDoctor.tags" :key="tag">{{ tag }}</span>
+              </div>
             </div>
           </div>
-        </div>
         <div class="modal-body">
           <div class="doctor-section">
             <h4><i class="fas fa-graduation-cap"></i> 教育背景</h4>
@@ -183,10 +185,14 @@
 </template>
 
 <script>
+import { departments, departmentDescriptions, getDepartmentIcon } from '../src/doctorData.js';
 export default {
   name: 'PetHospitalOverview',
   data() {
     return {
+      isSidebarFixed: false,
+      sidebarTop: 0,
+      contentHeight: 0,
       showFullIntro: false,
       selectedDoctor: null,
       innerNavItems: [
@@ -199,318 +205,8 @@ export default {
       defaultAvatar: 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
       activeDepartment: '眼科',
       activeSubDepartment: '',
-      departmentDescriptions: {
-        '眼科': '我们的眼科中心拥有最先进的诊断设备，专注于犬猫白内障、青光眼等眼部疾病的诊断和治疗。',
-        '骨科': '骨科团队精通各类骨折修复、关节置换和脊椎手术，采用国际先进的骨科技术。',
-        '外科': '外科中心提供从常规手术到复杂肿瘤切除的全方位外科服务，包括微创手术。',
-        '皮肤科': '专业治疗各类宠物皮肤病，拥有先进的过敏原检测系统和皮肤病治疗设备。',
-        '内科': '内科专家团队擅长诊断和治疗宠物的复杂内科疾病，提供个性化治疗方案。',
-        '心肺科': '配备专业的心脏超声和呼吸功能检测设备，专注于心肺系统疾病的诊疗。',
-        '口腔科': '提供全面的宠物口腔健康服务，包括牙齿清洁、矫正和牙周病治疗。',
-        '神经外科': '拥有专业的神经外科团队和先进设备，治疗各类神经系统疾病和创伤。'
-      },
-      departments: [
-        {
-          name: '眼科',
-          subDepartments: [],
-          doctors: [
-            {
-              id: '1',
-              name: '张明',
-              title: '主任医师、教授',
-              avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '中国农业大学兽医学博士，15年宠物眼科临床经验，擅长犬猫白内障手术、青光眼治疗，完成宠物眼科手术2000+例。',
-              education: '中国农业大学兽医学博士',
-              specialty: '犬猫白内障手术、青光眼治疗',
-              achievements: '发表SCI论文10篇，获得国家宠物医疗科技进步奖',
-              experience: '15年宠物眼科临床经验，完成手术2000+例',
-              tags: ['眼科专家', '白内障手术', '青光眼治疗']
-            },
-            {
-              id: '2',
-              name: '李静',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '南京农业大学兽医硕士，10年眼科临床经验，擅长角膜疾病诊断与治疗，发表SCI论文5篇。',
-              education: '南京农业大学兽医硕士',
-              specialty: '角膜疾病诊断与治疗',
-              achievements: '发表SCI论文5篇',
-              experience: '10年眼科临床经验',
-              tags: ['角膜疾病', '学术研究', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '骨科',
-          subDepartments: ['骨科一病区', '骨科二病区'],
-          doctors: [
-            {
-              id: '3',
-              name: '王强',
-              title: '主任医师、教授、博导',
-              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '台湾大学兽医骨科博士，12年骨科临床经验，擅长骨折内固定、髋关节置换术，持有国际兽医骨科协会认证。',
-              education: '台湾大学兽医骨科博士',
-              specialty: '骨折内固定、髋关节置换术',
-              achievements: '国际兽医骨科协会认证专家',
-              experience: '12年骨科临床经验',
-              tags: ['骨科专家', '髋关节置换', '国际认证']
-            },
-            {
-              id: '4',
-              name: '赵雪',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '中国农业大学兽医硕士，8年骨科临床经验，擅长关节镜微创手术，完成手术1000+例。',
-              education: '中国农业大学兽医硕士',
-              specialty: '关节镜微创手术',
-              achievements: '发表核心期刊论文3篇',
-              experience: '8年骨科临床经验，完成手术1000+例',
-              tags: ['微创手术', '关节镜', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '内科',
-          subDepartments: ['消化内科', '呼吸内科'],
-          doctors: [
-            {
-              id: '5',
-              name: '刘伟',
-              title: '主任医师、教授',
-              avatar: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '中国农业大学兽医内科学博士，15年内科诊疗经验，擅长消化系统疾病、内分泌疾病诊治。',
-              education: '中国农业大学兽医内科学博士',
-              specialty: '消化系统疾病、内分泌疾病诊治',
-              achievements: '发表SCI论文8篇',
-              experience: '15年内科诊疗经验',
-              tags: ['内科专家', '消化系统', '内分泌']
-            },
-            {
-              id: '6',
-              name: '陈芳',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '南京农业大学兽医硕士，10年内科临床经验，擅长呼吸系统疾病治疗，发表核心期刊论文8篇。',
-              education: '南京农业大学兽医硕士',
-              specialty: '呼吸系统疾病治疗',
-              achievements: '发表核心期刊论文8篇',
-              experience: '10年内科临床经验',
-              tags: ['呼吸内科', '学术研究', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '外科',
-          subDepartments: ['普通外科', '微创外科'],
-          doctors: [
-            {
-              id: '7',
-              name: '李建军',
-              title: '主任医师、教授、博导',
-              avatar: 'https://images.unsplash.com/photo-1545167622-3a6ac756afa4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '执业兽医师，外科专家，18年宠物外科临床经验，擅长肿瘤切除、腹腔镜微创手术，发表学术论文20余篇。',
-              education: '中国农业大学兽医学博士',
-              specialty: '肿瘤切除、腹腔镜微创手术',
-              achievements: '发表学术论文20余篇',
-              experience: '18年宠物外科临床经验',
-              tags: ['外科专家', '肿瘤切除', '微创手术']
-            },
-            {
-              id: '8',
-              name: '王丽',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '中国农业大学兽医硕士，9年外科临床经验，擅长软组织手术和创伤修复，完成手术1500+例。',
-              education: '中国农业大学兽医硕士',
-              specialty: '软组织手术和创伤修复',
-              achievements: '发表核心期刊论文5篇',
-              experience: '9年外科临床经验，完成手术1500+例',
-              tags: ['创伤修复', '软组织手术', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '皮肤科',
-          subDepartments: [],
-          doctors: [
-            {
-              id: '9',
-              name: '陈雨薇',
-              title: '主任医师、教授',
-              avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '南京农业大学兽医皮肤病学硕士，12年宠物皮肤病临床经验，擅长过敏性皮炎、真菌感染治疗，开发宠物皮肤护理方案10余种。',
-              education: '南京农业大学兽医皮肤病学硕士',
-              specialty: '过敏性皮炎、真菌感染治疗',
-              achievements: '开发宠物皮肤护理方案10余种',
-              experience: '12年宠物皮肤病临床经验',
-              tags: ['皮肤专家', '过敏性皮炎', '真菌感染']
-            },
-            {
-              id: '10',
-              name: '张华',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '中国农业大学兽医博士，8年皮肤病临床经验，擅长免疫性皮肤病诊断与治疗，发表SCI论文3篇。',
-              education: '中国农业大学兽医博士',
-              specialty: '免疫性皮肤病诊断与治疗',
-              achievements: '发表SCI论文3篇',
-              experience: '8年皮肤病临床经验',
-              tags: ['免疫性皮肤病', '学术研究', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '口腔科',
-          subDepartments: [],
-          doctors: [
-            {
-              id: '11',
-              name: '林小洁',
-              title: '主任医师、教授',
-              avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '日本东京大学兽医口腔医学进修，10年宠物口腔科临床经验，擅长牙周治疗、牙齿矫正，宠物口腔健康护理专家。',
-              education: '日本东京大学兽医口腔医学进修',
-              specialty: '牙周治疗、牙齿矫正',
-              achievements: '宠物口腔健康护理专家',
-              experience: '10年宠物口腔科临床经验',
-              tags: ['口腔专家', '牙齿矫正', '牙周治疗']
-            },
-            {
-              id: '12',
-              name: '吴明',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '中国农业大学兽医硕士，7年口腔科临床经验，擅长牙齿修复和口腔外科手术，完成手术800+例。',
-              education: '中国农业大学兽医硕士',
-              specialty: '牙齿修复和口腔外科手术',
-              achievements: '发表核心期刊论文3篇',
-              experience: '7年口腔科临床经验，完成手术800+例',
-              tags: ['牙齿修复', '口腔外科', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '神经外科',
-          subDepartments: [],
-          doctors: [
-            {
-              id: '13',
-              name: '黄志强',
-              title: '主任医师、教授、博导',
-              avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '德国汉诺威兽医大学神经外科博士后，15年宠物神经外科临床经验，擅长脊椎手术、脑部肿瘤切除，国内首批宠物神经外科专家。',
-              education: '德国汉诺威兽医大学神经外科博士后',
-              specialty: '脊椎手术、脑部肿瘤切除',
-              achievements: '国内首批宠物神经外科专家',
-              experience: '15年宠物神经外科临床经验',
-              tags: ['神经外科专家', '脊椎手术', '脑部肿瘤']
-            },
-            {
-              id: '14',
-              name: '周敏',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '中国农业大学兽医博士，8年神经外科临床经验，擅长神经系统疾病诊断与微创治疗，发表核心期刊论文5篇。',
-              education: '中国农业大学兽医博士',
-              specialty: '神经系统疾病诊断与微创治疗',
-              achievements: '发表核心期刊论文5篇',
-              experience: '8年神经外科临床经验',
-              tags: ['神经系统疾病', '微创治疗', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '心肺科',
-          subDepartments: [],
-          doctors: [
-            {
-              id: '15',
-              name: '赵雪',
-              title: '主任医师、教授、博导',
-              avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '美国康奈尔大学兽医心脏学访问学者，14年宠物心肺科临床经验，擅长心脏病诊断治疗、胸腔手术，完成宠物心脏手术500+例。',
-              education: '美国康奈尔大学兽医心脏学访问学者',
-              specialty: '心脏病诊断治疗、胸腔手术',
-              achievements: '完成宠物心脏手术500+例',
-              experience: '14年宠物心肺科临床经验',
-              tags: ['心肺专家', '心脏病治疗', '胸腔手术']
-            },
-            {
-              id: '16',
-              name: '郑阳',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '中国农业大学兽医硕士，9年心肺科临床经验，擅长呼吸系统疾病诊断与治疗，发表SCI论文2篇。',
-              education: '中国农业大学兽医硕士',
-              specialty: '呼吸系统疾病诊断与治疗',
-              achievements: '发表SCI论文2篇',
-              experience: '9年心肺科临床经验',
-              tags: ['呼吸系统', '学术研究', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '急诊科',
-          subDepartments: [],
-          doctors: [
-            {
-              id: '17',
-              name: '孙强',
-              title: '主任医师、教授',
-              avatar: 'https://images.unsplash.com/photo-1545167622-3a6ac756afa4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '20年急诊临床经验，擅长各类宠物急危重症抢救，宠物急诊医学学科带头人，发表急诊医学相关论文15篇。',
-              education: '中国农业大学兽医学博士',
-              specialty: '各类宠物急危重症抢救',
-              achievements: '发表急诊医学相关论文15篇',
-              experience: '20年急诊临床经验',
-              tags: ['急诊专家', '危重症抢救', '学科带头人']
-            },
-            {
-              id: '18',
-              name: '李娜',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '10年急诊临床经验，擅长中毒、创伤等急诊处理，完成急诊病例3000+例，急诊医学培训讲师。',
-              education: '中国农业大学兽医硕士',
-              specialty: '中毒、创伤等急诊处理',
-              achievements: '急诊医学培训讲师',
-              experience: '10年急诊临床经验，完成急诊病例3000+例',
-              tags: ['中毒处理', '创伤急救', '副主任医师']
-            }
-          ]
-        },
-        {
-          name: '老年病科',
-          subDepartments: [],
-          doctors: [
-            {
-              id: '19',
-              name: '王建国',
-              title: '主任医师、教授',
-              avatar: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '18年老年宠物疾病诊疗经验，擅长老年宠物慢性病管理和临终关怀，老年宠物健康管理专家。',
-              education: '中国农业大学兽医学博士',
-              specialty: '老年宠物慢性病管理和临终关怀',
-              achievements: '老年宠物健康管理专家',
-              experience: '18年老年宠物疾病诊疗经验',
-              tags: ['老年病专家', '慢性病管理', '临终关怀']
-            },
-            {
-              id: '20',
-              name: '刘芳',
-              title: '副主任医师',
-              avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-              introduction: '12年老年病临床经验，擅长老年宠物营养管理和关节保健，发表老年宠物护理相关论文5篇。',
-              education: '中国农业大学兽医硕士',
-              specialty: '老年宠物营养管理和关节保健',
-              achievements: '发表老年宠物护理相关论文5篇',
-              experience: '12年老年病临床经验',
-              tags: ['营养管理', '关节保健', '副主任医师']
-            }
-          ]
-        }
-      ]
+      departmentDescriptions: departmentDescriptions,
+      departments: departments,
     }
   },
   computed: {
@@ -531,6 +227,18 @@ export default {
     }
   },
   methods: {
+    calcSidebarPosition() {
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        this.sidebarTop = sidebar.offsetTop;
+        this.contentHeight = document.querySelector('.main-content').offsetHeight;
+      }
+    },
+    handleScroll() {
+      const scrollY = window.scrollY || window.pageYOffset;
+      this.isSidebarFixed = scrollY > this.sidebarTop && 
+                          scrollY < this.sidebarTop + this.contentHeight - window.innerHeight;
+    },
     openDoctorModal(doctor) {
       this.selectedDoctor = doctor;
       document.body.style.overflow = 'hidden';
@@ -557,32 +265,35 @@ export default {
       }
     },
     selectDepartment(name) {
+    // 添加平滑过渡效果
+    this.$nextTick(() => {
       this.activeDepartment = name;
       this.activeSubDepartment = '';
-    },
+      // 滚动到顶部
+      const container = document.querySelector('.main-content');
+      if (container) {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  },
     selectSubDepartment(name) {
       this.activeSubDepartment = name === this.activeSubDepartment ? '' : name;
     },
-    getDepartmentIcon(name) {
-      const icons = {
-        '眼科': 'fas fa-eye',
-        '骨科': 'fas fa-bone',
-        '外科': 'fas fa-scalpel',
-        '皮肤科': 'fas fa-spa',
-        '内科': 'fas fa-stethoscope',
-        '心肺科': 'fas fa-heartbeat',
-        '口腔科': 'fas fa-tooth',
-        '神经外科': 'fas fa-brain'
-      };
-      return icons[name] || 'fas fa-user-md';
-    },
+    getDepartmentIcon,
     getDepartmentDescription(name) {
       return this.departmentDescriptions[name] || '';
     }
   },
   mounted() {
     document.querySelector('.pet-hospital-page').style.opacity = '1';
-  }
+    this.calcSidebarPosition();
+    window.addEventListener('scroll', this.handleScroll);
+    window.addEventListener('resize', this.calcSidebarPosition);
+  },
+  beforeDestroy() {
+    window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('resize', this.calcSidebarPosition);
+  },
 }
 </script>
 
@@ -621,7 +332,7 @@ export default {
   position: relative;
   min-height: 90vh;
   background: linear-gradient(rgba(0, 0, 0, 0.3)), 
-              url('../assets/cat.jpg') no-repeat center/cover;
+              url('../src/assets/cat.jpg') no-repeat center/cover;
   display: flex;
   align-items: center;
   padding: 60px 20px;
@@ -875,36 +586,35 @@ export default {
 }
 
 .sidebar {
-  width: 280px;
-  background: white;
-  padding: 25px;
-  border-radius: var(--border-radius);
-  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-  flex-shrink: 0;
   position: sticky;
   top: 20px;
-  align-self: flex-start;
-  border: 1px solid rgba(0,0,0,0.05);
+  height: fit-content;
+  max-height: calc(100vh - 40px);
+  overflow: hidden; /* 移除滚动条 */
 }
-
 .sidebar ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .sidebar li {
-  padding: 16px 20px;
+  padding: 12px 16px;
   cursor: pointer;
   border-radius: 12px;
-  margin-bottom: 10px;
   display: flex;
   align-items: center;
   transition: all 0.3s ease;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--dark-text);
   border: 1px solid rgba(0,0,0,0.05);
+  will-change: transform; /* 防止闪动 */
+  backface-visibility: hidden; /* 防止闪动 */
 }
+
 
 .sidebar li:hover {
   background-color: rgba(108, 92, 231, 0.05);
@@ -918,6 +628,13 @@ export default {
   font-weight: 600;
   border-left: 3px solid var(--primary-color);
 }
+
+
+
+
+
+
+
 
 .dept-icon {
   margin-right: 15px;
@@ -1010,19 +727,39 @@ export default {
 
 .doctor-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 缩小卡片尺寸 */
+  gap: 20px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding-right: 10px;
+  margin-right: -10px;
+}
+.doctor-list::-webkit-scrollbar {
+  width: 6px;
 }
 
+.doctor-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.doctor-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.doctor-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
 .doctor-card {
-  background: white;
+  display: flex;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(0,0,0,0.05);
   transition: all 0.3s ease;
-  position: relative;
+  background: white;
+  height: 180px; /* 调整高度 */
 }
-
 .doctor-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -1040,20 +777,27 @@ export default {
 
 .doctor-card-content {
   display: flex;
-  padding: 20px;
+  width: 100%;
+  padding: 15px;
+  position: relative;
 }
 
+
+.doctor-avatar-container {
+  display: flex;
+  flex-direction: column;
+  margin-right: 15px;
+  width: 90px; /* 固定宽度 */
+}
 .doctor-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
   overflow: hidden;
-  margin-right: 20px;
   flex-shrink: 0;
   border: 3px solid white;
   box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  position: relative;
-  transition: all 0.3s ease;
+  margin-bottom: 8px; /* 与tags的间距 */
 }
 
 .doctor-card:hover .doctor-avatar {
@@ -1087,56 +831,61 @@ export default {
 
 .doctor-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
+
 .doctor-info h4 {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   color: var(--dark-text);
   margin: 0 0 5px 0;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
 .doctor-info .title {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--light-text);
   font-weight: normal;
-  margin-left: 8px;
+  margin: 0 0 10px 0;
 }
 
 .doctor-intro {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #555;
-  line-height: 1.6;
-  margin: 10px 0;
+  line-height: 1.5;
+  margin: 0 0 auto 0; /* 自动撑开 */
+  display: -webkit-box;
+  /* -webkit-line-clamp: 3; */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .doctor-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 15px;
+  margin-top: px;
 }
 
 .doctor-tags span {
   background: rgba(108, 92, 231, 0.1);
   color: var(--primary-color);
-  padding: 4px 12px;
+  padding: 5px 12px;
   border-radius: 15px;
   font-size: 0.8rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .doctor-action {
-  margin-top: 15px;
-  display: flex;
-  justify-content: flex-end;
+  margin-top: 10px;
+  align-self: flex-end; /* 按钮靠右 */
 }
 
 .detail-btn {
   background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-  color: white;
+  color: rgb(57, 10, 10);
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
@@ -1178,7 +927,6 @@ export default {
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  animation: modalFadeIn 0.3s ease;
 }
 
 @keyframes modalFadeIn {
@@ -1212,12 +960,11 @@ export default {
 
 .modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 30px;
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
-
 .modal-avatar {
   width: 120px;
   height: 120px;
@@ -1307,6 +1054,21 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 1024px) {
+  .doctor-list {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .doctor-card {
+    height: 160px;
+  }
+  
+  .doctor-avatar {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 1024px) {
   .doctor-layout {
     flex-direction: column;
   }
@@ -1363,10 +1125,6 @@ export default {
     font-size: 1.2rem;
   }
   
-  .doctor-list {
-    grid-template-columns: 1fr;
-  }
-  
   .doctor-card-content {
     flex-direction: column;
     align-items: center;
@@ -1418,6 +1176,13 @@ export default {
 
   .modal-content {
     max-height: 80vh;
+  }
+  .doctor-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .doctor-card {
+    height: auto;
   }
 }
 
@@ -1496,4 +1261,5 @@ export default {
     font-size: 0.95rem;
   }
 }
+
 </style>
