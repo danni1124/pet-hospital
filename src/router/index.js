@@ -31,8 +31,7 @@ const routes = [
   {
     path: '/questionnaire',
     name: 'QuestionnaireView',
-    component: QuestionnaireView
-  }
+    component: QuestionnaireView,
     props: true 
   },
   {
