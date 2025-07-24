@@ -105,6 +105,12 @@ const modules = [Pagination, Navigation, Autoplay];
   width: 100%;
   height: calc(100vh - 80px); /* 减去导航栏高度 */
   overflow: hidden;
+  background-image: url('@/assets/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* 固定背景，避免滚动 */
+  min-height: 100vh; /* 确保容器至少占满整个视口高度 */
 }
 
 .left-section {

@@ -6,11 +6,12 @@ import AppointmentView from '@/AppointmentView.vue'
 import QuestionnaireView from '../QuestionnaireView.vue'
 import Forum from '@/Forum.vue'
 import Introduction from '@/Introduction.vue'
+import UserInfoView from '@/UserInfoView.vue';
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component:Home // 路径要对得上
   },
   {
     path: '/manage',
@@ -46,7 +47,12 @@ const routes = [
     component: Introduction,
     props: true 
   },
-
+  {
+    path: '/user-info',
+    name: 'UserInfoView',
+    component: UserInfoView,
+    props: true
+  }
 ];
 
 const router = createRouter({
