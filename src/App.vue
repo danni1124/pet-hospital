@@ -18,21 +18,18 @@
         <router-link to="/questionnaire" class="nav-btn" active-class="active">
           <i class="fas fa-question"></i> 问卷
         </router-link>
-          <button class="nav-btn">
-            <i class="fas fa-users"></i> 用户
-          </button>
-          <button class="nav-btn">
-            <i class="fas fa-cog"></i> 设置
-          </button>
-          <button class="nav-btn">
-            <i class="fas fa-question-circle"></i> 帮助
-          </button>
-          <router-link to="/forum" class="nav-btn" active-class="active" exact>
-            <i class="fas fa-forum"></i>论坛
-          </router-link>
-          <router-link to="/introduction" class="nav-btn" active-class="active" exact>
-            <i class="fas fa-info"></i>概况
-          </router-link>
+        <button class="nav-btn">
+          <i class="fas fa-cog"></i> 设置
+        </button>
+        <button class="nav-btn">
+          <i class="fas fa-question-circle"></i> 帮助
+        </button>
+        <router-link to="/forum" class="nav-btn" active-class="active" exact>
+          <i class="fas fa-forum"></i>论坛
+        </router-link>
+        <router-link to="/introduction" class="nav-btn" active-class="active" exact>
+          <i class="fas fa-info"></i>概况
+        </router-link>
       </div>
       
       <!-- 右侧用户下拉菜单 -->
@@ -62,7 +59,9 @@
     </header>
     
     <!-- 路由视图容器 -->
-        <router-view></router-view>
+    <div class="router-view-container">
+      <router-view></router-view>
+    </div>
   
 </template>
 
@@ -71,40 +70,12 @@
 </script>
 
 <style>
-      body {
-        background-image: url('@/assets/background.jpg');
-        background-size: cover; /* 确保背景图片覆盖整个页面 */
-        background-position: center; /* 居中显示背景图片 */
-        background-repeat: no-repeat; /* 防止背景图片重复 */
-        margin: 0;
-        padding: 0 !important;/* 与导航栏高度一致 */
-        width: 100vw;
-        height: 100%;
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
-
       /* 顶部导航栏样式 */
       /* 所有页面的导航栏基本样式 */
       .app-header {
         width: 100%;
         display: flex;
         justify-content: flex-start;
-        align-items: center;
-        height: 100px;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        color: white;
-        padding: 0 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-      }
-
-      .logo-container {
-        display: flex;
         align-items: center;
         height: 80px;
         background: white;
@@ -113,7 +84,7 @@
 
       .logo {
         width: 150px;
-        height: 80px;
+        height: 79px;
         display: flex;
       }
 
@@ -124,7 +95,6 @@
 
       .nav-list {
         display: flex;
-
         list-style-type: none;
         gap: 30px;
       }
@@ -282,4 +252,8 @@
         box-sizing: border-box;
       }
 
+      .router-view-container {
+        margin-top: 1px; /* 调整为合适的间距 */
+      }
+     
     </style>
