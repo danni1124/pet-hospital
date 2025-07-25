@@ -18,21 +18,18 @@
         <router-link to="/questionnaire" class="nav-btn" active-class="active">
           <i class="fas fa-question"></i> 问卷
         </router-link>
-          <button class="nav-btn">
-            <i class="fas fa-users"></i> 用户
-          </button>
-          <button class="nav-btn">
-            <i class="fas fa-cog"></i> 设置
-          </button>
-          <button class="nav-btn">
-            <i class="fas fa-question-circle"></i> 帮助
-          </button>
-          <router-link to="/forum" class="nav-btn" active-class="active" exact>
-            <i class="fas fa-forum"></i>论坛
-          </router-link>
-          <router-link to="/introduction" class="nav-btn" active-class="active" exact>
-            <i class="fas fa-info"></i>概况
-          </router-link>
+        <button class="nav-btn">
+          <i class="fas fa-cog"></i> 设置
+        </button>
+        <button class="nav-btn">
+          <i class="fas fa-question-circle"></i> 帮助
+        </button>
+        <router-link to="/forum" class="nav-btn" active-class="active" exact>
+          <i class="fas fa-forum"></i>论坛
+        </router-link>
+        <router-link to="/introduction" class="nav-btn" active-class="active" exact>
+          <i class="fas fa-info"></i>概况
+        </router-link>
       </div>
       
       <!-- 右侧用户下拉菜单 -->
@@ -64,7 +61,9 @@
     </header>
     
     <!-- 路由视图容器 -->
-        <router-view></router-view>
+    <div class="router-view-container">
+      <router-view></router-view>
+    </div>
   
 </template>
 
@@ -81,21 +80,6 @@
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        height: 100px;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        color: white;
-        padding: 0 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-      }
-
-      .logo-container {
-        display: flex;
-        align-items: center;
         height: 80px;
         background: white;
         border-bottom: 1px solid #e5e5e5;
@@ -103,7 +87,7 @@
 
       .logo {
         width: 150px;
-        height: 80px;
+        height: 79px;
         display: flex;
       }
 
@@ -114,7 +98,6 @@
 
       .nav-list {
         display: flex;
-
         list-style-type: none;
         gap: 30px;
       }
@@ -271,6 +254,11 @@
         padding: 0 20px; /* 添加左右内边距 */
         box-sizing: border-box;
       }
+
+      .router-view-container {
+        margin-top: 1px; /* 调整为合适的间距 */
+      }
+     
       .user-name-link {
         color: inherit;      /* 保持白色 */
         text-decoration: none;
