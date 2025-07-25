@@ -49,12 +49,14 @@
         <div class="dropdown-menu">
           <div class="dropdown-item">
             <i class="icon">👤</i>
-            <span>个人信息</span>
+            <router-link to="/user-info" class="user-name-link">
+              <span class="user-name">个人信息</span>
+            </router-link>
           </div>
           <div class="dropdown-divider"></div>
           <div class="dropdown-item">
             <i class="icon">🚪</i>
-            <span>退出登录</span>
+            <span>切换用户</span>
           </div>
         </div>
       </div>
@@ -71,18 +73,6 @@
 </script>
 
 <style>
-      body {
-        background-image: url('@/assets/background.jpg');
-        background-size: cover; /* 确保背景图片覆盖整个页面 */
-        background-position: center; /* 居中显示背景图片 */
-        background-repeat: no-repeat; /* 防止背景图片重复 */
-        margin: 0;
-        padding: 0 !important;/* 与导航栏高度一致 */
-        width: 100vw;
-        height: 100%;
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
 
       /* 顶部导航栏样式 */
       /* 所有页面的导航栏基本样式 */
@@ -281,5 +271,8 @@
         padding: 0 20px; /* 添加左右内边距 */
         box-sizing: border-box;
       }
-
+      .user-name-link {
+        color: inherit;      /* 保持白色 */
+        text-decoration: none;
+      }
     </style>

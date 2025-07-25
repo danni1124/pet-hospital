@@ -40,14 +40,6 @@
         <button class="start-btn" style="position:static;margin:20px auto 0 auto;display:block;" @click="closeAndNavigate">
           关闭
         </button>
-        <div v-if="wrongQuestions.length > 0" class="wrong-questions">
-          <h3>错题列表</h3>
-          <ul>
-            <li v-for="(qIdx, idx) in wrongQuestions" :key="idx">
-              第 {{ qIdx + 1 }} 题：{{ questions[qIdx].text }}
-            </li>
-          </ul>
-        </div>
       </div>
     </div>
 
@@ -359,20 +351,23 @@ h1 {
 .options {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center; /* 选项居中 */
+  justify-content: flex-start; /* 修改为左对齐 */
   gap: 16px;               /* 水平间距 */
   row-gap: 14px;          /* 垂直间距 */
   margin-top: 12px;
+  padding-left: 10px; 
 }
 .option-label {
-  flex: 1 1 calc(50% - 16px); /* 每行两个选项 */
-  max-width: calc(50% - 16px); /* 限制最大宽度 */
-  min-width: 180px;          /* 确保最小宽度 */
+  flex: 0 0 calc(50% - 16px); /* 修改为固定宽度占比，确保每行两个 */
+  max-width: calc(50% - 16px); /* 保持最大宽度限制 */
+  min-width: 180px;          /* 保留最小宽度 */
+  box-sizing: border-box;    /* 确保padding不影响总宽度 */
+  /* 其他样式保持不变 */
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 1em;
-  background: #fff;  /* 添加白色背景 */
+  background: #fff;
   border-radius: 8px;
   padding: 8px 16px;
   box-shadow: 0 2px 4px rgba(30,60,114,0.06);
@@ -433,8 +428,9 @@ input[type="checkbox"], input[type="radio"] {
   box-shadow: 0 15px 32px rgba(30, 60, 114, 0.18);
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center; /* 修改为居中对齐 */
   position: relative;
+  text-align: center;
 }
 .notice-content h2 {
   margin-bottom: 18px;
