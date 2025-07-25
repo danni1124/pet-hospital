@@ -46,12 +46,14 @@
         <div class="dropdown-menu">
           <div class="dropdown-item">
             <i class="icon">👤</i>
-            <span>个人信息</span>
+            <router-link to="/user-info" class="user-name-link">
+              <span class="user-name">个人信息</span>
+            </router-link>
           </div>
           <div class="dropdown-divider"></div>
           <div class="dropdown-item">
             <i class="icon">🚪</i>
-            <span>退出登录</span>
+            <span>切换用户</span>
           </div>
         </div>
       </div>
@@ -70,6 +72,7 @@
 </script>
 
 <style>
+
       /* 顶部导航栏样式 */
       /* 所有页面的导航栏基本样式 */
       .app-header {
@@ -256,4 +259,8 @@
         margin-top: 1px; /* 调整为合适的间距 */
       }
      
+      .user-name-link {
+        color: inherit;      /* 保持白色 */
+        text-decoration: none;
+      }
     </style>

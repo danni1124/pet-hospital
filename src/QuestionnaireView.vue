@@ -40,14 +40,6 @@
         <button class="start-btn" style="position:static;margin:20px auto 0 auto;display:block;" @click="closeAndNavigate">
           关闭
         </button>
-        <div v-if="wrongQuestions.length > 0" class="wrong-questions">
-          <h3>错题列表</h3>
-          <ul>
-            <li v-for="(qIdx, idx) in wrongQuestions" :key="idx">
-              第 {{ qIdx + 1 }} 题：{{ questions[qIdx].text }}
-            </li>
-          </ul>
-        </div>
       </div>
     </div>
 
@@ -436,8 +428,9 @@ input[type="checkbox"], input[type="radio"] {
   box-shadow: 0 15px 32px rgba(30, 60, 114, 0.18);
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center; /* 修改为居中对齐 */
   position: relative;
+  text-align: center;
 }
 .notice-content h2 {
   margin-bottom: 18px;
