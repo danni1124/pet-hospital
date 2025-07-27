@@ -1,39 +1,53 @@
 <template>
-  <div class="user-info-wrapper">
-    <!-- 左侧导航 -->
-    <aside class="side-nav">
-      <div
-        v-for="tab in tabs"
-        :key="tab.key"
-        :class="['nav-item', { active: activeTab === tab.key }]"
-        @click="activeTab = tab.key"
-      >
-        {{ tab.label }}
+  <div class="user-center-bg">
+    <!-- 顶部用户信息卡片 -->
+    <div class="user-card">
+      <img class="avatar" src=""/>
+      <div class="user-info">
+        <div class="user-row">
+          <span class="user-username">@ jack</span>
+          <span class="level">Lv.5</span>
+        </div>
+        <div class="user-id">通行证ID:291423473</div>
       </div>
-    </aside>
 
-    <!-- 右侧内容 -->
-    <main class="content-area">
-      <component :is="currentComponent" />
-    </main>
+    </div>
+
+    <!-- 主体区域 -->
+    <div class="main-area">
+      <!-- 左侧导航 -->
+      <aside class="side-nav">
+        <div
+          v-for="tab in tabs"
+          :key="tab.key"
+          :class="['nav-item', { active: activeTab === tab.key }]"
+          @click="activeTab = tab.key"
+        >
+          <span class="nav-icon">{{ tab.icon }}</span>
+          {{ tab.label }}
+        </div>
+      </aside>
+
+      <!-- 右侧内容 -->
+      <main class="content-area">
+        <component :is="currentComponent" />
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 
-/* 1. 标签配置 */
 const tabs = [
-  { key: 'cases',   label: '病例' },
-  { key: 'booking', label: '预约' },
-  { key: 'coupon',  label: '优惠券' },
-  { key: 'order',   label: '订单' }
+  { key: 'cases',   label: '病例记录',   icon: '📋' },
+  { key: 'booking', label: '预约记录',   icon: '📅' },
+  { key: 'coupon',  label: '优惠券记录', icon: '🎟' },
+  { key: 'order',   label: '订单记录',   icon: '📦' }
 ]
 
-/* 2. 当前高亮标签 */
-const activeTab = ref('booking')
+const activeTab = ref('cases')
 
-/* 3. 动态组件映射 */
 const currentComponent = computed(() => {
   switch (activeTab.value) {
     case 'cases':   return CasesRecord
@@ -44,87 +58,204 @@ const currentComponent = computed(() => {
   }
 })
 
-/* ---------- 四个占位组件 ---------- */
-const CasesRecord   = { template: `<div class="placeholder">📋 病例记录模块建设中…</div>` }
-const BookingRecord = { template: `<div class="placeholder">📅 预约记录模块建设中…</div>` }
-const CouponRecord  = { template: `<div class="placeholder">🎟 优惠券记录模块建设中…</div>` }
-const OrderRecord   = { template: `<div class="placeholder">📦 订单记录模块建设中…</div>` }
+const CasesRecord   = { template: `<div class="placeholder">📋 病例记录</div>` }
+const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
+const CouponRecord  = { template: `<div class="placeholder">🎟 优惠券记录</div>` }
+const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
 </script>
 
 <style scoped>
-/* 全局变量 */
-:root {
-  --primary: #6366f1;
-  --primary-light: #a5b4fc;
-  --bg-page: #f6f8fb;
-  --bg-card: #ffffff;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --radius: 12px;
-  --shadow: 0 2px 8px rgba(99, 102, 241, .08);
-  --transition: .3s cubic-bezier(.4,0,.2,1);
-}
-
-.user-info-wrapper {
-  display: flex;
+.user-center-bg {
+  background: #f5f7fa;
   min-height: 100vh;
-  background: var(--bg-page);
-  padding-top: 100px; /* 留出固定导航 */
-  font-family: "Inter", "PingFang SC", "Helvetica Neue", sans-serif;
+  width: 100vw;           /* 改为视口宽度，确保更宽 */
+  padding: 1px 0 0 0;    /* 顶部增加64px内边距，不覆盖导航栏 */
+  box-sizing: border-box; /* 防止溢出 */
 }
 
-/* ========= 左侧导航 ========= */
-.side-nav {
-  width: 200px;
-  padding: 32px 0;
-  background: var(--bg-card);
-  border-right: 1px solid #e2e8f0;
-  box-shadow: var(--shadow);
+.user-card {
+  display: flex;
+  align-items: center;
+  background: #f3cdf6;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(200, 209, 223, 0.15);
+  padding: 32px 100px;
+  margin: 24px auto 0 auto;
+  max-width: 900px;
+  position: relative;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 32px;
+  border: 4px solid #e3eaf2;
+}
+
+.user-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.nav-item {
-  margin: 0 16px;
-  padding: 14px 20px;
-  border-radius: var(--radius);
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #222;
+}
+
+.level {
+  background: #e3f0ff;
+  color: #305aa2;
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-id {
+  font-size: 13px;
+  color: #888;
+}
+
+.user-username {
+  font-size: 15px;
+  color: #e57373;
+}
+
+.user-stats {
+  display: flex;
+  gap: 32px;
+  margin-top: 8px;
+  font-size: 15px;
+  color: #888;
+}
+
+.edit-btn {
+  position: absolute;
+  right: 32px;
+  top: 32px;
+  background: #fff;
+  border: 1px solid #b6d0f7;
+  color: #305aa2;
+  border-radius: 8px;
+  padding: 6px 24px;
+  font-size: 15px;
   cursor: pointer;
-  transition: all var(--transition);
-  color: var(--text-muted);
-  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.edit-btn:hover {
+  background: #e3f0ff;
+}
+
+/* 主体区域布局 */
+.main-area {
+  display: flex;
+  width: 1090px;             /* 与卡片同宽 */
+  margin: 32px auto 0;      /* 增加上间距 */
+  gap: 24px;
+  box-sizing: border-box;
+}
+
+/* 左侧导航 */
+.side-nav {
+  width: 220px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(200, 209, 223, 0.10);
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nav-item {
+  padding: 12px 32px;
+  font-size: 16px;
+  color: #305aa2;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+  margin: 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-icon {
+  font-size: 18px;
+}
+
+.nav-item.active {
+  background: #e3f0ff;
+  color: #222;
+  font-weight: bold;
 }
 
 .nav-item:hover {
-  background: rgba(99, 102, 241, .08);
-  color: var(--primary);
+  background: #f5f7fa;
 }
 
-.nav-item.active {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, .25);
-}
-
-/* ========= 右侧内容 ========= */
+/* 右侧内容区 */
 .content-area {
-  flex: 1;
-  padding: 40px;
+  flex: 1 1 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(200, 209, 223, 0.10);
+  padding: 32px 32px;
+  min-height: 400px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  position: relative;
 }
 
 .placeholder {
-  font-size: 18px;
-  color: var(--text-muted);
+  font-size: 20px;
+  font-weight: 500;
+  color: #305aa2;
 }
-/* 让文字在任何背景上都清晰 */
-.nav-item {
-  color: #1e293b !important;   /* 深灰黑，100%可读 */
-  font-weight: 600;            /* 稍粗更显眼 */
+
+/* 响应式 */
+@media (max-width: 900px) {
+  .user-card,
+  .main-area {
+    width: 100%;
+    padding: 0 24px;        /* 小屏时也保持左右 padding 一致 */
+    margin: 16px;
+    flex-direction: column;
+    gap: 0;
+  }
 }
-.nav-item.active {
-  color: #fff !important;      /* 激活状态保持白字 */
+@media (max-width: 900px) {
+  .user-card, .main-area {
+    max-width: 100%;
+    margin: 16px;
+    flex-direction: column;
+    gap: 0;
+    padding: 0 8px;
+  }
+  .side-nav {
+    width: 100%;
+    flex-direction: row;
+    padding: 12px 0;
+    gap: 0;
+    margin-bottom: 12px;
+  }
+  .nav-item {
+    flex: 1;
+    margin: 0;
+    text-align: center;
+  }
+  .content-area {
+    padding: 16px;
+    min-height: 200px;
+  }
 }
 </style>

@@ -40,6 +40,7 @@
           </button>
         </div>
         
+
         <!-- 已登录时显示用户下拉菜单 -->
         <div v-else class="user-dropdown">
           <div class="user-box">
@@ -48,7 +49,7 @@
             </div>
             <span class="user-name">{{ currentUser.name }}</span>
             <i class="arrow-down">▼</i>
-          </div>
+
           
           <!-- 下拉菜单内容 -->
           <div class="dropdown-menu">
