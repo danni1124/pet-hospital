@@ -47,7 +47,7 @@
           <div class="dropdown-item">
             <i class="icon">👤</i>
             <router-link to="/user-info" class="user-name-link">
-              <span class="user-name">个人信息</span>
+              <span class="user-name">个人中心</span>
             </router-link>
           </div>
           <div class="dropdown-divider"></div>
