@@ -52,7 +52,7 @@ const routes = [
     name: 'UserInfoView',
     component: UserInfoView,
     props: true
-  }
+  },
 ];
 
 const router = createRouter({

@@ -38,7 +38,7 @@
           <p style="margin-top:10px;color:#2a5298;">请继续努力！</p>
         </div>
         <button class="start-btn" style="position:static;margin:20px auto 0 auto;display:block;" @click="closeAndNavigate">
-          关闭
+          {{ score === 100 ? '领取' : '关闭' }}
         </button>
       </div>
     </div>
@@ -211,6 +211,13 @@ export default {
   },
   methods: {
     submitForm() {
+      // 双重保险：在提交前再次检查登录状态
+      if (!this.isUserLoggedIn()) {
+        alert('登录状态已过期，请重新登录');
+        this.$router.push('/?showLogin=true');
+        return;
+      }
+      
       // 计算分数
       let score = 0;
       let wrongQuestions = [];
@@ -247,14 +254,43 @@ export default {
       }
     },
     closeAndNavigate() {
-    this.showResult = false;
-    // 跳转到首页
-    this.$router.push('/'); // 如果使用Vue Router
-    // 或者使用普通的导航方法
-    // window.location.href = '/';
-  }
+      if (this.score === 100) {
+        // 显示领取成功提示
+        alert('领取成功，请在个人中心查看');
+        
+        // 延迟1秒后跳转到首页
+        setTimeout(() => {
+          this.showResult = false;
+          this.$router.push('/');
+        }, 1000);
+      } else {
+        // 直接关闭并跳转
+        this.showResult = false;
+        this.$router.push('/');
+      }
+    },
+    // 检查用户是否已登录
+    isUserLoggedIn() {
+      console.log('=== 问卷页面检查登录状态 ===')
+      
+      // 检查localStorage中的登录信息
+      const rememberedUser = localStorage.getItem('rememberedUser');
+      const currentUser = localStorage.getItem('currentUser');
+      
+      console.log('rememberedUser:', rememberedUser)
+      console.log('currentUser:', currentUser)
+      
+      // 只要有任意一种登录信息就认为已登录
+      const isLoggedIn = !!(rememberedUser || currentUser)
+      console.log('最终登录状态判断:', isLoggedIn)
+      
+      return isLoggedIn
+    }
   },
   mounted() {
+    // 不在页面加载时强制检查登录状态，让用户可以查看问卷内容
+    // 只在提交时才检查登录状态
+    
     this.canStart = false;
     // 初始化userAnswers为每题空数组（多选）或空字符串（单选）
     this.userAnswers = this.questions.map(q => (q.multiple ? [] : ""));
