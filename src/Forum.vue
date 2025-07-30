@@ -224,6 +224,12 @@
             </svg>
             <span>收藏 ({{ currentPost.collections }})</span>
           </button>
+          <button v-if="isCurrentUserPost" @click="confirmDeletePost" class="delete-btn">
+            <svg viewBox="0 0 24 24" class="action-icon">
+              <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
+            </svg>
+            <span>删除帖子</span>
+          </button>
         </div>
         
         <div class="comment-section">
@@ -333,6 +339,18 @@
                   </svg>
                   <span>回复</span>
                 </button>
+
+                <!-- 删除评论 -->
+                  <button 
+                  v-if="isCurrentUserComment(comment)" 
+                  @click.stop="confirmDeleteComment(comment)" 
+                  class="delete-btn"
+                >
+                  <svg viewBox="0 0 24 24" class="action-icon">
+                    <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
+                  </svg>
+                  <span>删除</span>
+                </button>
               </div>
             </div>
           </div>
@@ -395,8 +413,24 @@
         <img :src="currentPreviewImage" alt="图片预览">
       </div>
     </div>
-  </div>
 
+    <!-- 删除确认弹窗 -->
+    <div class="delete-confirm-overlay" v-if="showDeleteConfirm" @click.self="cancelDelete">
+      <div class="delete-confirm-modal">
+        <div class="delete-icon">
+          <svg viewBox="0 0 24 24">
+            <path fill="#EF4444" d="M12,2C6.47,2 2,6.47 2,12C2,17.53 6.47,22 12,22C17.53,22 22,17.53 22,12C22,6.47 17.53,2 12,2M17,15.59L15.59,17L12,13.41L8.41,17L7,15.59L10.59,12L7,8.41L8.41,7L12,10.59L15.59,7L17,8.41L13.41,12L17,15.59Z"/>
+          </svg>
+        </div>
+        <h3>确认删除</h3>
+        <p>{{ deleteConfirmMessage }}</p>
+        <div class="delete-actions">
+          <button class="cancel-btn" @click="cancelDelete">取消</button>
+          <button class="confirm-delete-btn" @click="confirmDelete">确认删除</button>
+        </div>
+      </div>
+    </div>
+  </div>
   
   <!-- 发布帖子模态框 -->
   <div class="post-overlay" v-if="showNewPostModal" @click.self="closeNewPostModal">
@@ -442,7 +476,7 @@
           <textarea 
             id="post-content" 
             v-model="newPostContent" 
-            placeholder="详细描述你的问题或分享经验...支持Markdown格式"
+            placeholder="详细描述你的问题或分享经验..."
             rows="6"
             v-auto-resize
           ></textarea>
@@ -736,7 +770,17 @@ export default {
       showImagePreviewModal: false,
       currentPreviewImage: '',
       likes: 0,        // 点赞数
-      isLiked: false   // 当前用户是否已点赞
+      isLiked: false,   // 当前用户是否已点赞
+      currentUser: {
+        id: 1,
+        name: '当前用户',
+        avatar: 'https://randomuser.me/api/portraits/men/1.jpg'
+      },
+      // 删除功能相关状态
+      showDeleteConfirm: false,
+      deleteTarget: null, // 要删除的目标（post或comment）
+      deleteType: null, // 'post' 或 'comment'
+      deleteConfirmMessage: ''
     }
   },
    
@@ -1351,7 +1395,91 @@ export default {
       traverse(this.comments);
       return result;
     },
+    // 检查是否是当前用户的评论
+    isCurrentUserComment(comment) {
+      return comment.author === this.currentUser.name;
+    },
     
+    // 确认删除帖子
+    confirmDeletePost() {
+      this.deleteType = 'post';
+      this.deleteTarget = this.currentPost;
+      this.deleteConfirmMessage = '确定要删除这篇帖子吗？删除后将无法恢复。';
+      this.showDeleteConfirm = true;
+    },
+    
+    // 确认删除评论
+    confirmDeleteComment(comment) {
+      this.deleteType = 'comment';
+      this.deleteTarget = comment;
+      this.deleteConfirmMessage = '确定要删除这条评论吗？删除后将无法恢复。';
+      this.showDeleteConfirm = true;
+    },
+    
+    // 取消删除
+    cancelDelete() {
+      this.showDeleteConfirm = false;
+      this.deleteTarget = null;
+      this.deleteType = null;
+    },
+    
+    // 确认删除
+    confirmDelete() {
+      if (this.deleteType === 'post') {
+        this.deletePost();
+      } else if (this.deleteType === 'comment') {
+        this.deleteComment();
+      }
+      
+      this.showDeleteConfirm = false;
+      this.deleteTarget = null;
+      this.deleteType = null;
+    },
+     // 删除帖子
+    deletePost() {
+      const postIndex = this.posts.findIndex(p => p.id === this.deleteTarget.id);
+      if (postIndex !== -1) {
+        this.posts.splice(postIndex, 1);
+      }
+      
+      const originalIndex = this.originalPosts.findIndex(p => p.id === this.deleteTarget.id);
+      if (originalIndex !== -1) {
+        this.originalPosts.splice(originalIndex, 1);
+      }
+      
+      this.closeModal();
+    },
+     // 删除评论
+    deleteComment() {
+      const commentIndex = this.comments.findIndex(c => c.id === this.deleteTarget.id);
+      if (commentIndex !== -1) {
+        this.comments.splice(commentIndex, 1);
+        this.currentPost.comments--;
+        return;
+      }
+      
+      // 如果是回复评论，在父评论中查找
+      const deleteFromParent = (comments) => {
+        for (let i = 0; i < comments.length; i++) {
+          if (comments[i].replies && comments[i].replies.length > 0) {
+            const replyIndex = comments[i].replies.findIndex(r => r.id === this.deleteTarget.id);
+            if (replyIndex !== -1) {
+              comments[i].replies.splice(replyIndex, 1);
+              this.currentPost.comments--;
+              return true;
+            }
+            
+            if (deleteFromParent(comments[i].replies)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+      
+      deleteFromParent(this.comments);
+    },
+
     // 修改提交回复方法
     async submitReply() {
       if (!this.replyContent.trim() && this.replyImages.length === 0) {
@@ -1500,6 +1628,7 @@ export default {
   color: #333;
   min-height: 100vh;
   line-height: 1.6;
+  padding-top: 59px;
 }
 
 /* 导航栏 */
@@ -1509,11 +1638,12 @@ export default {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 10;
+  
   display: flex;
   justify-content: flex-end;
-  background: rgba(255,255,255,0.9);
+  
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  padding-top: 90px;
 }
 
 .header-search {
@@ -1602,7 +1732,7 @@ export default {
   align-items: center;
   text-align: center;
   padding: 20px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3));
+  background: linear-gradient(to bottom, rgba(12, 5, 5, 0.1), rgba(0,0,0,0.3));
 }
 
 .banner-icon {
@@ -3089,7 +3219,7 @@ textarea {
   .navbar {
     position: sticky;
     top: 0;
-    z-index: 100;
+    
     /* 其他样式保持不变 */
   }
   
@@ -3634,4 +3764,120 @@ textarea {
   background-color: rgba(224, 231, 255, 0.8);
   border-color: #4F46E5;
 }
+/* 新增删除按钮样式 */
+.delete-btn {
+  padding: 8px 16px;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.delete-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 删除确认弹窗 */
+.delete-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 3000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  backdrop-filter: blur(5px);
+}
+
+.delete-confirm-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+.delete-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: 50%;
+}
+
+.delete-icon svg {
+  width: 36px;
+  height: 36px;
+}
+
+.delete-confirm-modal h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #1F2937;
+}
+
+.delete-confirm-modal p {
+  color: #6B7280;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.delete-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.cancel-btn {
+  padding: 10px 20px;
+  background-color: #F3F4F6;
+  color: #4B5563;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #E5E7EB;
+}
+
+.confirm-delete-btn {
+  padding: 10px 20px;
+  background-color: #EF4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.confirm-delete-btn:hover {
+  background-color: #DC2626;
+}
+
 </style>

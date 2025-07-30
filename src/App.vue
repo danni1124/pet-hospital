@@ -951,6 +951,8 @@ onMounted(() => {
         height: 80px;
         background: white;
         border-bottom: 1px solid #e5e5e5;
+        
+        
       }
 
       .logo {
