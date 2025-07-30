@@ -49,8 +49,8 @@
             </div>
             <span class="user-name">{{ currentUser.name }}</span>
             <i class="arrow-down">▼</i>
+          </div>
 
-          
           <!-- 下拉菜单内容 -->
           <div class="dropdown-menu">
             <div class="dropdown-item">
