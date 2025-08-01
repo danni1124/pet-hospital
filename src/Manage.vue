@@ -573,6 +573,8 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { API_BASE_URL } from '@/config/index';
+import axios from 'axios';
 import * as XLSX from 'xlsx';
 // 模拟API服务
 const petService = {
@@ -787,6 +789,7 @@ const petService = {
 
 export default {
   setup() {
+    const apiBaseUrl = ref(API_BASE_URL);
     // 状态管理
     const loading = ref(false);
     const toast = ref({
@@ -825,9 +828,9 @@ export default {
     // 加载领养申请
     const loadApplications = async () => {
       try {
-        const data = await petService.getAdoptionApplications();
+        const response = await axios.get(`${apiBaseUrl.value}/applications`);
         // 按时间倒序排列
-        notifications.value = data.sort((a, b) => 
+        notifications.value = response.data.sort((a, b) => 
           new Date(b.timestamp) - new Date(a.timestamp)
         );
       } catch (err) {
@@ -850,15 +853,15 @@ export default {
       selectedApplication.value = application;
       showApplicationModal.value = true;
       
-      // 标记为已读
-      if (!application.read) {
-        await petService.markAsRead(application.id);
-        // 更新本地状态
-        const index = notifications.value.findIndex(n => n.id === application.id);
-        if (index !== -1) {
-          notifications.value[index].read = true;
-        }
+      // 标记为已读 - 直接使用axios请求
+    const markAsRead = async (id) => {
+      try {
+        // 直接发送PATCH请求
+        await axios.post(`${apiBaseUrl.value}/applications/${id}/read`, {});
+      } catch (err) {
+        console.error('标记已读失败:', err);
       }
+    };
     };
     
     // 关闭申请详情
@@ -872,7 +875,8 @@ export default {
       const application = notifications.value[index];
       if (confirm(`确定要删除 ${application.applicant.name} 的申请吗？`)) {
         try {
-          await petService.deleteApplication(application.id);
+           // 直接发送post请求
+           await axios.post(`${apiBaseUrl.value}/applications/${application.id}`, {});
           notifications.value.splice(index, 1);
           showToast('申请已删除', 'success');
         } catch (err) {
@@ -895,9 +899,9 @@ export default {
     const approveApplication = async () => {
       if (selectedApplication.value) {
         try {
-          await petService.updateApplicationStatus(
-            selectedApplication.value.id, 
-            'approved'
+          await axios.post(
+            `${apiBaseUrl.value}/applications/${selectedApplication.value.id}`, 
+            { status: 'approved' }
           );
           
           // 更新本地状态
@@ -947,7 +951,7 @@ export default {
       loadApplications();
       
       // 模拟实时接收新申请
-      setInterval(loadApplications, 10000);
+      setInterval(loadApplications, 30000);
     });
     
     // 筛选条件
@@ -989,12 +993,13 @@ export default {
       try {
         loading.value = true;
         showToast('正在加载宠物数据...', 'loading');
-        const data = await petService.getPets();
-        pets.value = data.map(pet => ({
+        const response = await axios.get(`${apiBaseUrl.value}/pets`);
+        pets.value = response.data.map(pet => ({
           ...pet,
           editing: false,
           editingData: {}
         }));
+        showToast('宠物数据加载成功','success');
       } catch (err) {
         showToast('加载宠物数据失败: ' + (err.message || '未知错误'), 'error');
         console.error('加载宠物数据失败:', err);
@@ -1083,9 +1088,9 @@ export default {
             : null
         };
         
-        // 调用API保存数据
-        const updatedPet = await petService.updatePet(pet.id, saveData);
-        
+        // 直接发送POST请求
+        const response = await axios.post(`${apiBaseUrl.value}/pets/${pet.id}`, saveData);
+        const updatedPet = response.data;
         // 更新本地数据
         Object.assign(pet, {
           ...updatedPet,
@@ -1116,8 +1121,8 @@ export default {
         loading.value = true;
         showToast('正在删除宠物记录...', 'loading');
         
-        // 调用API删除宠物
-        await petService.deletePet(id);
+        // 直接发送DELETE请求
+        await axios.post(`${apiBaseUrl.value}/pets/${id}`, {});
         
         // 更新本地数据
         pets.value = pets.value.filter(pet => pet.id !== id);
@@ -1232,8 +1237,13 @@ export default {
         loading.value = true;
         showToast('正在批量添加宠物...', 'loading');
         
-        // 调用API批量添加
-        const newPets = await petService.batchAddPets(batchPets.value);
+         // 直接发送POST请求
+         const response = await axios.post(
+          `${apiBaseUrl.value}/pets/batch`, 
+          batchPets.value
+        );
+        
+        const newPets = response.data;
         
         // 添加到主列表
         newPets.forEach(pet => {
