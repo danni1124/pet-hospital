@@ -38,8 +38,10 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+
 import CasesRecord from './CasesRecord.vue'
 import CouponRecord from './CouponRecord.vue'
+
 const tabs = [
   { key: 'cases',   label: '病例记录',   icon: '📋' },
   { key: 'booking', label: '预约记录',   icon: '📅' },
@@ -48,6 +50,10 @@ const tabs = [
 ]
 
 const activeTab = ref('cases')
+
+const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
+const CouponRecord  = { template: `<div class="placeholder">🎟 优惠券记录</div>` }
+const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
 
 const currentComponent = computed(() => {
   switch (activeTab.value) {
@@ -59,8 +65,10 @@ const currentComponent = computed(() => {
   }
 })
 
+
 const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
 const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
+
 </script>
 
 <style scoped>
@@ -220,7 +228,78 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   font-weight: 500;
   color: #305aa2;
 }
-
+.prescription-wrapper {
+  background: #fff;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  padding: 24px 32px 12px 32px;
+  font-family: 'SimSun', 'serif';
+  color: #222;
+  min-width: 600px;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+.prescription-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  margin-bottom: 12px;
+}
+.prescription-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+.prescription-table td {
+  padding: 4px 8px 4px 0;
+  border: none;
+  white-space: nowrap;
+}
+.line {
+  display: inline-block;
+  min-width: 60px;
+  border-bottom: 1px solid #888;
+  margin-left: 4px;
+  margin-right: 12px;
+  height: 22px;
+  vertical-align: bottom;
+}
+.prescription-main {
+  display: flex;
+  border-top: 1px solid #888;
+  border-bottom: 1px solid #888;
+  margin: 12px 0;
+  min-height: 120px;
+}
+.diagnosis, .rp {
+  flex: 1;
+  padding: 12px 8px;
+  font-size: 16px;
+}
+.diag-content, .rp-content {
+  min-height: 60px;
+  padding-top: 8px;
+}
+.prescription-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  margin-top: 16px;
+  border-top: 1px solid #888;
+  padding-top: 8px;
+}
+.prescription-note {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  writing-mode: vertical-rl;
+  font-size: 13px;
+  color: #888;
+  letter-spacing: 2px;
+}
 /* 响应式 */
 @media (max-width: 900px) {
   .user-card,
