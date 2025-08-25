@@ -6,79 +6,81 @@
         <div
           class="carousel-track"
           :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
-      >
-        <div
-          v-for="(record, idx) in records"
-          :key="record.caseId"
-          class="prescription-root"
+
         >
-          <div class="prescription-title">宠物医院 <span class="bold">处方笺</span></div>
-          <div class="prescription-table">
-            <div class="row">
-              <div class="cell wide">
-                <span class="label bold">动物主人/饲养单位</span>
-                <span class="underline">{{ record.owner }}</span>
+          <div
+            v-for="(record, idx) in records"
+            :key="record.caseId"
+            class="prescription-root"
+          >
+            <div class="prescription-title">宠物医院 <span class="bold">处方笺</span></div>
+            <div class="prescription-table">
+              <div class="row">
+                <div class="cell wide">
+                  <span class="label bold">动物主人/饲养单位</span>
+                  <span class="underline">{{ record.owner }}</span>
+                </div>
+                <div class="cell">
+                  <span class="label bold">档案号</span>
+                  <span class="underline">{{ record.caseId }}</span>
+                </div>
               </div>
-              <div class="cell">
-                <span class="label bold">档案号</span>
-                <span class="underline">{{ record.caseId }}</span>
+              <div class="row">
+                <div class="cell">
+                  <span class="label bold">动物种类</span>
+                  <span class="underline">{{ record.type }}</span>
+                </div>
+                <div class="cell">
+                  <span class="label bold">动物性别</span>
+                  <span class="underline">{{ record.gender }}</span>
+                </div>
+                <div class="cell">
+                  <span class="label bold">体重/数量</span>
+                  <span class="underline">{{ record.weight }}</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="cell">
+                  <span class="label bold">年（日）龄</span>
+                  <span class="underline">{{ record.age }}</span>
+                </div>
+                <div class="cell wide">
+                  <span class="label bold">开具日期</span>
+                  <span class="underline">{{ record.date }}</span>
+                </div>
               </div>
             </div>
-            <div class="row">
-              <div class="cell">
-                <span class="label bold">动物种类</span>
-                <span class="underline">{{ record.type }}</span>
+            <div class="prescription-main">
+              <div class="main-left">
+                <div class="main-label bold">诊断：</div>
+                <div class="main-content">{{ record.diagnosis }}</div>
               </div>
-              <div class="cell">
-                <span class="label bold">动物性别</span>
-                <span class="underline">{{ record.gender }}</span>
-              </div>
-              <div class="cell">
-                <span class="label bold">体重/数量</span>
-                <span class="underline">{{ record.weight }}</span>
+              <div class="main-divider"></div>
+              <div class="main-right">
+                <div class="main-label bold">Rp：</div>
+                <div class="main-content">{{ record.rp }}</div>
               </div>
             </div>
-            <div class="row">
-              <div class="cell">
-                <span class="label bold">年（日）龄</span>
-                <span class="underline">{{ record.age }}</span>
+            <div class="prescription-footer">
+              <div class="footer-cell">
+                <span class="bold">执业兽医师</span>
+                <span class="footer-underline">{{ record.doctor }}</span>
               </div>
-              <div class="cell wide">
-                <span class="label bold">开具日期</span>
-                <span class="underline">{{ record.date }}</span>
+              <div class="footer-cell">
+                <span class="bold">注册号</span>
+                <span class="footer-underline">{{ record.regNo }}</span>
               </div>
-            </div>
-          </div>
-          <div class="prescription-main">
-            <div class="main-left">
-              <div class="main-label bold">诊断：</div>
-              <div class="main-content">{{ record.diagnosis }}</div>
-            </div>
-            <div class="main-divider"></div>
-            <div class="main-right">
-              <div class="main-label bold">Rp：</div>
-              <div class="main-content">{{ record.rp }}</div>
-            </div>
-          </div>
-          <div class="prescription-footer">
-            <div class="footer-cell">
-              <span class="bold">执业兽医师</span>
-              <span class="footer-underline">{{ record.doctor }}</span>
-            </div>
-            <div class="footer-cell">
-              <span class="bold">注册号</span>
-              <span class="footer-underline">{{ record.regNo }}</span>
-            </div>
-            <div class="footer-cell">
-              <span class="bold">发药人</span>
-              <span class="footer-underline">{{ record.pharmacist }}</span>
+              <div class="footer-cell">
+                <span class="bold">发药人</span>
+                <span class="footer-underline">{{ record.pharmacist }}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-      <!-- 右侧卡通箭头 -->
+    <!-- 右侧卡通箭头，放在病历单右侧，不覆盖 -->
+
     <button class="slide-arrow" @click="nextRecord" aria-label="下一条">
       <svg width="48" height="48" viewBox="0 0 48 48">
         <path d="M16 10 L32 24 L16 38"
@@ -94,7 +96,9 @@
         </filter>
       </svg>
     </button>
-    </div>
+
+  </div>
+
 </template>
 
 <script setup>
@@ -127,7 +131,9 @@ function nextRecord() {
   align-items: center;
   justify-content: center;
   width: 100%;
+
   padding-left: px; /* 新增，数值可根据实际需要调整 */
+
 }
 .prescription-carousel-root {
   flex: none;
@@ -267,6 +273,11 @@ function nextRecord() {
 
 /* 右侧箭头按钮样式 */
 .slide-arrow {
+
+  position: relative;
+  right: 0;
+  top: 0;
+  transform: none;
   margin-left: 24px;
   background: #fff;
   border: 3px solid #1976d2;
@@ -288,4 +299,6 @@ function nextRecord() {
   border-color: #1565c0;
   background: #e3f0ff;
 }
+
 </style>
+
