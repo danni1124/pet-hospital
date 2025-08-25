@@ -37,6 +37,15 @@
                       class="search-input"
                   >
               </div>
+              <div class="filter-group">
+                  <label>宠物类别：</label>
+                  <input 
+                      type="text" 
+                      v-model="filters.disease" 
+                      placeholder="搜索宠物类别" 
+                      class="search-input"
+                  >
+              </div>
           </div>
 
           <div class="filters">
@@ -1163,34 +1172,12 @@ setup() {
 };
 </script>
 
-<style scoped>
-.pet-management {
+<style scoped>.pet-management {
   width: 100%;
-  max-width: 1920px;
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
-}
-@media (min-width: 1200px) {
-  .filter-section, 
-  .pet-container {
-    margin: 0 2%; /* 使用百分比边距 */
-  }
-}
-
-@media (min-width: 1600px) {
-  .filter-section, 
-  .pet-container {
-    margin: 0 5%; /* 在大屏幕上增加边距 */
-  }
-}
-.filter-section {
-  margin: 0 2% 20px; /* 左右2%边距 */
-}
-
-.pet-container {
-  margin: 0 2%; /* 左右2%边距 */
 }
 
 .header {
@@ -2347,48 +2334,7 @@ setup() {
 .btn.approve:hover {
   background-color: #27ae60;
 }
-/* 这里包含所有CSS样式，由于字符限制，只展示关键部分 */
-/* 完整样式请参考原始代码 */
-.main-container {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    max-width: 1920px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f5f7fa;
-}
 
-.header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding: 20px;
-    background: linear-gradient(135deg, #3498db, #8e44ad);
-    color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.pet-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.pet-card {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.filter-section {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
 /* 响应式设计 */
 @media (max-width: 768px) {
   .notification-modal {
@@ -2414,5 +2360,4 @@ setup() {
     justify-content: center;
   }
 }
-
 </style>
