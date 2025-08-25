@@ -38,7 +38,9 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import CasesRecord from './CasesRecord.vue' // 新增这一行
+
+import CasesRecord from './CasesRecord.vue'
+import CouponRecord from './CouponRecord.vue'
 
 const tabs = [
   { key: 'cases',   label: '病例记录',   icon: '📋' },
@@ -62,6 +64,11 @@ const currentComponent = computed(() => {
     default:        return BookingRecord
   }
 })
+
+
+const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
+const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
+
 </script>
 
 <style scoped>
