@@ -27,9 +27,19 @@
       <div class="notice-content">
         <h2>答题结果</h2>
         <div v-if="score === 100">
-          <p style="font-size:1.2em;color:#2a5298;font-weight:bold;">恭喜你全部答对，送给你一张优惠券！</p>
-          <div style="margin:20px 0;">
-            <span style="display:inline-block;padding:12px 32px;background:linear-gradient(90deg,#4facfe,#00f2fe);color:#fff;border-radius:16px;font-size:1.2em;font-weight:bold;">🐾 宠物体检优惠券 🐾</span>
+          <div v-if="couponLimitReached">
+            <p style="font-size:1.2em;color:#2a5298;font-weight:bold;">恭喜你全部答对！</p>
+            <div style="margin:20px 0; padding:16px; background:#fff3e0; border-radius:8px; border-left:4px solid #ff9800;">
+              <p style="color:#e65100; font-size:1.1em; margin:0; font-weight:bold;">😊 您一周内已经获得过问卷优惠券了哦！</p>
+              <p style="color:#bf360c; font-size:0.9em; margin:8px 0 0 0;">请等待一周后再来答题领取新的优惠券。</p>
+            </div>
+          </div>
+          <div v-else>
+            <p style="font-size:1.2em;color:#2a5298;font-weight:bold;">恭喜你全部答对，送给你一张优惠券！</p>
+            <div style="margin:20px 0;">
+              <span style="display:inline-block;padding:12px 32px;background:linear-gradient(90deg,#4facfe,#00f2fe);color:#fff;border-radius:16px;font-size:1.2em;font-weight:bold;">🐾 宠物体检优惠券 🐾</span>
+            </div>
+            <p style="font-size:0.9em;color:#666;margin-top:10px;">* 每用户每周仅可获得一张问卷优惠券</p>
           </div>
         </div>
         <div v-else>
@@ -38,7 +48,7 @@
           <p style="margin-top:10px;color:#2a5298;">请继续努力！</p>
         </div>
         <button class="start-btn" style="position:static;margin:20px auto 0 auto;display:block;" @click="closeAndNavigate">
-          {{ score === 100 ? '领取' : '关闭' }}
+          {{ score === 100 ? (couponLimitReached ? '确定' : '领取') : '关闭' }}
         </button>
       </div>
     </div>
@@ -74,6 +84,9 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { API_BASE_URL } from '@/config/index.js'
+
 export default {
   data() {
     return {
@@ -82,6 +95,7 @@ export default {
       showResult: false,
       score: 0,
       wrongQuestions: [],
+      couponLimitReached: false, // 新增：标记用户是否因为一周限制无法领取优惠券
       noticeList: [
         "1. 本问卷旨在收集您和您宠物的真实信息，以便我们为您提供更优质的医疗服务，请您认真填写每一项内容。",
         "2. 请确保填写的宠物信息（如品种、年龄、健康状况等）准确无误，便于医生做出科学判断。",
@@ -92,7 +106,8 @@ export default {
         "7. 若您的宠物有特殊病史、过敏史或正在服药，请在相关问题中详细说明。",
         "8. 本问卷仅限宠物主人本人填写，请勿代他人作答，以保证数据的真实性。",
         "9. 问卷填写时间约为5-10分钟，请合理安排时间，确保填写完整。",
-        "10. 感谢您的配合与支持，您的宝贵意见将帮助我们不断提升服务质量！"
+        "10. 答题满分可获得优惠券奖励，每用户每周仅可获得一张问卷优惠券。",
+        "11. 感谢您的配合与支持，您的宝贵意见将帮助我们不断提升服务质量！"
       ],
       questions: [
         {
@@ -210,7 +225,7 @@ export default {
     };
   },
   methods: {
-    submitForm() {
+    async submitForm() {
       // 双重保险：在提交前再次检查登录状态
       if (!this.isUserLoggedIn()) {
         alert('登录状态已过期，请重新登录');
@@ -240,6 +255,12 @@ export default {
       }
       this.score = score;
       this.wrongQuestions = wrongQuestions;
+      
+      // 如果得满分，发放优惠券
+      if (score === 100) {
+        await this.awardCoupon();
+      }
+      
       this.showResult = true;
     },
     handleScroll() {
@@ -255,16 +276,21 @@ export default {
     },
     closeAndNavigate() {
       if (this.score === 100) {
-        // 显示领取成功提示
-        alert('领取成功，请在个人中心查看');
+        if (this.couponLimitReached) {
+          // 一周限制情况
+          alert('😊 您一周内已经获得过问卷优惠券了！\n请等待一周后再来答题领取新的优惠券。')
+        } else {
+          // 正常领取优惠券
+          alert('🎉 优惠券领取成功！请在个人中心查看您的优惠券。')
+        }
         
-        // 延迟1秒后跳转到首页
+        // 延迟1秒后跳转到个人中心
         setTimeout(() => {
           this.showResult = false;
-          this.$router.push('/');
+          this.$router.push('/user-info');
         }, 1000);
       } else {
-        // 直接关闭并跳转
+        // 直接关闭并跳转到首页
         this.showResult = false;
         this.$router.push('/');
       }
@@ -285,6 +311,227 @@ export default {
       console.log('最终登录状态判断:', isLoggedIn)
       
       return isLoggedIn
+    },
+    
+    // 生成唯一优惠券码
+    generateCouponCode() {
+      const timestamp = Date.now()
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase()
+      return `QUIZ${timestamp}${random}`
+    },
+    
+    // 检查用户是否在一周内已经获得过优惠券
+    async checkCouponLimit(userId) {
+      try {
+        console.log('=== 检查优惠券领取限制 ===')
+        
+        const oneWeekAgo = new Date()
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+        
+        // 1. 先检查后端API
+        try {
+          const response = await axios.get(`${API_BASE_URL}/getUserCoupons`, {
+            params: { userId: userId }
+          })
+          
+          if (response.data && response.data.code === 200) {
+            const userCoupons = response.data.data || response.data.userCoupons || []
+            
+            // 检查是否有一周内获得的问卷优惠券
+            const recentQuizCoupons = userCoupons.filter(userCoupon => {
+              const acquiredDate = new Date(userCoupon.acquiredAt)
+              return acquiredDate > oneWeekAgo && 
+                     (userCoupon.source === 'questionnaire' || 
+                      userCoupon.coupon?.code?.startsWith('QUIZ'))
+            })
+            
+            if (recentQuizCoupons.length > 0) {
+              const lastCouponDate = new Date(recentQuizCoupons[0].acquiredAt)
+              console.log('用户在一周内已获得问卷优惠券:', lastCouponDate)
+              return false
+            }
+          }
+        } catch (apiError) {
+          console.log('后端API不可用，检查本地缓存:', apiError.message)
+        }
+        
+        // 2. API降级：检查本地存储
+        const userCouponsKey = `userCoupons_${userId}`
+        const localCoupons = JSON.parse(localStorage.getItem(userCouponsKey) || '[]')
+        
+        const recentLocalCoupons = localCoupons.filter(userCoupon => {
+          const acquiredDate = new Date(userCoupon.acquiredAt)
+          return acquiredDate > oneWeekAgo && 
+                 (userCoupon.source === 'questionnaire' || 
+                  userCoupon.coupon?.code?.startsWith('QUIZ'))
+        })
+        
+        if (recentLocalCoupons.length > 0) {
+          const lastCouponDate = new Date(recentLocalCoupons[0].acquiredAt)
+          console.log('用户在一周内已获得问卷优惠券（本地记录）:', lastCouponDate)
+          return false
+        }
+        
+        console.log('用户一周内未获得问卷优惠券，可以领取')
+        return true
+        
+      } catch (error) {
+        console.error('检查优惠券限制时发生错误:', error)
+        // 发生错误时，为了安全起见，不允许领取
+        return false
+      }
+    },
+
+    // 发放优惠券
+    async awardCoupon() {
+      try {
+        console.log('=== 开始发放优惠券 ===')
+        
+        // 获取当前用户信息
+        const currentUserStr = localStorage.getItem('currentUser')
+        if (!currentUserStr) {
+          console.error('未找到用户信息，无法发放优惠券')
+          return
+        }
+        
+        const currentUser = JSON.parse(currentUserStr)
+        const userId = currentUser.userId
+        
+        if (!userId) {
+          console.error('用户ID不存在，无法发放优惠券')
+          return
+        }
+        
+        // 检查一周内是否已经领取过优惠券
+        const canReceiveCoupon = await this.checkCouponLimit(userId)
+        if (!canReceiveCoupon) {
+          this.couponLimitReached = true
+          console.log('用户一周内已领取过优惠券，设置限制标记')
+          return
+        }
+
+        // 生成优惠券数据
+        const couponCode = this.generateCouponCode()
+        
+        // 1. 首先创建优惠券
+        const couponData = {
+          code: couponCode,
+          discountType: 'percent',
+          discountValue: 20.00,
+          minAmount: 100.00,
+          validFrom: new Date().toISOString().split('T')[0],
+          validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30天有效期
+        }
+        
+        console.log('创建优惠券数据:', couponData)
+        
+        try {
+          // 调用后端API创建优惠券
+          const createCouponResponse = await axios.post(`${API_BASE_URL}/addCoupon`, couponData)
+          
+          console.log('创建优惠券响应:', createCouponResponse.data)
+          
+          if (createCouponResponse.data && createCouponResponse.data.code === 200) {
+            // 优惠券创建成功，获取couponId
+            const couponId = createCouponResponse.data.couponId || createCouponResponse.data.data?.couponId
+            
+            if (couponId) {
+              // 2. 将优惠券分配给用户
+              const userCouponData = {
+                userId: userId,
+                couponId: couponId,
+                acquiredAt: new Date().toISOString(),
+                used: false
+              }
+              
+              console.log('分配用户优惠券数据:', userCouponData)
+              
+              const assignCouponResponse = await axios.post(`${API_BASE_URL}/addUserCoupon`, userCouponData)
+              
+              console.log('分配优惠券响应:', assignCouponResponse.data)
+              
+              if (assignCouponResponse.data && assignCouponResponse.data.code === 200) {
+                console.log('优惠券发放成功！')
+                this.saveCouponToLocalStorage(couponCode, couponData, userId)
+              } else {
+                throw new Error('分配优惠券失败: ' + (assignCouponResponse.data?.msg || '未知错误'))
+              }
+            } else {
+              throw new Error('未获取到优惠券ID')
+            }
+          } else {
+            throw new Error('创建优惠券失败: ' + (createCouponResponse.data?.msg || '未知错误'))
+          }
+          
+        } catch (apiError) {
+          console.log('后端API不可用，使用本地降级存储:', apiError.message)
+          
+          // API降级：本地存储优惠券信息
+          this.saveCouponToLocalStorage(couponCode, couponData, userId)
+        }
+        
+      } catch (error) {
+        console.error('发放优惠券时发生错误:', error)
+        
+        // 即使发放失败，也要保存到本地作为备用
+        const couponCode = this.generateCouponCode()
+        const couponData = {
+          code: couponCode,
+          discountType: 'percent',
+          discountValue: 20.00,
+          minAmount: 100.00,
+          validFrom: new Date().toISOString().split('T')[0],
+          validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        }
+        
+        const currentUserStr = localStorage.getItem('currentUser')
+        if (currentUserStr) {
+          const currentUser = JSON.parse(currentUserStr)
+          this.saveCouponToLocalStorage(couponCode, couponData, currentUser.userId || 'unknown')
+        }
+      }
+    },
+    
+    // 将优惠券保存到本地存储（降级方案）
+    saveCouponToLocalStorage(couponCode, couponData, userId) {
+      try {
+        console.log('保存优惠券到本地存储')
+        
+        // 获取现有的用户优惠券列表
+        const userCouponsKey = `userCoupons_${userId}`
+        const existingCoupons = JSON.parse(localStorage.getItem(userCouponsKey) || '[]')
+        
+        // 创建新的用户优惠券记录
+        const newUserCoupon = {
+          id: Date.now(), // 本地生成的ID
+          couponId: Date.now() + 1, // 本地生成的优惠券ID
+          userId: userId,
+          coupon: {
+            couponId: Date.now() + 1,
+            code: couponCode,
+            discountType: couponData.discountType,
+            discountValue: couponData.discountValue,
+            minAmount: couponData.minAmount,
+            validFrom: couponData.validFrom,
+            validTo: couponData.validTo
+          },
+          acquiredAt: new Date().toISOString(),
+          used: false,
+          source: 'questionnaire', // 标记来源
+          localOnly: true // 标记为本地数据
+        }
+        
+        // 添加到列表
+        existingCoupons.push(newUserCoupon)
+        
+        // 保存回localStorage
+        localStorage.setItem(userCouponsKey, JSON.stringify(existingCoupons))
+        
+        console.log('优惠券已保存到本地存储:', newUserCoupon)
+        
+      } catch (error) {
+        console.error('保存优惠券到本地存储失败:', error)
+      }
     }
   },
   mounted() {
@@ -292,6 +539,7 @@ export default {
     // 只在提交时才检查登录状态
     
     this.canStart = false;
+    this.couponLimitReached = false; // 重置优惠券限制状态
     // 初始化userAnswers为每题空数组（多选）或空字符串（单选）
     this.userAnswers = this.questions.map(q => (q.multiple ? [] : ""));
   }

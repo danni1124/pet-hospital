@@ -2,15 +2,18 @@
   <div class="user-center-bg">
     <!-- 顶部用户信息卡片 -->
     <div class="user-card">
-      <img class="avatar" src=""/>
+      <img class="avatar" :src="userInfo.avatar_url || ''" alt="用户头像"/>
       <div class="user-info">
         <div class="user-row">
-          <span class="user-username">@ jack</span>
-          <span class="level">Lv.5</span>
+          <span class="user-username">@ {{ userInfo.username || 'loading...' }}</span>
+          <span class="level">Lv.{{ userInfo.level || 1 }}</span>
         </div>
-        <div class="user-id">通行证ID:291423473</div>
+        <div class="user-id">通行证ID:{{ userInfo.userId || 'loading...' }}</div>
+        <div v-if="userInfo.phone || userInfo.email" class="user-contact">
+          <span v-if="userInfo.phone">📱 {{ userInfo.phone }}</span>
+          <span v-if="userInfo.email">📧 {{ userInfo.email }}</span>
+        </div>
       </div>
-
     </div>
 
     <!-- 主体区域 -->
@@ -37,13 +40,26 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-
+import { onMounted, computed, ref } from 'vue'
+import axios from 'axios'
+import { API_BASE_URL } from '@/config/index.js'
 import CasesRecord from './CasesRecord.vue'
-import CouponRecord from './CouponRecord.vue'
-import BookingRecord from './BookingRecord.vue'
+
+import CouponRecord from './components/CouponRecord.vue'
 
 
+// 用户信息响应式数据
+const userInfo = ref({
+  userId: null,
+  username: '',
+  level: 1,
+  phone: '',
+  email: '',
+  avatar_url: '',
+  address: ''
+})
+
+// Tab数据和状态
 const tabs = [
   { key: 'cases',   label: '病例记录',   icon: '📋' },
   { key: 'booking', label: '预约记录',   icon: '📅' },
@@ -53,8 +69,8 @@ const tabs = [
 
 const activeTab = ref('cases')
 
+// 组件映射
 const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
-const CouponRecord  = { template: `<div class="placeholder">🎟 优惠券记录</div>` }
 const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
 
 const currentComponent = computed(() => {
@@ -67,9 +83,115 @@ const currentComponent = computed(() => {
   }
 })
 
+// 获取用户详细信息
+const fetchUserInfo = async () => {
+  try {
+    // 首先从localStorage获取当前登录用户的基本信息
+    const currentUserStr = localStorage.getItem('currentUser')
+    if (!currentUserStr) {
+      console.error('未找到登录用户信息')
+      return
+    }
+    
+    const currentUser = JSON.parse(currentUserStr)
+    const userId = currentUser.userId
+    
+    if (!userId) {
+      console.error('用户ID不存在，无法获取详细信息')
+      // 使用localStorage中的基本信息作为降级方案
+      userInfo.value = {
+        userId: 'unknown',
+        username: currentUser.username || 'unknown',
+        level: 1,
+        phone: '',
+        email: '',
+        avatar_url: '',
+        address: ''
+      }
+      return
+    }
+    
+    console.log('获取用户详细信息，userId:', userId)
+    
+    let response
+    
+    try {
+      // 调用后端API获取用户详细信息
+      response = await axios.get(`${API_BASE_URL}/getUser`, {
+        params: { userId: userId }
+      })
+      
+      console.log('后端用户信息响应:', response.data)
+      
+      if (response.data && response.data.code === 200) {
+        // 成功获取用户信息
+        const userData = response.data.user || response.data.data || {}
+        userInfo.value = {
+          userId: userData.userId || userId,
+          username: userData.username || currentUser.username,
+          level: userData.level || 1,
+          phone: userData.phone || '',
+          email: userData.email || '',
+          avatar_url: userData.avatar_url || '',
+          address: userData.address || ''
+        }
+        
+        console.log('用户信息更新成功:', userInfo.value)
+      } else {
+        throw new Error(response.data?.msg || '获取用户信息失败')
+      }
+      
+    } catch (apiError) {
+      console.log('真实API不可用，使用本地降级:', apiError.message)
+      
+      // API降级：使用localStorage中已保存的用户数据
+      if (currentUser.userData) {
+        userInfo.value = {
+          userId: currentUser.userData.userId || userId,
+          username: currentUser.userData.username || currentUser.username,
+          level: currentUser.userData.level || 1,
+          phone: currentUser.userData.phone || '',
+          email: currentUser.userData.email || '',
+          avatar_url: currentUser.userData.avatar_url || '',
+          address: currentUser.userData.address || ''
+        }
+      } else {
+        // 如果没有详细数据，使用基本信息
+        userInfo.value = {
+          userId: userId,
+          username: currentUser.username || 'unknown',
+          level: 1,
+          phone: '',
+          email: '',
+          avatar_url: '',
+          address: ''
+        }
+      }
+      
+      console.log('降级用户信息:', userInfo.value)
+    }
+    
+  } catch (error) {
+    console.error('获取用户信息时发生错误:', error)
+    
+    // 错误处理：显示默认信息
+    userInfo.value = {
+      userId: 'error',
+      username: '加载失败',
+      level: 1,
+      phone: '',
+      email: '',
+      avatar_url: '',
+      address: ''
+    }
+  }
+}
 
-const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
-const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
+// 页面加载时自动获取用户信息
+onMounted(() => {
+  console.log('个人中心页面加载，开始获取用户信息...')
+  fetchUserInfo()
+})
 
 </script>
 
@@ -141,6 +263,14 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   color: #888;
   margin-top: 2px;
   letter-spacing: 1px;
+}
+
+.user-contact {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  display: flex;
+  gap: 16px;
 }
 
 .user-username {
