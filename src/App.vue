@@ -9,9 +9,9 @@
         <router-link to="/" class="nav-btn" active-class="active" exact>
           <i class="fas fa-home"></i> 首页
         </router-link>
-        <router-link to="/questionnaire" class="nav-btn" active-class="active">
+        <button @click="handleQuestionnaireClick" class="nav-btn" :class="{ active: $route.path === '/questionnaire' }">
           <i class="fas fa-question"></i> 问卷
-        </router-link>
+        </button>
         <router-link to="/manage" class="nav-btn" active-class="active">
           <i class="fas fa-tasks"></i> 管理
         </router-link>
@@ -39,7 +39,6 @@
             <i class="fas fa-sign-in-alt"></i> 登录
           </button>
         </div>
-        
 
         <!-- 已登录时显示用户下拉菜单 -->
         <div v-else class="user-dropdown">
@@ -51,6 +50,8 @@
             <i class="arrow-down">▼</i>
           </div>
           
+          </div>
+
           <!-- 下拉菜单内容 -->
           <div class="dropdown-menu">
             <div class="dropdown-item">
@@ -392,8 +393,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
+
+// Vue Router
+const route = useRoute()
+const router = useRouter()
 
 // 登录状态
 const isLoggedIn = ref(false)
@@ -510,6 +516,35 @@ const isRegisterFormValid = computed(() => {
          registerForm.value.agreeTerms
 })
 
+// 检查用户是否已登录
+const isUserLoggedIn = () => {
+  // 优先检查当前的登录状态
+  if (isLoggedIn.value) {
+    return true
+  }
+  
+  // 如果当前状态为未登录，再检查 localStorage 中的登录信息
+  const rememberedUser = localStorage.getItem('rememberedUser')
+  const currentUser = localStorage.getItem('currentUser')
+  return !!(rememberedUser || currentUser)
+}
+
+// 处理问卷按钮点击
+const handleQuestionnaireClick = () => {
+  console.log('问卷按钮点击 - 当前登录状态:', isLoggedIn.value)
+  console.log('当前用户信息:', currentUser.value)
+  
+  if (!isLoggedIn.value) {
+    alert('请先登录后再访问问卷页面')
+    showLoginModal.value = true
+    return
+  }
+  
+  // 如果已登录，正常跳转到问卷页面
+  console.log('用户已登录，跳转到问卷页面')
+  router.push('/questionnaire')
+}
+
 // 处理登录
 const handleLogin = async () => {
   // 清空之前的错误信息
@@ -569,7 +604,14 @@ const handleLogin = async () => {
         avatar: loginForm.value.username.substring(0, 2).toUpperCase()
       }
       
-      // 记住密码功能
+      // 保存当前登录状态到localStorage（与记住密码功能分开）
+      localStorage.setItem('currentUser', JSON.stringify({
+        username: loginForm.value.username,
+        avatar: loginForm.value.username.substring(0, 2).toUpperCase(),
+        loginTime: new Date().toISOString()
+      }))
+      
+      // 记住密码功能（可选）
       if (loginForm.value.remember) {
         localStorage.setItem('rememberedUser', JSON.stringify({
           username: loginForm.value.username,
@@ -794,6 +836,10 @@ const mockRegister = async (userData) => {
 const handleLogout = () => {
   isLoggedIn.value = false
   currentUser.value = { name: '', avatar: '' }
+  
+  // 清除登录状态（但保留记住的密码，如果用户之前选择了记住密码）
+  localStorage.removeItem('currentUser')
+  
   alert('已退出登录')
 }
 
@@ -841,12 +887,56 @@ const addTestUser = () => {
 
 // 页面加载时检查记住的密码
 onMounted(() => {
+  console.log('=== 页面加载，检查登录状态 ===')
+  
+  // 首先检查当前登录状态
+  const currentUserData = localStorage.getItem('currentUser')
+  if (currentUserData) {
+    const user = JSON.parse(currentUserData)
+    console.log('发现当前登录用户:', user.username)
+    
+    // 恢复登录状态
+    isLoggedIn.value = true
+    currentUser.value = {
+      name: user.username,
+      avatar: user.avatar || user.username.substring(0, 2).toUpperCase()
+    }
+    
+    console.log('已恢复当前登录状态:', isLoggedIn.value)
+  }
+  
+  // 然后检查是否有记住的用户信息（用于填充登录表单）
   const rememberedUser = localStorage.getItem('rememberedUser')
   if (rememberedUser) {
     const user = JSON.parse(rememberedUser)
+    console.log('发现记住的用户:', user.username)
+    
+    // 如果还没有登录状态，则恢复登录状态
+    if (!isLoggedIn.value) {
+      isLoggedIn.value = true
+      currentUser.value = {
+        name: user.username,
+        avatar: user.username.substring(0, 2).toUpperCase()
+      }
+    }
+    
+    // 恢复登录表单数据
     loginForm.value.username = user.username
     loginForm.value.password = user.password
     loginForm.value.remember = true
+    
+    console.log('已恢复记住的用户登录状态:', isLoggedIn.value)
+  }
+  
+  if (!currentUserData && !rememberedUser) {
+    console.log('未找到任何登录信息')
+  }
+  
+  // 检查 URL 查询参数，如果有 showLogin=true 则自动弹出登录弹窗
+  if (route.query.showLogin === 'true') {
+    showLoginModal.value = true
+    // 清理 URL 参数，避免刷新页面时重复弹出
+    router.replace({ query: {} })
   }
 })
 </script>
@@ -863,6 +953,8 @@ onMounted(() => {
         height: 80px;
         background: white;
         border-bottom: 1px solid #e5e5e5;
+        
+        
       }
 
       .logo {
@@ -926,6 +1018,20 @@ onMounted(() => {
       .nav-btn.active::before {
         width: 100%; /* 当前页面按钮背景始终展开 */
         background-color: rgba(235, 240, 255, 0.8); /* 使用悬停时的背景色 */
+      }
+
+      /* 为 button 类型的导航按钮添加特殊样式 */
+      button.nav-btn {
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        font-family: inherit;
+      }
+
+      button.nav-btn i {
+        margin-right: 4px;
       }
 
       /* 用户区域样式 */
