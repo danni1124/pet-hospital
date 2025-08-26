@@ -1,967 +1,507 @@
 <template>
   <div class="main-container">
-  <div class="pet-management">
-    <!-- 头部区域 -->
-    <div class="header">
-      <div class="header-content">
-        <h1>宠物医院管理系统</h1>
-        <div class="subtitle">宠物信息管理模块</div>
-        <!-- 消息通知区域 -->
-        <div class="notification-area">
-          <div class="notification-icon" @click="toggleNotifications">
-            <i class="fas fa-bell"></i>
-            <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+    <div class="pet-management">
+      <!-- 头部区域 -->
+      <div class="header">
+        <div class="header-content">
+          <h1>宠物医院管理系统</h1>
+          <div class="subtitle">宠物信息管理模块</div>
+          <!-- 消息通知区域 -->
+          <div class="notification-area">
+              <div class="notification-icon" @click="toggleNotifications">
+                  <i class="fas fa-bell"></i>
+                  <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+              </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 消息中心模态框 -->
-    <div :class="['notification-modal', { active: showNotifications }]">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>领养申请通知</h2>
-          <button class="modal-close" @click="toggleNotifications">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <div class="notification-list">
-          <div v-if="notifications.length === 0" class="empty-notifications">
-            <i class="fas fa-bell-slash"></i>
-            <p>暂无新的领养申请</p>
+      <!-- 搜索和筛选区域 -->
+      <div class="filter-section">
+          <div class="search-box">
+              <div class="filter-group">
+                  <label>宠物姓名：</label>
+                  <input 
+                      type="text" 
+                      v-model="filters.petName" 
+                      placeholder="搜索宠物名称" 
+                      class="search-input"
+                  >
+              </div>
+              <div class="filter-group">
+                  <label>宠物病症：</label>
+                  <input 
+                      type="text" 
+                      v-model="filters.disease" 
+                      placeholder="搜索宠物病症" 
+                      class="search-input"
+                  >
+              </div>
           </div>
-          
+
+          <div class="filters">
+              <div class="filter-group">
+                  <label>领养状态：</label>
+                  <select v-model="filters.status" class="filter-select">
+                      <option value="all">全部</option>
+                      <option value="owned">有主人</option>
+                      <option value="forAdoption">待领养</option>
+                      <option value="adopted">已领养</option>
+                  </select>
+              </div>
+
+              <div class="filter-group">
+                  <label>年龄范围：</label>
+                  <select v-model="filters.ageRange" class="filter-select">
+                      <option value="all">全部</option>
+                      <option value="0-2">0-2岁</option>
+                      <option value="3-5">3-5岁</option>
+                      <option value="6+">6岁及以上</option>
+                  </select>
+              </div>
+              
+              <!-- 操作按钮区域 -->
+              <div class="action-buttons">
+                  <button class="btn-primary" @click="addNewPet" :disabled="loading">
+                      <i class="fas fa-plus"></i> 添加新宠物
+                  </button>
+                  <button class="btn-secondary" @click="exportToExcel" :disabled="loading">
+                      <i class="fas fa-download"></i> 导出数据
+                  </button>
+              </div>
+          </div>
+      </div>
+
+      <!-- 加载状态 -->
+      <div v-if="loading && pets.length === 0" class="loading-state">
+          <i class="fas fa-paw fa-spin"></i>
+          <p>正在加载宠物数据...</p>
+      </div>
+
+      <!-- 宠物列表展示 -->
+      <div v-else class="pet-container">
           <div 
-            v-for="(notification, index) in notifications" 
-            :key="index" 
-            class="notification-item"
-            :class="{ unread: !notification.read }"
-            @click="openApplication(notification)"
+              v-for="pet in filteredPets" 
+              :key="pet.petId" 
+              class="pet-card"
+              :class="{
+                  'for-adoption': pet.adoptionStatus === 'forAdoption',
+                  'adopted': pet.adoptionStatus === 'adopted'
+              }"
           >
-            <div class="notification-header">
-              <div class="pet-info">
-                <div class="pet-name">{{ notification.petName }}</div>
-                <div class="applicant-name">{{ notification.applicant.name }}</div>
+              <!-- 宠物卡片内容 -->
+              <div class="pet-header">
+                  <div class="pet-image">
+                      <img :src="petImage(pet)" alt="宠物图片">
+                  </div>
+                  <div class="pet-info">
+                      <div v-if="!pet.editing" class="pet-name">{{ pet.petName }}</div>
+                      <input v-else v-model="pet.editingData.petName" class="edit-input-pet-name-input">
+                      
+                      <div class="pet-status">
+                          <span v-if="!pet.editing" class="status-tag" :class="getStatusClass(pet.adoptionStatus)">
+                              {{ getStatusText(pet.adoptionStatus) }}
+                          </span>
+                          <select v-else v-model="pet.editingData.adoptionStatus" class="edit-select1" @change="onStatusChange(pet)">
+                              <option value="owned">有主人</option>
+                              <option value="forAdoption">待领养</option>
+                              <option value="adopted">已领养</option>
+                          </select>
+                          
+                          <!-- 宠物类型标签 -->
+                          <span v-if="!pet.editing" class="type-tag" :class="getTypeClass(pet.type)">
+                              {{ pet.type === 'dog' ? '狗狗' : '猫咪' }}
+                          </span>
+                          <select v-else v-model="pet.editingData.type" class="edit-select-type">
+                              <option value="dog">狗狗</option>
+                              <option value="cat">猫咪</option>
+                          </select>
+                      </div>
+                      
+                      <div class="pet-attributes-row">
+                          <!-- 宠物性别 -->
+                          <div class="pet-gender-row">
+                              <span v-if="!pet.editing" class="pet-gender">
+                                  <i :class="pet.gender === '公' ? 'fas fa-mars' : 'fas fa-venus'"></i> 
+                                  {{ pet.gender }}
+                              </span>
+                              <div v-else class="gender-edit">
+                                  <label>性别:</label>
+                                  <select v-model="pet.editingData.gender" class="edit-select-gender">
+                                      <option value="公">公</option>
+                                      <option value="母">母</option>
+                                  </select>
+                              </div>
+                          </div>
+                          
+                          <!-- 宠物年龄 -->
+                          <div class="pet-age-row">
+                              <span v-if="!pet.editing" class="pet-age">年龄: {{ pet.age }}岁</span>
+                              <div v-else class="age-edit">
+                                  <label>年龄:</label>
+                                  <input v-model="pet.editingData.age" type="number" min="0" max="30" class="edit-input-pet-age">
+                                  <label>岁</label>
+                              </div>
+                          </div>
+                          
+                          <!-- 宠物重量 -->
+                          <div class="pet-weight-row">
+                              <span v-if="!pet.editing" class="pet-weight">重量: {{ pet.weight }}公斤</span>
+                              <div v-else class="weight-edit">
+                                  <label>重量:</label>
+                                  <input v-model="pet.editingData.weight" type="number" min="0.1" max="100" step="0.1" class="edit-input-pet-weight">
+                                  <label>公斤</label>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
               </div>
-              <div class="notification-status">
-                <span v-if="!notification.read" class="unread-dot"></span>
-                <div class="notification-time">{{ formatTime(notification.timestamp) }}</div>
-              </div>
-            </div>
-            <div class="notification-body">
-              <div class="contact-info">
-                <span><i class="fas fa-phone"></i> {{ notification.applicant.phone }}</span>
-                <span><i class="fas fa-envelope"></i> {{ notification.applicant.email }}</span>
-              </div>
-              <button class="delete-btn" @click.stop="deleteNotification(index)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 申请详情模态框 -->
-    <div :class="['application-modal', { active: showApplicationModal }]">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>领养申请详情</h2>
-          <button class="modal-close" @click="closeApplicationModal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <div v-if="selectedApplication" class="application-details">
-          <div class="section">
-            <h3>宠物信息</h3>
-            <div class="pet-info-display">
-              <img :src="petImageForApplication" alt="宠物图片" class="pet-image">
               <div class="pet-details">
-                <div class="detail-item"><strong>名称:</strong> {{ selectedApplication.petName }}</div>
-                <div class="detail-item"><strong>类型:</strong> {{ selectedApplication.petType }}</div>
-                <div class="detail-item"><strong>年龄:</strong> {{ selectedApplication.petAge }}岁</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <h3>申请人信息</h3>
-            <div class="applicant-details">
-              <div class="detail-row">
-                <span class="detail-label">姓名:</span>
-                <span class="detail-value">{{ selectedApplication.applicant.name }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">电话:</span>
-                <span class="detail-value">{{ selectedApplication.applicant.phone }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">邮箱:</span>
-                <span class="detail-value">{{ selectedApplication.applicant.email }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">申请时间:</span>
-                <span class="detail-value">{{ formatTime(selectedApplication.timestamp) }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <h3>家庭环境描述</h3>
-            <div class="environment-desc">
-              {{ selectedApplication.applicant.environment }}
-            </div>
-          </div>
-          
-          <div class="action-buttons">
-            <button class="btn contact" @click="contactApplicant">
-              <i class="fas fa-phone"></i> 联系申请人
-            </button>
-            <button class="btn approve" @click="approveApplication">
-              <i class="fas fa-check"></i> 批准申请
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- 搜索和筛选区域 -->
-    <div class="filter-section">
-      <div class="search-box">
-        <div class="filter-group">
-          <label>宠物姓名：</label>
-          <input 
-            type="text" 
-            v-model="filters.name" 
-            placeholder="搜索宠物名称" 
-            class="search-input"
-          >
-        </div>
-        <div class="filter-group">
-          <label>宠物病症：</label>
-          <input 
-            type="text" 
-            v-model="filters.disease" 
-            placeholder="搜索宠物病症" 
-            class="search-input"
-          >
-        </div>
-        <div class="filter-group">
-          <label>主人姓名：</label>
-          <input 
-            type="text" 
-            v-model="filters.owner" 
-            placeholder="搜索主人姓名" 
-            class="search-input"
-          >
-        </div>
-      </div>
-
-      <div class="filters">
-        <div class="filter-group">
-          <label>领养状态：</label>
-          <select v-model="filters.status" class="filter-select">
-            <option value="all">全部</option>
-            <option value="owned">有主人</option>
-            <option value="forAdoption">待领养</option>
-            <option value="adopted">已领养</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>年龄范围：</label>
-          <select v-model="filters.ageRange" class="filter-select">
-            <option value="all">全部</option>
-            <option value="0-2">0-2岁</option>
-            <option value="3-5">3-5岁</option>
-            <option value="6+">6岁及以上</option>
-          </select>
-        </div>
-        
-        <!-- 操作按钮区域 -->
-        <div class="action-buttons">
-          <button class="btn-primary" @click="addNewPet" :disabled="loading">
-            <i class="fas fa-plus"></i> 添加新宠物
-          </button>
-          <button class="btn-secondary" @click="exportToExcel" :disabled="loading">
-            <i class="fas fa-download"></i> 导出数据
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 加载状态 -->
-    <div v-if="loading && pets.length === 0" class="loading-state">
-      <i class="fas fa-paw fa-spin"></i>
-      <p>正在加载宠物数据...</p>
-    </div>
-
-    <!-- 宠物列表展示 -->
-    <div v-else class="pet-container">
-      <div 
-        v-for="pet in filteredPets" 
-        :key="pet.id" 
-        class="pet-card"
-        :class="{
-          'for-adoption': pet.adoptionStatus === 'forAdoption',
-          'adopted': pet.adoptionStatus === 'adopted'
-        }"
-      >
-        <div class="pet-header">
-          <div class="pet-image">
-            <img :src="petImage(pet)" alt="宠物图片">
-          </div>
-          <div class="pet-info">
-            <div v-if="!pet.editing" class="pet-name">{{ pet.name }}</div>
-            <input v-else v-model="pet.editingData.name" class="edit-input-pet-name-input">
-            
-            <div class="pet-status">
-              <span v-if="!pet.editing" class="status-tag" :class="getStatusClass(pet.adoptionStatus)">
-                {{ getStatusText(pet.adoptionStatus) }}
-              </span>
-              <select v-else v-model="pet.editingData.adoptionStatus" class="edit-select1" @change="onStatusChange(pet)">
-                <option value="owned">有主人</option>
-                <option value="forAdoption">待领养</option>
-                <option value="adopted">已领养</option>
-              </select>
-              
-              <!-- 新增：宠物类型标签 -->
-              <span v-if="!pet.editing" class="type-tag" :class="getTypeClass(pet.type)">
-                {{ pet.type === 'dog' ? '狗狗' : '猫咪' }}
-              </span>
-              <select v-else v-model="pet.editingData.type" class="edit-select-type">
-                <option value="dog">狗狗</option>
-                <option value="cat">猫咪</option>
-              </select>
-            </div>
-            
-            <div class="pet-attributes-row">
-              <!-- 宠物性别 -->
-              <div class="pet-gender-row">
-                <span v-if="!pet.editing" class="pet-gender">
-                  <i :class="pet.gender === '男' ? 'fas fa-mars' : 'fas fa-venus'"></i> 
-                  {{ pet.gender }}
-                </span>
-                <div v-else class="gender-edit">
-                  <label>性别:</label>
-                  <select v-model="pet.editingData.gender" class="edit-select-gender">
-                    <option value="男">男</option>
-                    <option value="女">女</option>
-                  </select>
-                </div>
-              </div>
-              
-              <!-- 宠物年龄 -->
-              <div class="pet-age-row">
-                <span v-if="!pet.editing" class="pet-age">年龄: {{ pet.age }}岁</span>
-                <div v-else class="age-edit">
-                  <label>年龄:</label>
-                  <input v-model="pet.editingData.age" type="number" min="0" max="30" class="edit-input-pet-age">
-                  <label>岁</label>
-                </div>
-              </div>
-              
-              <!-- 宠物重量 -->
-              <div class="pet-weight-row">
-                <span v-if="!pet.editing" class="pet-weight">重量: {{ pet.weight }}公斤</span>
-                <div v-else class="weight-edit">
-                  <label>重量:</label>
-                  <input v-model="pet.editingData.weight" type="number" min="0.1" max="100" step="0.1" class="edit-input-pet-weight">
-                  <label>公斤</label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="pet-details">
-          <div class="detail-row">
-            <span class="detail-label1">病症 :</span>
-            <span v-if="!pet.editing" class="detail-value">{{ pet.disease || '无' }}</span>
-            <input v-else v-model="pet.editingData.disease" class="edit-input">
-          </div>
-          
-          <div class="owner-info">
-            <!-- 编辑状态下显示完整表单 -->
-            <div v-if="pet.editing">
-              <div v-if="pet.editingData.adoptionStatus !== 'forAdoption'">
-                <div class="detail-row1">
-                  <span class="detail-label2">姓名 :</span>
-                  <input v-model="pet.editingData.owner.name" class="edit-input">
-                </div>
-                <div class="detail-row1">
-                  <span class="detail-label2">性别 :</span>
-                  <select v-model="pet.editingData.owner.gender" class="edit-select">
-                    <option value="男">男</option>
-                    <option value="女">女</option>
-                  </select>
-                </div>
-                <div class="detail-row1">
-                  <span class="detail-label2">电话 :</span>
-                  <input v-model="pet.editingData.owner.phone" class="edit-input">
-                </div>
-                <div class="detail-row1">
-                  <span class="detail-label2">地址 :</span>
-                  <input v-model="pet.editingData.owner.address" class="edit-input">
-                </div>
-              </div>
-              <!-- 编辑状态下显示描述编辑 -->
-              <div v-else>
-                <div class="detail-row1">
-                  <span class="detail-label">描述 :</span>
-                  <textarea v-model="pet.editingData.description" class="edit-textarea" placeholder="输入宠物描述"></textarea>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 查看状态下的显示 -->
-            <div v-else>
-              <div v-if="pet.adoptionStatus === 'owned'" >
-                <div class="detail-row">
-                  <span class="detail-label">主人信息 :</span>
-                  <span class="detail-value">{{ pet.owner?.name || '无' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">性别 :</span>
-                  <span class="detail-value">{{ pet.owner?.gender || '无' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">联系电话 :</span>
-                  <span class="detail-value">{{ pet.owner?.phone || '无' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">地址 :</span>
-                  <span class="detail-value">{{ pet.owner?.address || '无' }}</span>
-                </div>
-              </div>
-              
-              <div v-else>
-                <div v-if="pet.adoptionStatus === 'adopted'">
                   <div class="detail-row">
-                    <span class="detail-label">领养人信息 :</span>
-                    <span class="detail-value">{{ pet.owner?.name || '无' }}</span>
+                      <span class="detail-label1">病症 :</span>
+                      <span v-if="!pet.editing" class="detail-value">{{ pet.disease || '无' }}</span>
+                      <input v-else v-model="pet.editingData.disease" class="edit-input">
                   </div>
-                  <div class="detail-row">
-                    <span class="detail-label">性别 :</span>
-                    <span class="detail-value">{{ pet.owner?.gender || '无' }}</span>
+                  
+                  <div class="owner-info">
+                      <!-- 编辑状态下显示完整表单 -->
+                      <div v-if="pet.editing">
+                          <div v-if="pet.editingData.adoptionStatus !== 'forAdoption'">
+                              <div class="detail-row1">
+                                  <span class="detail-label2">姓名 :</span>
+                                  <input v-model="pet.editingData.owner.ownerName" class="edit-input">
+                              </div>
+                              <div class="detail-row1">
+                                  <span class="detail-label2">性别 :</span>
+                                  <select v-model="pet.editingData.owner.gender" class="edit-select">
+                                      <option value="男">男</option>
+                                      <option value="女">女</option>
+                                  </select>
+                              </div>
+                              <div class="detail-row1">
+                                  <span class="detail-label2">电话 :</span>
+                                  <input v-model="pet.editingData.owner.phone" class="edit-input">
+                              </div>
+                              <div class="detail-row1">
+                                  <span class="detail-label2">邮箱 :</span>
+                                  <input v-model="pet.editingData.owner.email" class="edit-input">
+                              </div>
+                          </div>
+                          <!-- 编辑状态下显示描述编辑 -->
+                          <div v-else>
+                              <div class="detail-row1">
+                                  <span class="detail-label">描述 :</span>
+                                  <textarea v-model="pet.editingData.description" class="edit-textarea" placeholder="输入宠物描述"></textarea>
+                              </div>
+                          </div>
+                          <!-- PDF上传 -->
+                          <div class="detail-row1">
+                              <span class="detail-label2">病历PDF :</span>
+                              <input type="file" accept=".pdf" @change="handlePdfUpload($event, pet)" class="edit-input">
+                              <span v-if="pet.editingData.pdfCase" class="pdf-name">{{ getPdfName(pet.editingData.pdfCase) }}</span>
+                          </div>
+                      </div>
+                      
+                      <!-- 查看状态下的显示 -->
+                      <div v-else>
+                          <div v-if="pet.adoptionStatus === 'owned'" >
+                              <div class="detail-row">
+                                  <span class="detail-label">主人信息 :</span>
+                                  <span class="detail-value">{{ pet.owner?.ownerName || '无' }}</span>
+                              </div>
+                              <div class="detail-row">
+                                  <span class="detail-label">性别 :</span>
+                                  <span class="detail-value">{{ pet.owner?.gender || '无' }}</span>
+                              </div>
+                              <div class="detail-row">
+                                  <span class="detail-label">联系电话 :</span>
+                                  <span class="detail-value">{{ pet.owner?.phone || '无' }}</span>
+                              </div>
+                              <div class="detail-row">
+                                  <span class="detail-label">邮箱 :</span>
+                                  <span class="detail-value">{{ pet.owner?.email || '无' }}</span>
+                              </div>
+                          </div>
+                          
+                          <div v-else>
+                              <div v-if="pet.adoptionStatus === 'adopted'">
+                                  <div class="detail-row">
+                                      <span class="detail-label">领养人信息 :</span>
+                                      <span class="detail-value">{{ pet.owner?.ownerName || '无' }}</span>
+                                  </div>
+                                  <div class="detail-row">
+                                      <span class="detail-label">性别 :</span>
+                                      <span class="detail-value">{{ pet.owner?.gender || '无' }}</span>
+                                  </div>
+                                  <div class="detail-row">
+                                      <span class="detail-label">联系电话 :</span>
+                                      <span class="detail-value">{{ pet.owner?.phone || '无' }}</span>
+                                  </div>
+                                  <div class="detail-row">
+                                      <span class="detail-label">邮箱 :</span>
+                                      <span class="detail-value">{{ pet.owner?.email || '无' }}</span>
+                                  </div>
+                              </div>
+                              <!-- 待领养状态下显示描述 -->
+                              <div v-else class="pet-description">
+                                  <h4>领养介绍</h4>
+                                  <p>{{ pet.description || '暂无描述信息' }}</p>
+                              </div>
+                          </div>
+                          <!-- PDF查看 -->
+                          <div v-if="pet.pdfCase" class="detail-row">
+                              <span class="detail-label">病历PDF :</span>
+                              <a :href="pet.pdfCase" target="_blank" class="detail-value">查看病历</a>
+                          </div>
+                      </div>
                   </div>
-                  <div class="detail-row">
-                    <span class="detail-label">联系电话 :</span>
-                    <span class="detail-value">{{ pet.owner?.phone || '无' }}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">地址 :</span>
-                    <span class="detail-value">{{ pet.owner?.address || '无' }}</span>
-                  </div>
-                </div>
-                <!-- 待领养状态下显示描述 -->
-                <div v-else class="pet-description">
-                  <h4>领养介绍</h4>
-                  <p>{{ pet.description || '暂无描述信息' }}</p>
-                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <div class="pet-actions">
-          <template v-if="!pet.editing">
-            <button class="action-btn edit" @click="startEditing(pet)" :disabled="loading">
-              <i class="fas fa-edit"></i> 修改
-            </button>
-            <button class="action-btn view" @click="viewPet(pet)" :disabled="loading">
-              <i class="fas fa-eye"></i> 查看
-            </button>
-            <button class="action-btn delete" @click="deletePet(pet.id)" :disabled="loading">
-              <i class="fas fa-trash"></i> 删除
-            </button>
-          </template>
-          
-          <template v-else>
-            <button class="action-btn save" @click="savePet(pet)" :disabled="loading">
-              <i class="fas fa-save"></i> 保存
-            </button>
-            <button class="action-btn cancel" @click="cancelEditing(pet)" :disabled="loading">
-              <i class="fas fa-times"></i> 取消
-            </button>
-          </template>
-        </div>
-      </div>
-    </div>
-
-    <!-- 空状态提示 -->
-    <div v-if="!loading && filteredPets.length === 0" class="empty-state">
-      <i class="fas fa-paw"></i>
-      <p>没有找到符合条件的宠物</p>
-      <button class="btn primary" @click="resetFilters">重置筛选条件</button>
-    </div>
-
-    <!-- 批量添加宠物模态框 -->
-    <div v-if="showBatchAddModal" class="modal-overlay">
-      <div class="modal-container">
-        <div class="modal-header">
-          <h2>批量添加宠物</h2>
-          <button class="modal-close" @click="closeBatchAddModal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <div class="modal-body">
-          <div class="add-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label>宠物姓名：</label>
-                <input type="text" v-model="newPet.name" placeholder="输入宠物姓名">
-              </div>
-              <div class="form-group">
-                <label>宠物类型：</label>
-                <select v-model="newPet.type" class="edit-select2">
-                  <option value="dog">狗狗</option>
-                  <option value="cat">猫咪</option>
-                </select>
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>年龄：</label>
-                <input type="number" v-model.number="newPet.age" min="0" max="30" placeholder="0">
-              </div>
-              <div class="form-group">
-                <label>性别：</label>
-                <select v-model="newPet.gender" class="edit-select2">
-                  <option value="男">男</option>
-                  <option value="女">女</option>
-                </select>
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>重量（公斤）：</label>
-                <input type="number" v-model.number="newPet.weight" min="0.1" max="100" step="0.1" placeholder="0.0">
-              </div>
-              <div class="form-group">
-                <label>病症：</label>
-                <input type="text" v-model="newPet.disease" placeholder="输入宠物病症">
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>图片URL：</label>
-                <input type="text" v-model="newPet.image" placeholder="输入图片URL">
-              </div>
-              <div class="form-group">
-                <label>领养状态：</label>
-                <select v-model="newPet.adoptionStatus" @change="onNewPetStatusChange">
-                  <option value="forAdoption">待领养</option>
-                  <option value="owned">有主人</option>
-                  <option value="adopted">已领养</option>
-                </select>
-              </div>
-            </div>
-            
-            <!-- 待领养状态显示描述输入框 -->
-            <div v-if="newPet.adoptionStatus === 'forAdoption'" class="form-row">
-              <div class="form-group full-width">
-                <label>领养描述：</label>
-                <textarea v-model="newPet.description" placeholder="输入宠物描述，吸引潜在领养者" class="edit-textarea"></textarea>
-              </div>
-            </div>
-            
-            <!-- 主人信息 -->
-            <div v-if="newPet.adoptionStatus !== 'forAdoption'" class="owner-form">
-              <h3>主人信息</h3>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>姓名：</label>
-                  <input type="text" v-model="newPet.owner.name" placeholder="主人姓名" required>
-                </div>
-                <div class="form-group">
-                  <label>性别：</label>
-                  <select v-model="newPet.owner.gender">
-                    <option value="男">男</option>
-                    <option value="女">女</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>电话：</label>
-                  <input type="text" v-model="newPet.owner.phone" placeholder="联系电话" required>
-                </div>
-                <div class="form-group">
-                  <label>地址：</label>
-                  <input type="text" v-model="newPet.owner.address" placeholder="地址（可选）">
-                </div>
-              </div>
-            </div>
-            
-            <div class="form-actions">
-              <button class="btn secondary" @click="importFromExcel">
-                <i class="fas fa-file-import"></i> 导入数据
-              </button>
-              <button class="btn primary" @click="addToBatchList">
-                <i class="fas fa-plus"></i> 添加到列表
-              </button>
-            </div>
-          </div>
-          
-          <!-- 批量添加列表 -->
-          <div class="batch-list-container">
-            <h3>待添加宠物列表 ({{ batchPets.length }})</h3>
-            <div class="table-container">
-              <table class="batch-table">
-                <thead>
-                  <tr>
-                    <th>宠物姓名</th>
-                    <th>类型</th>
-                    <th>性别</th>
-                    <th>年龄</th>
-                    <th>重量</th>
-                    <th>病症</th>
-                    <th>状态</th>
-                    <th>主人/描述</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(pet, index) in batchPets" :key="index">
-                    <td>{{ pet.name }}</td>
-                    <td>{{ pet.type === 'dog' ? '狗狗' : '猫咪' }}</td>
-                    <td>{{ pet.gender }}</td>
-                    <td>{{ pet.age }}岁</td>
-                    <td>{{ pet.weight }}公斤</td>
-                    <td>{{ pet.disease || '无' }}</td>
-                    <td>{{ getStatusText(pet.adoptionStatus) }}</td>
-                    <td>
-                      <span v-if="pet.adoptionStatus !== 'forAdoption'">
-                        {{ pet.owner?.name || '无' }}
-                      </span>
-                      <span v-else>{{ pet.description ? pet.description.substring(0, 15) + '...' : '无描述' }}</span>
-                    </td>
-                    <td>
-                      <button class="action-btn delete" @click="removeFromBatchList(index)">
-                        <i class="fas fa-trash"></i> 移除
+              <div class="pet-actions">
+                  <template v-if="!pet.editing">
+                      <button class="action-btn edit" @click="startEditing(pet)" :disabled="loading">
+                          <i class="fas fa-edit"></i> 修改
                       </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                      <button class="action-btn view" @click="viewPet(pet)" :disabled="loading">
+                          <i class="fas fa-eye"></i> 查看
+                      </button>
+                      <button class="action-btn delete" @click="deletePet(pet.petId)" :disabled="loading">
+                          <i class="fas fa-trash"></i> 删除
+                      </button>
+                  </template>
+                  
+                  <template v-else>
+                      <button class="action-btn save" @click="savePet(pet)" :disabled="loading">
+                          <i class="fas fa-save"></i> 保存
+                      </button>
+                      <button class="action-btn cancel" @click="cancelEditing(pet)" :disabled="loading">
+                          <i class="fas fa-times"></i> 取消
+                      </button>
+                  </template>
+              </div>
           </div>
-        </div>
-        
-        <div class="modal-footer">
-          <button class="btn secondary" @click="closeBatchAddModal">
-            <i class="fas fa-times"></i> 取消
-          </button>
-          <button class="btn primary" @click="submitBatchPets" :disabled="batchPets.length === 0">
-            <i class="fas fa-save"></i> 提交 ({{ batchPets.length }})
-          </button>
-        </div>
       </div>
-    </div>
 
-    <!-- Toast 弹窗 -->
-    <div v-if="toast.show" class="toast" :class="toast.type">
-      <i :class="toast.icon"></i> {{ toast.message }}
+      <!-- 空状态提示 -->
+      <div v-if="!loading && filteredPets.length === 0" class="empty-state">
+          <i class="fas fa-paw"></i>
+          <p>没有找到符合条件的宠物</p>
+          <button class="btn primary" @click="resetFilters">重置筛选条件</button>
+      </div>
+
+      <!-- 批量添加宠物模态框 -->
+      <div v-if="showBatchAddModal" class="modal-overlay">
+          <div class="modal-container">
+              <div class="modal-header">
+                  <h2>批量添加宠物</h2>
+                  <button class="modal-close" @click="closeBatchAddModal">
+                      <i class="fas fa-times"></i>
+                  </button>
+              </div>
+              
+              <div class="modal-body">
+                  <div class="add-form">
+                      <div class="form-row">
+                          <div class="form-group">
+                              <label>宠物姓名：</label>
+                              <input type="text" v-model="newPet.petName" placeholder="输入宠物姓名">
+                          </div>
+                          <div class="form-group">
+                              <label>宠物类型：</label>
+                              <select v-model="newPet.type" class="edit-select2">
+                                  <option value="dog">狗狗</option>
+                                  <option value="cat">猫咪</option>
+                              </select>
+                          </div>
+                      </div>
+                      
+                      <div class="form-row">
+                          <div class="form-group">
+                              <label>年龄：</label>
+                              <input type="number" v-model.number="newPet.age" min="0" max="30" placeholder="0">
+                          </div>
+                          <div class="form-group">
+                              <label>性别：</label>
+                              <select v-model="newPet.gender" class="edit-select2">
+                                  <option value="公">公</option>
+                                  <option value="母">母</option>
+                              </select>
+                          </div>
+                      </div>
+                      
+                      <div class="form-row">
+                          <div class="form-group">
+                              <label>重量（公斤）：</label>
+                              <input type="number" v-model.number="newPet.weight" min="0.1" max="100" step="0.1" placeholder="0.0">
+                          </div>
+                          <div class="form-group">
+                              <label>病症：</label>
+                              <input type="text" v-model="newPet.disease" placeholder="输入宠物病症">
+                          </div>
+                      </div>
+                      
+                      <div class="form-row">
+                          <div class="form-group">
+                              <label>图片URL：</label>
+                              <input type="text" v-model="newPet.image" placeholder="输入图片URL">
+                          </div>
+                          <div class="form-group">
+                              <label>领养状态：</label>
+                              <select v-model="newPet.adoptionStatus" @change="onNewPetStatusChange">
+                                  <option value="forAdoption">待领养</option>
+                                  <option value="owned">有主人</option>
+                                  <option value="adopted">已领养</option>
+                              </select>
+                          </div>
+                      </div>
+                      
+                      <!-- PDF上传 -->
+                      <div class="form-row">
+                          <div class="form-group full-width">
+                              <label>病历PDF：</label>
+                              <input type="file" accept=".pdf" @change="handleNewPdfUpload" class="edit-input">
+                              <span v-if="newPet.pdfCase" class="pdf-name">{{ getPdfName(newPet.pdfCase) }}</span>
+                          </div>
+                      </div>
+                      
+                      <!-- 待领养状态显示描述输入框 -->
+                      <div v-if="newPet.adoptionStatus === 'forAdoption'" class="form-row">
+                          <div class="form-group full-width">
+                              <label>领养描述：</label>
+                              <textarea v-model="newPet.description" placeholder="输入宠物描述，吸引潜在领养者" class="edit-textarea"></textarea>
+                          </div>
+                      </div>
+                      
+                      <!-- 主人信息 -->
+                      <div v-if="newPet.adoptionStatus !== 'forAdoption'" class="owner-form">
+                          <h3>主人信息</h3>
+                          <div class="form-row">
+                              <div class="form-group">
+                                  <label>姓名：</label>
+                                  <input type="text" v-model="newPet.owner.ownerName" placeholder="主人姓名" required>
+                              </div>
+                              <div class="form-group">
+                                  <label>性别：</label>
+                                  <select v-model="newPet.owner.gender">
+                                      <option value="男">男</option>
+                                      <option value="女">女</option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div class="form-row">
+                              <div class="form-group">
+                                  <label>电话：</label>
+                                  <input type="text" v-model="newPet.owner.phone" placeholder="联系电话" required>
+                              </div>
+                              <div class="form-group">
+                                  <label>邮箱：</label>
+                                  <input type="email" v-model="newPet.owner.email" placeholder="邮箱地址">
+                              </div>
+                          </div>
+                      </div>
+                      
+                      <div class="form-actions">
+                          <button class="btn secondary" @click="importFromExcel">
+                              <i class="fas fa-file-import"></i> 导入数据
+                          </button>
+                          <button class="btn primary" @click="addToBatchList">
+                              <i class="fas fa-plus"></i> 添加到列表
+                          </button>
+                      </div>
+                  </div>
+                  
+                  <!-- 批量添加列表 -->
+                  <div class="batch-list-container">
+                      <h3>待添加宠物列表 ({{ batchPets.length }})</h3>
+                      <div class="table-container">
+                          <table class="batch-table">
+                              <thead>
+                                  <tr>
+                                      <th>宠物姓名</th>
+                                      <th>类型</th>
+                                      <th>性别</th>
+                                      <th>年龄</th>
+                                      <th>重量</th>
+                                      <th>病症</th>
+                                      <th>状态</th>
+                                      <th>主人/描述</th>
+                                      <th>操作</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  <tr v-for="(pet, index) in batchPets" :key="index">
+                                      <td>{{ pet.petName }}</td>
+                                      <td>{{ pet.type === 'dog' ? '狗狗' : '猫咪' }}</td>
+                                      <td>{{ pet.gender }}</td>
+                                      <td>{{ pet.age }}岁</td>
+                                      <td>{{ pet.weight }}公斤</td>
+                                      <td>{{ pet.disease || '无' }}</td>
+                                      <td>{{ getStatusText(pet.adoptionStatus) }}</td>
+                                      <td>
+                                          <span v-if="pet.adoptionStatus !== 'forAdoption'">
+                                              {{ pet.owner?.ownerName || '无' }}
+                                          </span>
+                                          <span v-else>{{ pet.description ? pet.description.substring(0, 15) + '...' : '无描述' }}</span>
+                                      </td>
+                                      <td>
+                                          <button class="action-btn delete" @click="removeFromBatchList(index)">
+                                              <i class="fas fa-trash"></i> 移除
+                                          </button>
+                                      </td>
+                                  </tr>
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+              </div>
+                          
+              <div class="modal-footer">
+                  <button class="btn secondary" @click="closeBatchAddModal">
+                      <i class="fas fa-times"></i> 取消
+                  </button>
+                  <button class="btn primary" @click="submitBatchPets" :disabled="batchPets.length === 0">
+                      <i class="fas fa-save"></i> 提交 ({{ batchPets.length }})
+                  </button>
+              </div>
+          </div>
+      </div>
+
+      <!-- Toast 弹窗 -->
+      <div v-if="toast.show" class="toast" :class="toast.type">
+          <i :class="toast.icon"></i> {{ toast.message }}
+      </div>
     </div>
   </div>
-</div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import { API_BASE_URL } from '@/config/index';
+import axios from 'axios';
 import * as XLSX from 'xlsx';
-// 模拟API服务
-const petService = {
-  async getPets() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve([
-          {
-            id: 1,
-            name: '小白',
-            type: 'dog',
-            age: 3,
-            gender: '男',
-            weight: 5.2,
-            disease: '感冒，流鼻涕',
-            image: 'https://randomuser.me/api/portraits/men/32.jpg',
-
-            adoptionStatus: 'owned',
-            owner: {
-              name: '张先生',
-              gender: '男',
-              phone: '13800138000',
-              address: '无'
-            },
-            description: ''
-          },
-          {
-            id: 2,
-            name: '喵喵',
-            type: 'cat',
-            age: 1,
-            gender: '女',
-            weight: 3.8,
-            disease: '肠胃不适',
-            image: 'https://randomuser.me/api/portraits/men/32.jpg',
-            adoptionStatus: 'forAdoption',
-            owner: null,
-            description: '温顺友好的布偶猫，已绝育，喜欢和人玩耍，特别适合有孩子的家庭。'
-          },
-          {
-            id: 3,
-            name: '旺财',
-            type: 'dog',
-            age: 5,
-            gender: '男',
-            weight: 12.5,
-            disease: '皮肤病',
-            image: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&w=800&q=80',
-            adoptionStatus: 'adopted',
-            owner: {
-              name: '张先生',
-              gender: '男',
-              phone: '13800138000',
-              address: '翻斗花园1号楼'
-            },
-            description: ''
-          },
-          {
-            id: 4,
-            name: '球球',
-            type: 'cat',
-            age: 2,
-            gender: '女',
-            weight: 4.1,
-            disease: '耳螨',
-            image: 'https://randomuser.me/api/portraits/men/32.jpg',
-            adoptionStatus: 'owned',
-            owner: {
-              name: '李女士',
-              gender: '女',
-              phone: '13900139000',
-              address: '星星小区2单元'
-            },
-            description: ''
-          },
-          {
-            id: 5,
-            name: '豆豆',
-            type: 'dog',
-            age: 4,
-            gender: '男',
-            weight: 8.7,
-            disease: '骨折恢复期',
-            image: 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&w=800&q=80',
-            adoptionStatus: 'forAdoption',
-            owner: null,
-            description: '活泼可爱的金毛寻回犬，已接种疫苗，喜欢户外活动，需要一个有院子的家。'
-          },
-          {
-            id: 6,
-            name: '布丁',
-            type: 'cat',
-            age: 7,
-            gender: '男',
-            weight: 15.2,
-            disease: '老年犬关节炎',
-            image: 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?auto=format&fit=crop&w=800&q=80',
-            adoptionStatus: 'owned',
-            owner: {
-              name: '王先生',
-              gender: '男',
-              phone: '13700137000',
-              address: '阳光花园3栋'
-            },
-            description: ''
-          }
-        ]);
-      }, 800);
-    });
-  },
-   // 新增：获取领养申请
-   async getAdoptionApplications() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        // 从localStorage获取申请数据
-        const storedApplications = localStorage.getItem('adoptionApplications');
-        const applications = storedApplications ? JSON.parse(storedApplications) : [];
-        resolve(applications);
-      }, 300);
-    });
-  },
-  // 新增：更新申请状态
-  async updateApplicationStatus(id, status) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const storedApplications = localStorage.getItem('adoptionApplications');
-        let applications = storedApplications ? JSON.parse(storedApplications) : [];
-        
-        applications = applications.map(app => {
-          if (app.id === id) {
-            return { ...app, status };
-          }
-          return app;
-        });
-        
-        localStorage.setItem('adoptionApplications', JSON.stringify(applications));
-        resolve({ success: true });
-      }, 300);
-    });
-  },
-  
-  // 新增：删除申请
-  async deleteApplication(id) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const storedApplications = localStorage.getItem('adoptionApplications');
-        let applications = storedApplications ? JSON.parse(storedApplications) : [];
-        
-        applications = applications.filter(app => app.id !== id);
-        localStorage.setItem('adoptionApplications', JSON.stringify(applications));
-        resolve({ success: true });
-      }, 300);
-    });
-  },
-  
-  // 新增：标记为已读
-  async markAsRead(id) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const storedApplications = localStorage.getItem('adoptionApplications');
-        let applications = storedApplications ? JSON.parse(storedApplications) : [];
-        
-        applications = applications.map(app => {
-          if (app.id === id) {
-            return { ...app, read: true };
-          }
-          return app;
-        });
-        
-        localStorage.setItem('adoptionApplications', JSON.stringify(applications));
-        resolve({ success: true });
-      }, 300);
-    });
-  },
-  async addPet(petData) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
-          ...petData,
-          id: Math.floor(Math.random() * 1000) + 100
-        });
-      }, 500);
-    });
-  },
-  
-  async updatePet(petId, petData) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(petData);
-      }, 500);
-    });
-  },
-  
-  async deletePet(petId) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({ success: true });
-      }, 300);
-    });
-  },
-  
-  async batchAddPets(petsData) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(petsData.map(pet => ({
-          ...pet,
-          id: Math.floor(Math.random() * 1000) + 100
-        })));
-      }, 800);
-    });
-  }
-};
 
 export default {
-  setup() {
+setup() {
+    const apiBaseUrl = ref('http://47.113.205.34:8085');
     // 状态管理
     const loading = ref(false);
     const toast = ref({
-      show: false,
-      message: '',
-      type: 'info',
-      icon: ''
-    });
-    // 新增：通知相关状态
-    const notifications = ref([]);
-    const showNotifications = ref(false);
-    const showApplicationModal = ref(false);
-    const selectedApplication = ref(null);
-    
-    // 计算未读消息数量
-    const unreadCount = computed(() => {
-      return notifications.value.filter(n => !n.read).length;
-    });
-    
-    // 显示Toast消息
-    const showToast = (message, type = 'info') => {
-      toast.value = {
-        show: true,
-        message,
-        type,
-        icon: type === 'success' ? 'fas fa-check-circle' : 
-              type === 'error' ? 'fas fa-exclamation-circle' : 
-              type === 'loading' ? 'fas fa-spinner fa-spin' : 'fas fa-info-circle'
-      };
-      
-      setTimeout(() => {
-        toast.value.show = false;
-      }, 1000);
-    };
-    
-    // 加载领养申请
-    const loadApplications = async () => {
-      try {
-        const data = await petService.getAdoptionApplications();
-        // 按时间倒序排列
-        notifications.value = data.sort((a, b) => 
-          new Date(b.timestamp) - new Date(a.timestamp)
-        );
-      } catch (err) {
-        showToast('加载申请数据失败: ' + (err.message || '未知错误'), 'error');
-        console.error('加载申请数据失败:', err);
-      }
-    };
-    
-    // 切换通知面板
-    const toggleNotifications = () => {
-      showNotifications.value = !showNotifications.value;
-      // 打开时刷新申请数据
-      if (showNotifications.value) {
-        loadApplications();
-      }
-    };
-    
-    // 打开申请详情
-    const openApplication = async (application) => {
-      selectedApplication.value = application;
-      showApplicationModal.value = true;
-      
-      // 标记为已读
-      if (!application.read) {
-        await petService.markAsRead(application.id);
-        // 更新本地状态
-        const index = notifications.value.findIndex(n => n.id === application.id);
-        if (index !== -1) {
-          notifications.value[index].read = true;
-        }
-      }
-    };
-    
-    // 关闭申请详情
-    const closeApplicationModal = () => {
-      showApplicationModal.value = false;
-      selectedApplication.value = null;
-    };
-    
-    // 删除通知
-    const deleteNotification = async (index) => {
-      const application = notifications.value[index];
-      if (confirm(`确定要删除 ${application.applicant.name} 的申请吗？`)) {
-        try {
-          await petService.deleteApplication(application.id);
-          notifications.value.splice(index, 1);
-          showToast('申请已删除', 'success');
-        } catch (err) {
-          showToast('删除申请失败: ' + (err.message || '未知错误'), 'error');
-          console.error('删除申请失败:', err);
-        }
-      }
-    };
-    
-    // 联系申请人
-    const contactApplicant = () => {
-      if (selectedApplication.value) {
-        const phone = selectedApplication.value.applicant.phone;
-        alert(`正在呼叫 ${phone}...`);
-        // 实际应用中这里可以触发电话呼叫
-      }
-    };
-    
-    // 批准申请
-    const approveApplication = async () => {
-      if (selectedApplication.value) {
-        try {
-          await petService.updateApplicationStatus(
-            selectedApplication.value.id, 
-            'approved'
-          );
-          
-          // 更新本地状态
-          const index = notifications.value.findIndex(
-            n => n.id === selectedApplication.value.id
-          );
-          
-          if (index !== -1) {
-            notifications.value[index].status = 'approved';
-          }
-          
-          showToast('申请已批准', 'success');
-          closeApplicationModal();
-        } catch (err) {
-          showToast('批准申请失败: ' + (err.message || '未知错误'), 'error');
-          console.error('批准申请失败:', err);
-        }
-      }
-    };
-    
-    // 格式化时间
-    const formatTime = (timestamp) => {
-      const date = new Date(timestamp);
-      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-    };
-    
-    // 获取宠物图片（用于申请详情）
-    const petImageForApplication = computed(() => {
-      if (!selectedApplication.value) return '';
-      
-      const petImages = {
-        '小白': 'https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&w=800&q=80',
-        '喵喵': 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80',
-        '豆豆': 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&w=800&q=80',
-        '橘子': 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&w=800&q=80',
-        '小柴': 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?auto=format&fit=crop&w=800&q=80',
-        '小雪': 'https://images.unsplash.com/photo-1592194996308-7b43878e84b6?auto=format&fit=crop&w=800&q=80'
-      };
-      
-      return petImages[selectedApplication.value.petName] || 
-             'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=800&q=80';
-    });
-    
-    // 初始化加载数据
-    onMounted(() => {
-      loadPets();
-      loadApplications();
-      
-      // 模拟实时接收新申请
-      setInterval(loadApplications, 10000);
+        show: false,
+        message: '',
+        type: 'info',
+        icon: ''
     });
     
     // 筛选条件
     const filters = ref({
-      name: '',
-      disease: '',
-      owner: '',
-      status: 'all',
-      ageRange: 'all'
+        petName: '',
+        disease: '',
+        owner: '',
+        status: 'all',
+        ageRange: 'all'
     });
-    
+
     // 宠物数据
     const pets = ref([]);
     
@@ -969,632 +509,657 @@ export default {
     const showBatchAddModal = ref(false);
     const batchPets = ref([]);
     const newPet = ref({
-      name: '',
-      type: 'dog',
-      age: 1,
-      gender: '男',
-      weight: 3.5,
-      disease: '',
-      image: null,
-      adoptionStatus: 'forAdoption',
-      owner: {
-        name: '',
-        gender: '男',
-        phone: '',
-        address: ''
-      },
-      description: ''
-    });
-    
-    
-    // 加载宠物数据
-    const loadPets = async () => {
-      try {
-        loading.value = true;
-        showToast('正在加载宠物数据...', 'loading');
-        const data = await petService.getPets();
-        pets.value = data.map(pet => ({
-          ...pet,
-          editing: false,
-          editingData: {}
-        }));
-      } catch (err) {
-        showToast('加载宠物数据失败: ' + (err.message || '未知错误'), 'error');
-        console.error('加载宠物数据失败:', err);
-      } finally {
-        loading.value = false;
-      }
-    };
-    
-    // 计算属性 - 筛选后的宠物列表
-    const filteredPets = computed(() => {
-      return pets.value.filter(pet => {
-        // 搜索条件匹配
-        const matchesName = !filters.value.name || 
-          pet.name.toLowerCase().includes(filters.value.name.toLowerCase());
-        
-        const matchesDisease = !filters.value.disease || 
-          (pet.disease && pet.disease.toLowerCase().includes(filters.value.disease.toLowerCase()));
-        
-        const matchesOwner = !filters.value.owner || 
-          (pet.owner && pet.owner.name.toLowerCase().includes(filters.value.owner.toLowerCase()));
-        
-        // 领养状态匹配
-        const matchesStatus = filters.value.status === 'all' || 
-          pet.adoptionStatus === filters.value.status;
-        
-        // 年龄匹配
-        let matchesAge = true;
-        if (filters.value.ageRange !== 'all') {
-          const [min, max] = filters.value.ageRange.split('-');
-          if (max) {
-            matchesAge = pet.age >= parseInt(min) && pet.age <= parseInt(max);
-          } else {
-            matchesAge = pet.age >= parseInt(min);
-          }
-        }
-        
-        return matchesName && matchesDisease && matchesOwner && matchesStatus && matchesAge;
-      });
-    });
-    
-    // 获取宠物图片
-    const petImage = (pet) => {
-      return pet.image;
-    };
-    
-    // 开始编辑宠物信息
-    const startEditing = (pet) => {
-      pet.editing = true;
-      // 深拷贝当前数据到编辑数据对象
-      pet.editingData = {
-        name: pet.name,
-        type: pet.type,
-        age: pet.age,
-        gender: pet.gender,
-        weight: pet.weight,
-        disease: pet.disease,
-        adoptionStatus: pet.adoptionStatus,
-        description: pet.description || '',
-        owner: pet.owner ? {...pet.owner} : {
-          name: '',
-          gender: '男',
-          phone: '',
-          address: ''
-        }
-      };
-    };
-    
-    // 保存编辑
-    const savePet = async (pet) => {
-      try {
-        loading.value = true;
-        showToast('正在保存宠物信息...', 'loading');
-        
-        // 准备要保存的数据
-        const saveData = {
-          name: pet.editingData.name,
-          type: pet.editingData.type,
-          age: pet.editingData.age,
-          gender: pet.editingData.gender,
-          weight: pet.editingData.weight,
-          disease: pet.editingData.disease,
-          adoptionStatus: pet.editingData.adoptionStatus,
-          description: pet.editingData.description || '',
-          owner: pet.editingData.adoptionStatus !== 'forAdoption' 
-            ? pet.editingData.owner 
-            : null
-        };
-        
-        // 调用API保存数据
-        const updatedPet = await petService.updatePet(pet.id, saveData);
-        
-        // 更新本地数据
-        Object.assign(pet, {
-          ...updatedPet,
-          editing: false,
-          editingData: {}
-        });
-        
-        showToast('宠物信息更新成功', 'success');
-      } catch (err) {
-        showToast('保存宠物信息失败: ' + (err.message || '未知错误'), 'error');
-        console.error('保存宠物信息失败:', err);
-      } finally {
-        loading.value = false;
-      }
-    };
-    
-    // 取消编辑
-    const cancelEditing = (pet) => {
-      pet.editing = false;
-      pet.editingData = {};
-    };
-    
-    // 删除宠物
-    const deletePet = async (id) => {
-      if (!confirm('确定要删除这只宠物的记录吗？此操作不可恢复。')) return;
-      
-      try {
-        loading.value = true;
-        showToast('正在删除宠物记录...', 'loading');
-        
-        // 调用API删除宠物
-        await petService.deletePet(id);
-        
-        // 更新本地数据
-        pets.value = pets.value.filter(pet => pet.id !== id);
-        
-        showToast('宠物删除成功', 'success');
-      } catch (err) {
-        showToast('删除宠物失败: ' + (err.message || '未知错误'), 'error');
-        console.error('删除宠物失败:', err);
-      } finally {
-        loading.value = false;
-      }
-    };
-    
-    // 查看宠物详情
-    const viewPet = (pet) => {
-      let details = `宠物详情: ${pet.name}\nID: ${pet.id}\n类型: ${pet.type === 'dog' ? '狗狗' : '猫咪'}\n性别: ${pet.gender}\n年龄: ${pet.age}岁\n重量: ${pet.weight}公斤\n状态: ${getStatusText(pet.adoptionStatus)}`;
-      
-      if (pet.adoptionStatus === 'forAdoption' && pet.description) {
-        details += `\n\n领养介绍:\n${pet.description}`;
-      }
-      
-      alert(details);
-    };
-    
-    // 打开批量添加模态框
-    const openBatchAddModal = () => {
-      showBatchAddModal.value = true;
-      batchPets.value = [];
-      resetNewPetForm();
-    };
-    
-    // 关闭批量添加模态框
-    const closeBatchAddModal = () => {
-      showBatchAddModal.value = false;
-    };
-    
-    // 重置新宠物表单
-    const resetNewPetForm = () => {
-      newPet.value = {
-        name: '',
+        petName: '',
         type: 'dog',
         age: 1,
-        gender: '男',
+        gender: '公',
         weight: 3.5,
         disease: '',
         image: null,
         adoptionStatus: 'forAdoption',
+        description: '',
+        pdfCase: null,
         owner: {
-          name: '',
-          gender: '男',
-          phone: '',
-          address: ''
-        },
-        description: ''
-      };
+            ownerName: '',
+            gender: '男',
+            phone: '',
+            email: ''
+        }
+    });
+
+    // 显示Toast消息
+    const showToast = (message, type = 'info') => {
+        toast.value = {
+            show: true,
+            message,
+            type,
+            icon: type === 'success' ? 'fas fa-check-circle' : 
+                  type === 'error' ? 'fas fa-exclamation-circle' : 
+                  type === 'loading' ? 'fas fa-spinner fa-spin' : 'fas fa-info-circle'
+        };
+        
+        setTimeout(() => {
+            toast.value.show = false;
+        }, 3000);
     };
-    
+
+    // 加载宠物数据
+    const loadPets = async () => {
+        try {
+            loading.value = true;
+            showToast('正在加载宠物数据...', 'loading');
+            const response = await axios.get(`${apiBaseUrl.value}/getPetsAndOwners`);
+            
+            if (response.data.code === 200) {
+                // 转换数据结构，将owner信息合并到pet对象中
+                pets.value = response.data.data.map(item => {
+                    const pet = {...item.pet};
+                    pet.owner = item.owner || null;
+                    pet.editing = false;
+                    pet.editingData = {};
+                    return pet;
+                });
+                showToast('宠物数据加载成功', 'success');
+            } else {
+                showToast('获取宠物数据失败', 'error');
+            }
+        } catch (err) {
+            showToast('加载宠物数据失败: ' + (err.message || '未知错误'), 'error');
+            console.error('加载宠物数据失败:', err);
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    // 计算属性 - 筛选后的宠物列表
+    const filteredPets = computed(() => {
+        return pets.value.filter(pet => {
+            // 搜索条件匹配
+            const matchesName = !filters.value.petName || 
+              pet.petName.toLowerCase().includes(filters.value.petName.toLowerCase());
+            
+            const matchesDisease = !filters.value.disease || 
+              (pet.disease && pet.disease.toLowerCase().includes(filters.value.disease.toLowerCase()));
+            
+            const matchesOwner = !filters.value.owner || 
+              (pet.owner && pet.owner.ownerName && pet.owner.ownerName.toLowerCase().includes(filters.value.owner.toLowerCase()));
+            
+            // 领养状态匹配
+            const matchesStatus = filters.value.status === 'all' || 
+              pet.adoptionStatus === filters.value.status;
+            
+            // 年龄匹配
+            let matchesAge = true;
+            if (filters.value.ageRange !== 'all') {
+                const [min, max] = filters.value.ageRange.split('-');
+                if (max) {
+                    matchesAge = pet.age >= parseInt(min) && pet.age <= parseInt(max);
+                } else {
+                    matchesAge = pet.age >= parseInt(min);
+                }
+            }
+            
+            return matchesName && matchesDisease && matchesOwner && matchesStatus && matchesAge;
+        });
+    });
+
+    // 获取宠物图片
+    const petImage = (pet) => {
+        return pet.image || 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=800&q=80';
+    };
+
+    // 开始编辑宠物信息
+    const startEditing = (pet) => {
+        pet.editing = true;
+        // 深拷贝当前数据到编辑数据对象
+        pet.editingData = {
+            petName: pet.petName,
+            type: pet.type,
+            age: pet.age,
+            gender: pet.gender,
+            weight: pet.weight,
+            disease: pet.disease || '无',
+            adoptionStatus: pet.adoptionStatus,
+            description: pet.description || '',
+            pdfCase: pet.pdfCase || null,
+            owner: pet.owner ? {...pet.owner} : {
+                ownerName: '',
+                gender: '男',
+                phone: '',
+                email: ''
+            }
+        };
+    };
+
+    // 保存编辑
+    const savePet = async (pet) => {
+        try {
+            loading.value = true;
+            showToast('正在保存宠物信息...', 'loading');
+            console.log( pet.editingData);
+            // 准备要保存的数据
+            if(pet.editingData.adoptionStatus !== 'forAdoption' && pet.editingData.owner){
+              const saveData = {
+                pet:{
+                  petId: pet.petId,
+                  petName: pet.editingData.petName,
+                  type: pet.editingData.type,
+                  age: pet.editingData.age,
+                  gender: pet.editingData.gender,
+                  weight: pet.editingData.weight,
+                  disease: pet.editingData.disease,
+                  adoptionStatus: pet.editingData.adoptionStatus,
+                  description: pet.editingData.description || '',
+                  pdfCase: pet.editingData.pdfCase || null
+                },
+                owner: pet.editingData.owner
+              };
+            }
+            else{
+              const saveData = {
+                petId: pet.petId,
+                petName: pet.editingData.petName,
+                type: pet.editingData.type,
+                age: pet.editingData.age,
+                gender: pet.editingData.gender,
+                weight: pet.editingData.weight,
+                disease: pet.editingData.disease || '无',
+                adoptionStatus: pet.editingData.adoptionStatus,
+                description: pet.editingData.description || '',
+                pdfCase: pet.editingData.pdfCase || null
+              };
+              const response = await axios.post(`${apiBaseUrl.value}/updatePet`, saveData);
+            }
+            
+            // 更新宠物信息
+            const response = await axios.post(`${apiBaseUrl.value}/updatePet`, saveData);
+            
+            if (response.data.code === 200) {
+                // 如果有主人信息，更新主人信息
+                if (pet.editingData.adoptionStatus !== 'forAdoption' && pet.editingData.owner) {
+                    const ownerData = {
+                        ownerId: pet.editingData.owner.ownerId || null,
+                        ownerName: pet.editingData.owner.ownerName,
+                        gender: pet.editingData.owner.gender,
+                        phone: pet.editingData.owner.phone,
+                        email: pet.editingData.owner.email
+                    };
+                    
+                    if (ownerData.ownerId) {
+                        // 更新主人信息
+                        await axios.post(`${apiBaseUrl.value}/updateOwner`, ownerData);
+                    } else if (pet.petId) {
+                        // 添加新主人并与宠物关联
+                        await axios.post(`${apiBaseUrl.value}/addPetAndOwner`, {
+                            pet: saveData,
+                            owner: ownerData
+                        });
+                    }
+                }
+                
+                // 更新本地数据
+                Object.assign(pet, {
+                    ...saveData,
+                    editing: false,
+                    editingData: {}
+                });
+                
+                showToast('宠物信息更新成功', 'success');
+                // 重新加载数据以确保一致性
+                await loadPets();
+            } else {
+                throw new Error(response.data.msg || '更新失败');
+            }
+        } catch (err) {
+            showToast('保存宠物信息失败: ' + (err.message || '未知错误'), 'error');
+            console.error('保存宠物信息失败:', err);
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    // 取消编辑
+    const cancelEditing = (pet) => {
+        pet.editing = false;
+        pet.editingData = {};
+    };
+
+    // 删除宠物
+    const deletePet = async (id) => {
+        if (!confirm('确定要删除这只宠物的记录吗？此操作不可恢复。')) return;
+        
+        try {
+            loading.value = true;
+            showToast('正在删除宠物记录...', 'loading');
+            
+            const response = await axios.post(`${apiBaseUrl.value}/deletePet?petId=${id}`);
+            
+            if (response.data.code === 200) {
+                // 更新本地数据
+                pets.value = pets.value.filter(pet => pet.petId !== id);
+                showToast('宠物删除成功', 'success');
+            } else {
+                showToast('删除宠物失败: ' + (response.data.msg || '未知错误'), 'error');
+            }
+        } catch (err) {
+            showToast('删除宠物失败: ' + (err.message || '未知错误'), 'error');
+            console.error('删除宠物失败:', err);
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    // 打开批量添加模态框
+    const openBatchAddModal = () => {
+        showBatchAddModal.value = true;
+        batchPets.value = [];
+        resetNewPetForm();
+    };
+
+    // 关闭批量添加模态框
+    const closeBatchAddModal = () => {
+        showBatchAddModal.value = false;
+    };
+
+    // 重置新宠物表单
+    const resetNewPetForm = () => {
+        newPet.value = {
+            petName: '',
+            type: 'dog',
+            age: 1,
+            gender: '公',
+            weight: 3.5,
+            disease: '',
+            image: null,
+            adoptionStatus: 'forAdoption',
+            description: '',
+            pdfCase: null,
+            owner: {
+                ownerName: '',
+                gender: '男',
+                phone: '',
+                email: ''
+            }
+        };
+    };
+
     // 添加到批量列表
     const addToBatchList = () => {
-      // 验证必填字段
-      if (!newPet.value.name.trim()) {
-        alert('请填写宠物姓名');
-        return;
-      }
-      
-      // 验证重量
-      if (newPet.value.weight <= 0) {
-        alert('重量必须大于0');
-        return;
-      }
-      
-      // 如果有主人/领养人，验证必填字段
-      if (newPet.value.adoptionStatus !== 'forAdoption') {
-        if (!newPet.value.owner.name.trim() || !newPet.value.owner.phone.trim()) {
-          alert('请填写主人姓名和联系电话');
-          return;
+        // 验证必填字段
+        if (!newPet.value.petName.trim()) {
+            alert('请填写宠物姓名');
+            return;
         }
-      }
-      
-      // 待领养宠物验证描述
-      if (newPet.value.adoptionStatus === 'forAdoption' && !newPet.value.description.trim()) {
-        alert('请填写宠物描述');
-        return;
-      }
-      
-      // 创建宠物副本
-      const petCopy = JSON.parse(JSON.stringify(newPet.value));
-      
-      // 如果状态是待领养，清除主人信息
-      if (petCopy.adoptionStatus === 'forAdoption') {
-        petCopy.owner = null;
-      }
-      
-      // 添加到列表
-      batchPets.value.push(petCopy);
-      
-      // 重置表单
-      resetNewPetForm();
-      
-      // 显示成功消息
-      showToast('宠物已添加到批量列表', 'success');
+        
+        // 验证重量
+        if (newPet.value.weight <= 0) {
+            alert('重量必须大于0');
+            return;
+        }
+        
+        // 如果有主人/领养人，验证必填字段
+        if (newPet.value.adoptionStatus !== 'forAdoption') {
+            if (!newPet.value.owner.ownerName.trim() || !newPet.value.owner.phone.trim()) {
+                alert('请填写主人姓名和联系电话');
+                return;
+            }
+        }
+        
+        // 待领养宠物验证描述
+        if (newPet.value.adoptionStatus === 'forAdoption' && !newPet.value.description.trim()) {
+            alert('请填写宠物描述');
+            return;
+        }
+        
+        // 创建宠物副本
+        const petCopy = JSON.parse(JSON.stringify(newPet.value));
+        
+        // 如果状态是待领养，清除主人信息
+        if (petCopy.adoptionStatus === 'forAdoption') {
+            petCopy.owner = null;
+        }
+        
+        // 添加到列表
+        batchPets.value.push(petCopy);
+        
+        // 重置表单
+        resetNewPetForm();
+        
+        // 显示成功消息
+        showToast('宠物已添加到批量列表', 'success');
     };
-    
+
     // 从批量列表移除
     const removeFromBatchList = (index) => {
-      batchPets.value.splice(index, 1);
+        batchPets.value.splice(index, 1);
     };
-    
+
     // 提交批量添加
     const submitBatchPets = async () => {
       try {
-        loading.value = true;
-        showToast('正在批量添加宠物...', 'loading');
-        
-        // 调用API批量添加
-        const newPets = await petService.batchAddPets(batchPets.value);
-        
-        // 添加到主列表
-        newPets.forEach(pet => {
-          pets.value.push({
-            ...pet,
-            editing: false,
-            editingData: {}
-          });
+            loading.value = true;
+            showToast('正在批量添加宠物...', 'loading');
+            
+            for (const pet of batchPets.value) {
+              if (pet.adoptionStatus !== 'forAdoption' && pet.owner) {
+                // 添加宠物和主人
+                console.log("1111");
+                const response = await axios.post(`${apiBaseUrl.value}/addPetAndOwner`, [{
+                    pet: {
+                        petName: pet.petName,
+                        type: pet.type,
+                        age: pet.age,
+                        gender: pet.gender,
+                        weight: pet.weight,
+                        disease: pet.disease,
+                        image: pet.image,
+                        adoptionStatus: pet.adoptionStatus,
+                        description: pet.description
+                    },
+                    owner: pet.owner
+                }]);
+                console.log(response);
+                }else {
+                console.log("2222");
+                // 只添加宠物
+                console.log(pet);
+                const response = await axios.post(`${apiBaseUrl.value}/addPetList`, [pet]);
+                console.log(response);
+                }
+              }
+            // 准备要发送的数据 - 确保是数组格式
+            // const petsToAdd = batchPets.value.map(pet => {
+            //     // 只提取宠物相关字段，排除owner字段
+            //     return {
+            //         petName: pet.petName,
+            //         type: pet.type,
+            //         age: pet.age,
+            //         gender: pet.gender,
+            //         weight: pet.weight,
+            //         disease: pet.disease || '',
+            //         image: pet.image || null,
+            //         adoptionStatus: pet.adoptionStatus,
+            //         description: pet.description || '',
+            //         pdfCase: pet.pdfCase || null
+            //     };
+            // });
+            
+            // console.log("准备发送的数据:", petsToAdd); // 调试用
+            
+            // // 发送请求 - 注意这里直接发送数组
+            // const response = await axios.post(`${apiBaseUrl.value}/addPetList`, petsToAdd);
+            // console.log(response);
+            // 添加到主列表
+        batchPets.value.forEach(pet => {
+            pets.value.push({
+                ...pet,
+                editing: false,
+                editingData: {}
+            });
         });
         
         // 关闭模态框
         closeBatchAddModal();
         
-        showToast(`成功添加 ${newPets.length} 只宠物`, 'success');
-      } catch (err) {
+        showToast(`成功添加 ${batchPets.value.length} 只宠物`, 'success');
+        } catch (err) {
         showToast('批量添加失败: ' + (err.message || '未知错误'), 'error');
         console.error('批量添加失败:', err);
-      } finally {
-        loading.value = false;
-      }
+        } finally {
+            loading.value = false;
+        }
     };
-    
+
     // 添加新宠物（批量）
     const addNewPet = () => {
-      openBatchAddModal();
+        openBatchAddModal();
     };
-    
+
     // 重置筛选条件
     const resetFilters = () => {
-      filters.value = {
-        name: '',
-        disease: '',
-        owner: '',
-        status: 'all',
-        ageRange: 'all'
-      };
+        filters.value = {
+            petName: '',
+            disease: '',
+            owner: '',
+            status: 'all',
+            ageRange: 'all'
+        };
     };
-    
+
     // 获取状态文本
     const getStatusText = (status) => {
-      switch (status) {
-        case 'owned': return '有主人';
-        case 'forAdoption': return '待领养';
-        case 'adopted': return '已领养';
-        default: return '';
-      }
+        switch (status) {
+            case 'owned': return '有主人';
+            case 'forAdoption': return '待领养';
+            case 'adopted': return '已领养';
+            default: return '';
+        }
     };
-    
+
     // 获取状态类名
     const getStatusClass = (status) => {
-      switch (status) {
-        case 'owned': return 'owned';
-        case 'forAdoption': return 'for-adoption';
-        case 'adopted': return 'adopted';
-        default: return '';
-      }
+        switch (status) {
+            case 'owned': return 'owned';
+            case 'forAdoption': return 'for-adoption';
+            case 'adopted': return 'adopted';
+            default: return '';
+        }
     };
-    
+
     // 获取类型类名
     const getTypeClass = (type) => {
-      switch (type) {
-        case 'dog': return 'dog-type';
-        case 'cat': return 'cat-type';
-        default: return '';
-      }
+        switch (type) {
+            case 'dog': return 'dog-type';
+            case 'cat': return 'cat-type';
+            default: return '';
+        }
     };
-    
+
     // 编辑状态下状态变更处理
     const onStatusChange = (pet) => {
-      // 如果从待领养变为有主人/已领养，初始化主人信息
-      if (pet.editingData.adoptionStatus !== 'forAdoption' && 
-          (!pet.editingData.owner || !pet.editingData.owner.name)) {
-        pet.editingData.owner = {
-          name: '',
-          gender: '男',
-          phone: '',
-          address: ''
-        };
-      }
+        // 如果从待领养变为有主人/已领养，初始化主人信息
+        if (pet.editingData.adoptionStatus !== 'forAdoption' && 
+              (!pet.editingData.owner || !pet.editingData.owner.ownerName)) {
+            pet.editingData.owner = {
+                ownerName: '',
+                gender: '男',
+                phone: '',
+                email: ''
+            };
+        }
     };
-    
+
     // 新宠物状态变更处理
     const onNewPetStatusChange = () => {
-      // 如果从待领养变为有主人/已领养，初始化主人信息
-      if (newPet.value.adoptionStatus !== 'forAdoption' && 
-          (!newPet.value.owner || !newPet.value.owner.name)) {
-        newPet.value.owner = {
-          name: '',
-          gender: '男',
-          phone: '',
-          address: ''
-        };
-      }
+        // 如果从待领养变为有主人/已领养，初始化主人信息
+        if (newPet.value.adoptionStatus !== 'forAdoption' && 
+              (!newPet.value.owner || !newPet.value.owner.ownerName)) {
+            newPet.value.owner = {
+                ownerName: '',
+                gender: '男',
+                phone: '',
+                email: ''
+            };
+        }
     };
-    
-    // 初始化加载数据
-    onMounted(loadPets);
-    // 新增导出功能
-    // const exportToExcel = () => {
-    //   try {
-    //     loading.value = true;
-    //   }catch(err){
 
-    //   }
-    // };
     // 导出功能
     const exportToExcel = () => {
-      try {
-        loading.value = true;
-        showToast('正在导出数据...', 'loading');r
-        
-        // 准备Excel数据
-        const excelData = filteredPets.value.map(pet => {
-          const baseInfo = {
-            '编号': pet.id,
-            '宠物姓名': pet.name,
-            '宠物年龄': pet.age,
-            '宠物病症': pet.disease || '无',
-            '领养状态': getStatusText(pet.adoptionStatus),
-            '宠物类型': pet.type === 'dog' ? '狗狗' : '猫咪',
-            '宠物性别': pet.gender,
-            '宠物年龄': pet.age,
-            '宠物重量': pet.weight,
-            '宠物病症': pet.disease || '无',
-            '领养状态': getStatusText(pet.adoptionStatus),
-            '宠物描述': pet.description || ''
-
-          };
-          
-          if (pet.owner) {
-            return {
-              ...baseInfo,
-              '主人姓名': pet.owner.name,
-              '性别': pet.owner.gender,
-              '联系电话': pet.owner.phone,
-              '地址': pet.owner.address || '无'
-            };
-          } else {
-            return {
-              ...baseInfo,
-              '主人姓名': '',
-              '性别': '',
-              '联系电话': '',
-              '地址': ''
-            };
-          }
-        });
-        
-        // 创建工作簿
-        const wb = XLSX.utils.book_new();
-        
-        // 创建工作表
-        const ws = XLSX.utils.json_to_sheet(excelData, {
-          header: [
-            '编号', '宠物姓名', '宠物类型', '宠物性别', '宠物年龄', '宠物重量', 
-            '宠物病症', '领养状态', '宠物描述', '主人姓名', '性别', '联系电话', '地址'
-          ]
-        });
-        
-        // 设置列宽
-        const colWidths = [
-          { wch: 8 },  // 编号
-          { wch: 12 }, // 宠物姓名
-          { wch: 8 },  // 宠物类型
-          { wch: 8 },  // 宠物性别
-          { wch: 8 },  // 宠物年龄
-          { wch: 8 },  // 宠物重量
-          { wch: 20 }, // 宠物病症
-          { wch: 10 }, // 领养状态
-          { wch: 30 }, // 宠物描述
-          { wch: 12 }, // 主人姓名
-          { wch: 6 },  // 性别
-          { wch: 15 }, // 联系电话
-          { wch: 25 }  // 地址
-        ];
-        ws['!cols'] = colWidths;
-        
-        // 添加工作表到工作簿
-        XLSX.utils.book_append_sheet(wb, ws, '宠物数据');
-        
-        // 生成Excel文件并下载
-        const date = new Date();
-        const dateStr = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
-        XLSX.writeFile(wb, `宠物医院数据_${dateStr}.xlsx`);
-        
-        showToast('数据导出成功！文件已开始下载', 'success');
-      } catch (err) {
-        showToast('导出失败: ' + (err.message || '未知错误'), 'error');
-        console.error('导出失败:', err);
-      } finally {
-        loading.value = false;
-      }
+        try {
+            loading.value = true;
+            showToast('正在导出数据...', 'loading');
+            
+            // 准备Excel数据
+            const excelData = filteredPets.value.map(pet => {
+                const baseInfo = {
+                    '编号': pet.petId,
+                    '宠物姓名': pet.petName,
+                    '宠物类型': pet.type === 'dog' ? '狗狗' : '猫咪',
+                    '宠物性别': pet.gender,
+                    '宠物年龄': pet.age,
+                    '宠物重量': pet.weight,
+                    '宠物病症': pet.disease || '无',
+                    '领养状态': getStatusText(pet.adoptionStatus),
+                    '宠物描述': pet.description || '',
+                    'PDF病历': pet.pdfCase || '无'
+                };
+                
+                if (pet.owner) {
+                    return {
+                        ...baseInfo,
+                        '主人姓名': pet.owner.ownerName,
+                        '性别': pet.owner.gender,
+                        '联系电话': pet.owner.phone,
+                        '邮箱': pet.owner.email || '无'
+                    };
+                } else {
+                    return {
+                        ...baseInfo,
+                        '主人姓名': '',
+                        '性别': '',
+                        '联系电话': '',
+                        '邮箱': ''
+                    };
+                }
+            });
+            
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            
+            // 创建工作表
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            
+            // 添加工作表到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, '宠物数据');
+            
+            // 生成Excel文件并下载
+            const date = new Date();
+            const dateStr = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+            XLSX.writeFile(wb, `宠物医院数据_${dateStr}.xlsx`);
+            
+            showToast('数据导出成功！文件已开始下载', 'success');
+        } catch (err) {
+            showToast('导出失败: ' + (err.message || '未知错误'), 'error');
+            console.error('导出失败:', err);
+        } finally {
+            loading.value = false;
+        }
     };
-    
-    // 导入Excel功能
-    const importFromExcel = () => {
-      // 创建隐藏的文件输入元素
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = '.xlsx, .xls';
-      fileInput.style.display = 'none';
-      
-      // 添加事件监听器
-      fileInput.addEventListener('change', async (event) => {
+
+    // 处理PDF上传
+    const handlePdfUpload = async (event, pet) => {
         const file = event.target.files[0];
-        if (!file) return;
+        if (!file || file.type !== 'application/pdf') {
+            showToast('请选择PDF文件', 'error');
+            return;
+        }
         
         try {
-          loading.value = true;
-          showToast('正在导入数据...', 'loading');
-          
-          // 读取Excel文件
-          const data = await readExcelFile(file);
-          
-          // 解析Excel数据
-          const importedPets = parseExcelData(data);
-          
-          // 添加到待添加列表
-          batchPets.value = [...batchPets.value, ...importedPets];
-          
-          showToast(`成功导入 ${importedPets.length} 条宠物数据`, 'success');
+            loading.value = true;
+            showToast('正在上传PDF...', 'loading');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await axios.post(`${apiBaseUrl.value}/uploadPdf`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            if (response.data.code === 200) {
+                pet.editingData.pdfCase = response.data.data;
+                showToast('PDF上传成功', 'success');
+            } else {
+                showToast('PDF上传失败: ' + response.data.msg, 'error');
+            }
         } catch (err) {
-          showToast('导入失败: ' + (err.message || '未知错误'), 'error');
-          console.error('导入失败:', err);
+            showToast('PDF上传失败: ' + (err.message || '未知错误'), 'error');
+            console.error('PDF上传失败:', err);
         } finally {
-          loading.value = false;
-          // 清理文件输入
-          document.body.removeChild(fileInput);
+            loading.value = false;
         }
-      });
-      
-      // 触发文件选择
-      document.body.appendChild(fileInput);
-      fileInput.click();
     };
-    
-    // 读取Excel文件
-    const readExcelFile = (file) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-          try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            
-            // 获取第一个工作表
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            
-            // 转换为JSON
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
-            resolve(jsonData);
-          } catch (err) {
-            reject(err);
-          }
-        };
-        
-        reader.onerror = (error) => reject(error);
-        reader.readAsArrayBuffer(file);
-      });
-    };
-    
-    // 解析Excel数据为宠物对象
-    const parseExcelData = (excelData) => {
-      return excelData.map((row, index) => {
-        // 转换领养状态文本为状态值
-        const statusMap = {
-          '有主人': 'owned',
-          '待领养': 'forAdoption',
-          '已领养': 'adopted'
-        };
-        
-        // 转换宠物类型文本为类型值
-        const typeMap = {
-          '狗狗': 'dog',
-          '猫咪': 'cat'
-        };
-        
-        const adoptionStatus = statusMap[row['领养状态']] || 'forAdoption';
-        const petType = typeMap[row['宠物类型']] || 'dog';
-        
-        // 创建宠物对象
-        const pet = {
-          name: row['宠物姓名'] || `未命名宠物${index + 1}`,
-          type: petType,
-          age: parseInt(row['宠物年龄']) || 1,
-          gender: row['宠物性别'] || '男',
-          weight: parseFloat(row['宠物重量']) || 3.5,
-          disease: row['宠物病症'] || '',
-          image: null,
-          adoptionStatus: adoptionStatus,
-          description: row['宠物描述'] || ''
-        };
-        
-        // 如果有主人信息
-        if (adoptionStatus !== 'forAdoption' && row['主人姓名']) {
-          pet.owner = {
-            name: row['主人姓名'] || '',
-            gender: row['性别'] || '男',
-            phone: row['联系电话'] || '',
-            address: row['地址'] || ''
-          };
-        } else {
-          pet.owner = null;
-        }
-        
-        return pet;
-      });
-    };
-    
-    return {
-       // 新增状态
-       notifications,
-      showNotifications,
-      showApplicationModal,
-      selectedApplication,
-      unreadCount,
-      
-      // 新增方法
-      toggleNotifications,
-      openApplication,
-      closeApplicationModal,
-      deleteNotification,
-      contactApplicant,
-      approveApplication,
-      formatTime,
-      petImageForApplication,
-      filters,
-      pets,
-      filteredPets,
-      loading,
-      toast,
-      showBatchAddModal,
-      batchPets,
-      newPet,
-      petImage,
-      startEditing,
-      savePet,
-      cancelEditing,
-      deletePet,
-      viewPet,
-      addNewPet,
-      resetFilters,
-      getStatusText,
-      getStatusClass,
-      getTypeClass,
-      openBatchAddModal,
-      closeBatchAddModal,
-      addToBatchList,
-      removeFromBatchList,
-      submitBatchPets,
-      onStatusChange,
-      onNewPetStatusChange,
 
-      exportToExcel,
-      importFromExcel
+    // 处理新宠物的PDF上传
+    const handleNewPdfUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file || file.type !== 'application/pdf') {
+            showToast('请选择PDF文件', 'error');
+            return;
+        }
+        
+        try {
+            loading.value = true;
+            showToast('正在上传PDF...', 'loading');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await axios.post(`${apiBaseUrl.value}/uploadPdf`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            if (response.data.code === 200) {
+                newPet.value.pdfCase = response.data.data;
+                showToast('PDF上传成功', 'success');
+            } else {
+                showToast('PDF上传失败: ' + response.data.msg, 'error');
+            }
+        } catch (err) {
+            showToast('PDF上传失败: ' + (err.message || '未知错误'), 'error');
+            console.error('PDF上传失败:', err);
+        } finally {
+            loading.value = false;
+        }
     };
-  }
+
+    // 获取PDF文件名
+    const getPdfName = (pdfUrl) => {
+        if (!pdfUrl) return '';
+        const parts = pdfUrl.split('/');
+        return parts[parts.length - 1];
+    };
+
+    // 初始化加载数据
+    onMounted(() => {
+        loadPets();
+    });
+
+    return {
+        filters,
+        pets,
+        filteredPets,
+        loading,
+        toast,
+        showBatchAddModal,
+        batchPets,
+        newPet,
+        petImage,
+        startEditing,
+        savePet,
+        cancelEditing,
+        deletePet,
+        addNewPet,
+        resetFilters,
+        getStatusText,
+        getStatusClass,
+        getTypeClass,
+        openBatchAddModal,
+        closeBatchAddModal,
+        addToBatchList,
+        removeFromBatchList,
+        submitBatchPets,
+        onStatusChange,
+        onNewPetStatusChange,
+        exportToExcel,
+        handlePdfUpload,
+        handleNewPdfUpload,
+        getPdfName
+    };
+}
 };
 </script>
 
@@ -2782,7 +2347,48 @@ export default {
 .btn.approve:hover {
   background-color: #27ae60;
 }
+/* 这里包含所有CSS样式，由于字符限制，只展示关键部分 */
+/* 完整样式请参考原始代码 */
+.main-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f7fa;
+}
 
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #3498db, #8e44ad);
+    color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pet-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.pet-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.filter-section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 /* 响应式设计 */
 @media (max-width: 768px) {
   .notification-modal {
@@ -2808,4 +2414,5 @@ export default {
     justify-content: center;
   }
 }
+
 </style>

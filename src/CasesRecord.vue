@@ -6,6 +6,7 @@
         <div
           class="carousel-track"
           :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+
         >
           <div
             v-for="(record, idx) in records"
@@ -79,6 +80,7 @@
       </div>
     </div>
     <!-- 右侧卡通箭头，放在病历单右侧，不覆盖 -->
+
     <button class="slide-arrow" @click="nextRecord" aria-label="下一条">
       <svg width="48" height="48" viewBox="0 0 48 48">
         <path d="M16 10 L32 24 L16 38"
@@ -94,7 +96,9 @@
         </filter>
       </svg>
     </button>
+
   </div>
+
 </template>
 
 <script setup>
@@ -127,6 +131,9 @@ function nextRecord() {
   align-items: center;
   justify-content: center;
   width: 100%;
+
+  padding-left: px; /* 新增，数值可根据实际需要调整 */
+
 }
 .prescription-carousel-root {
   flex: none;
@@ -266,6 +273,7 @@ function nextRecord() {
 
 /* 右侧箭头按钮样式 */
 .slide-arrow {
+
   position: relative;
   right: 0;
   top: 0;
@@ -291,4 +299,6 @@ function nextRecord() {
   border-color: #1565c0;
   background: #e3f0ff;
 }
+
 </style>
+

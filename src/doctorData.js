@@ -31,65 +31,29 @@ export const departments = [
       },
       {
         id: 'eye-3',
-        name: '李静',
-        title: '副主任医师',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-        introduction: '南京农业大学兽医硕士，10年眼科临床经验，擅长角膜疾病诊断与治疗，发表SCI论文5篇。',
-        education: '南京农业大学兽医硕士',
-        specialty: '角膜疾病诊断与治疗',
-        achievements: '发表SCI论文5篇',
-        experience: '10年眼科临床经验',
-        tags: ['角膜疾病', '学术研究', '副主任医师']
+        name: '陈宇光',
+        title: '主治医师',
+        avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '北京农学院兽医硕士，8年宠物眼科经验，擅长眼底病筛查与泪道手术，完成手术900+例。',
+        education: '北京农学院兽医硕士',
+        specialty: '眼底病筛查、泪道手术',
+        achievements: '参与国家级科研项目2项',
+        experience: '8年宠物眼科临床经验',
+        tags: ['眼底病', '泪道手术', '主治医师']
       },
       {
         id: 'eye-4',
-        name: '李静',
-        title: '副主任医师',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-        introduction: '南京农业大学兽医硕士，10年眼科临床经验，擅长角膜疾病诊断与治疗，发表SCI论文5篇。',
-        education: '南京农业大学兽医硕士',
-        specialty: '角膜疾病诊断与治疗',
-        achievements: '发表SCI论文5篇',
-        experience: '10年眼科临床经验',
-        tags: ['角膜疾病', '学术研究', '副主任医师']
+        name: '刘倩',
+        title: '住院医师',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '东北农业大学兽医硕士，6年眼科经验，专注于干眼症与角膜移植术后管理，发表核心期刊论文3篇。',
+        education: '东北农业大学兽医硕士',
+        specialty: '干眼症、角膜移植术后管理',
+        achievements: '核心期刊论文3篇',
+        experience: '6年宠物眼科临床经验',
+        tags: ['干眼症', '角膜移植', '住院医师']
       },
-      {
-        id: 'eye-5',
-        name: '李静',
-        title: '副主任医师',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-        introduction: '南京农业大学兽医硕士，10年眼科临床经验，擅长角膜疾病诊断与治疗，发表SCI论文5篇。',
-        education: '南京农业大学兽医硕士',
-        specialty: '角膜疾病诊断与治疗',
-        achievements: '发表SCI论文5篇',
-        experience: '10年眼科临床经验',
-        tags: ['角膜疾病', '学术研究', '副主任医师']
-      },
-      {
-        id: 'eye-6',
-        name: '李静',
-        title: '副主任医师',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-        introduction: '南京农业大学兽医硕士，10年眼科临床经验，擅长角膜疾病诊断与治疗，发表SCI论文5篇。',
-        education: '南京农业大学兽医硕士',
-        specialty: '角膜疾病诊断与治疗',
-        achievements: '发表SCI论文5篇',
-        experience: '10年眼科临床经验',
-        tags: ['角膜疾病', '学术研究', '副主任医师']
-      },
-      {
-        id: 'eye-7',
-        name: '李静',
-        title: '副主任医师',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&h=200&q=80',
-        introduction: '南京农业大学兽医硕士，10年眼科临床经验，擅长角膜疾病诊断与治疗，发表SCI论文5篇。',
-        education: '南京农业大学兽医硕士',
-        specialty: '角膜疾病诊断与治疗',
-        achievements: '发表SCI论文5篇',
-        experience: '10年眼科临床经验',
-        tags: ['角膜疾病', '学术研究', '副主任医师']
-      },
-      // 更多眼科医生...
+
     ]
   },
   {
@@ -121,7 +85,31 @@ export const departments = [
         experience: '10年内科临床经验',
         tags: ['呼吸内科', '学术研究', '副主任医师']
       },
-      // 更多内科医生...
+      {
+        id: 'internal-3',
+        name: '周志强',
+        title: '副主任医师',
+        avatar: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '中国农业大学兽医博士，12年内科经验，擅长肾病及电解质紊乱管理，主持省级课题1项。',
+        education: '中国农业大学兽医博士',
+        specialty: '肾病、电解质紊乱管理',
+        achievements: '主持省级课题1项',
+        experience: '12年内科临床经验',
+        tags: ['肾病专家', '电解质紊乱', '副主任医师']
+      },
+      {
+        id: 'internal-4',
+        name: '王雪',
+        title: '主治医师',
+        avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '华南农业大学兽医硕士，9年经验，专注于猫传染性腹膜炎早期诊疗，完成病例随访1000+例。',
+        education: '华南农业大学兽医硕士',
+        specialty: '猫传染性腹膜炎早期诊疗',
+        achievements: '病例随访1000+例',
+        experience: '9年内科临床经验',
+        tags: ['猫传腹', '早期诊疗', '主治医师']
+      },
+
     ]
   },
   {
@@ -141,7 +129,30 @@ export const departments = [
         experience: '骨科、外科手术。执业兽医师，从业13年，华南农业大学临床兽医硕士，现任广东科贸学院客座讲师，华南农业大学兽医学院校外指导老师，荣获"中国百家宠物医师"、"华南优秀青年兽医师"、"广州市动物诊疗行业协会优秀兽医师"等奖项。从初只是作为学业需要，在投入到学习和工作中，逐渐对宠物和宠物医生产生浓厚兴趣，成为他坚持和专注的终生事业。',
         tags: ['外科专家', '肿瘤切除', '微创手术']
       },
-      // 更多外科医生...
+      {
+        id: 'surgery-2',
+        name: '赵一鸣',
+        title: '主治医师',
+        avatar: 'https://images.unsplash.com/photo-1545167622-3a6ac756afa4?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '浙江大学兽医硕士，10年外科经验，擅长胸腔镜肺叶切除及复杂膈疝修补，完成手术1500+例。',
+        education: '浙江大学兽医硕士',
+        specialty: '胸腔镜肺叶切除、膈疝修补',
+        achievements: '完成手术1500+例',
+        experience: '10年外科临床经验',
+        tags: ['胸腔镜', '膈疝', '主治医师']
+      },
+      {
+        id: 'surgery-3',
+        name: '孙琳',
+        title: '住院医师',
+        avatar: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '扬州大学兽医硕士，6年外科经验，专注于软组织创伤修复及术后疼痛管理，参与编写教材1部。',
+        education: '扬州大学兽医硕士',
+        specialty: '软组织创伤修复、术后疼痛管理',
+        achievements: '参编教材1部',
+        experience: '6年外科临床经验',
+        tags: ['创伤修复', '疼痛管理', '住院医师']
+      },
     ]
   },
   {
@@ -161,7 +172,31 @@ export const departments = [
         experience: '15年肿瘤科临床经验',
         tags: ['肿瘤专家', '化疗', '靶向治疗']
       },
-      // 更多肿瘤科医生...
+      {
+        id: 'oncology-2',
+        name: '林浩',
+        title: '副主任医师',
+        avatar: 'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '日本麻布大学肿瘤学博士，12年肿瘤科经验，擅长犬猫淋巴瘤化疗方案个体化，主持GCP临床试验3项。',
+        education: '日本麻布大学肿瘤学博士',
+        specialty: '淋巴瘤个体化化疗',
+        achievements: '主持GCP临床试验3项',
+        experience: '12年肿瘤科临床经验',
+        tags: ['淋巴瘤', 'GCP临床', '副主任医师']
+      },
+      {
+        id: 'oncology-3',
+        name: '张雪梅',
+        title: '主治医师',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '南京农业大学兽医硕士，8年肿瘤科经验，专注乳腺肿瘤早期筛查及靶向治疗，发表SCI论文6篇。',
+        education: '南京农业大学兽医硕士',
+        specialty: '乳腺肿瘤早期筛查、靶向治疗',
+        achievements: '发表SCI论文6篇',
+        experience: '8年肿瘤科临床经验',
+        tags: ['乳腺肿瘤', '靶向治疗', '主治医师']
+      },
+
     ]
   },
   {
@@ -181,7 +216,32 @@ export const departments = [
         experience: '12年宠物皮肤病临床经验',
         tags: ['皮肤专家', '过敏性皮炎', '真菌感染']
       },
-      // 更多皮肤科医生...
+      {
+        id: 'dermatology-2',
+        name: '郑浩',
+        title: '主治医师',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '华中农业大学兽医硕士，10年皮肤科经验，擅长马拉色菌皮炎及异位性皮炎综合管理，主编诊疗共识1部。',
+        education: '华中农业大学兽医硕士',
+        specialty: '马拉色菌皮炎、异位性皮炎',
+        achievements: '主编诊疗共识1部',
+        experience: '10年皮肤科临床经验',
+        tags: ['马拉色菌皮炎', '异位性皮炎', '主治医师']
+      },
+      {
+        id: 'dermatology-3',
+        name: '林雅',
+        title: '住院医师',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '四川农业大学兽医硕士，6年皮肤科经验，专注于宠物皮肤镜诊断与过敏原检测，完成病例5000+例。',
+        education: '四川农业大学兽医硕士',
+        specialty: '皮肤镜诊断、过敏原检测',
+        achievements: '完成病例5000+例',
+        experience: '6年皮肤科临床经验',
+        tags: ['皮肤镜', '过敏原检测', '住院医师']
+      },
+
+    
     ]
   },
   {
@@ -201,7 +261,31 @@ export const departments = [
         experience: '10年影像科临床经验',
         tags: ['影像专家', '超声诊断', '放射诊断']
       },
-      // 更多影像科医生...
+      {
+        id: 'imaging-2',
+        name: '黄伟',
+        title: '主治医师',
+        avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '中国农业大学兽医影像硕士，9年经验，擅长心脏彩超及CT血管造影，参与多中心研究2项。',
+        education: '中国农业大学兽医影像硕士',
+        specialty: '心脏彩超、CT血管造影',
+        achievements: '参与多中心研究2项',
+        experience: '9年影像科临床经验',
+        tags: ['心脏彩超', 'CT造影', '主治医师']
+      },
+      {
+        id: 'imaging-3',
+        name: '陈晨',
+        title: '住院医师',
+        avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '华南农业大学兽医硕士，5年影像科经验，专注MRI神经系统疾病诊断，发表核心期刊论文2篇。',
+        education: '华南农业大学兽医硕士',
+        specialty: 'MRI神经系统疾病诊断',
+        achievements: '核心期刊论文2篇',
+        experience: '5年影像科临床经验',
+        tags: ['MRI', '神经系统', '住院医师']
+      },
+
     ]
   },
   {
@@ -221,7 +305,30 @@ export const departments = [
         experience: '10年康复科临床经验',
         tags: ['康复专家', '物理治疗', '运动康复']
       },
-      // 更多康复科医生...
+      {
+        id: 'rehab-2',
+        name: '周思远',
+        title: '主治医师',
+        avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '日本麻布大学康复医学硕士，8年康复经验，擅长髋关节置换术后康复，设计康复器械2套。',
+        education: '日本麻布大学康复医学硕士',
+        specialty: '髋关节置换术后康复',
+        achievements: '设计康复器械2套',
+        experience: '8年康复科临床经验',
+        tags: ['髋关节康复', '康复器械', '主治医师']
+      },
+      {
+        id: 'rehab-3',
+        name: '王悦',
+        title: '住院医师',
+        avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '南京农业大学兽医硕士，6年康复经验，专注猫后肢瘫痪水疗与激光理疗，完成康复病例1200+例。',
+        education: '南京农业大学兽医硕士',
+        specialty: '猫后肢瘫痪水疗、激光理疗',
+        achievements: '完成康复病例1200+例',
+        experience: '6年康复科临床经验',
+        tags: ['水疗', '激光理疗', '住院医师']
+      },
     ]
   },
   {
@@ -241,7 +348,30 @@ export const departments = [
         experience: '7年口腔科临床经验，完成手术800+例',
         tags: ['牙齿修复', '口腔外科', '副主任医师']
       },
-      // 更多牙科医生...
+      {
+        id: 'dental-2',
+        name: '刘畅',
+        title: '主治医师',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '中国农业大学兽医硕士，9年口腔科经验，擅长牙髓病显微根管治疗及复杂拔牙，完成手术1500+例。',
+        education: '中国农业大学兽医硕士',
+        specialty: '显微根管治疗、复杂拔牙',
+        achievements: '完成手术1500+例',
+        experience: '9年口腔科临床经验',
+        tags: ['牙髓病', '显微根管', '主治医师']
+      },
+      {
+        id: 'dental-3',
+        name: '张萌',
+        title: '住院医师',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80',
+        introduction: '沈阳农业大学兽医硕士，5年口腔科经验，专注幼宠牙齿畸形早期干预及洁牙，参与公益洁牙活动20场。',
+        education: '沈阳农业大学兽医硕士',
+        specialty: '幼宠牙齿畸形早期干预、洁牙',
+        achievements: '公益洁牙活动20场',
+        experience: '5年口腔科临床经验',
+        tags: ['牙齿畸形', '公益洁牙', '住院医师']
+      }
     ]
   }
 ];
