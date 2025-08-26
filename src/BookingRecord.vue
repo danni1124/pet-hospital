@@ -1,78 +1,199 @@
 <!-- filepath: d:\PetHospital\pet-hospital\src\BookingRecord.vue -->
 <template>
   <div class="booking-list">
-    <div
-      v-for="item in bookings"
-      :key="item.id"
-      class="booking-card"
-    >
-      <div class="booking-row">
-        <span class="booking-label">预约日期</span>
-        <span class="booking-value">{{ item.date }}</span>
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-state">
+      <p>🔄 正在加载预约记录...</p>
+    </div>
+    
+    <!-- 预约记录列表 -->
+    <div v-else-if="appointments.length > 0">
+      <div
+        v-for="item in appointments"
+        :key="item.appointmentId"
+        class="booking-card"
+      >
+        <div class="booking-row">
+          <span class="booking-label">预约日期</span>
+          <span class="booking-value">{{ item.date }}</span>
+        </div>
+        <div class="booking-row">
+          <span class="booking-label">预约时间</span>
+          <span class="booking-value">{{ item.time }}</span>
+        </div>
+        <div class="booking-row">
+          <span class="booking-label">预约号码</span>
+          <span class="booking-value">{{ item.appointmentNum }}</span>
+        </div>
+        <div class="booking-row">
+          <span class="booking-label">状态</span>
+          <span
+            class="booking-status"
+            :class="{
+              pending: item.status === 'pending',
+              approved: item.status === 'approved',
+              rejected: item.status === 'rejected'
+            }"
+          >
+            {{ getStatusText(item.status) }}
+          </span>
+        </div>
+        <div class="booking-row">
+          <span class="booking-label">创建时间</span>
+          <span class="booking-value">{{ formatDate(item.createdAt) }}</span>
+        </div>
       </div>
-      <div class="booking-row">
-        <span class="booking-label">预约号码</span>
-        <span class="booking-value">{{ item.number }}</span>
-      </div>
-      <div class="booking-row">
-        <span class="booking-label">状态</span>
-        <span
-          class="booking-status"
-          :class="{
-            pending: item.status === '待处理',
-            success: item.status === '成功',
-            fail: item.status === '失败'
-          }"
-        >
-          {{ item.status }}
-        </span>
-      </div>
-      <div class="booking-row">
-        <span class="booking-label">创建时间</span>
-        <span class="booking-value">{{ item.createdAt }}</span>
-      </div>
+    </div>
+    
+    <!-- 空状态 -->
+    <div v-else class="empty-state">
+      <p>📝 暂无预约记录</p>
+      <p class="empty-tip">您还没有任何预约记录哦~</p>
     </div>
   </div>
 </template>
 
 <script setup>
-const bookings = [
-  {
-    id: 1,
-    date: '2025-08-01',
-    number: 'A20250801001',
-    status: '待处理',
-    createdAt: '2025-07-28 09:12'
-  },
-  {
-    id: 2,
-    date: '2025-07-15',
-    number: 'A20250715002',
-    status: '成功',
-    createdAt: '2025-07-10 14:23'
-  },
-  {
-    id: 3,
-    date: '2025-07-05',
-    number: 'A20250705003',
-    status: '失败',
-    createdAt: '2025-07-01 10:05'
-  },
-  {
-    id: 4,
-    date: '2025-06-20',
-    number: 'A20250620004',
-    status: '成功',
-    createdAt: '2025-06-15 11:30'
-  },
-  {
-    id: 5,
-    date: '2025-06-10',
-    number: 'A20250610005',
-    status: '失败',
-    createdAt: '2025-06-05 08:45'
+import { onMounted, ref } from 'vue'
+import axios from 'axios'
+import { API_BASE_URL } from '@/config/index.js'
+
+// 响应式数据
+const appointments = ref([])
+const loading = ref(true)
+
+// 获取用户预约记录
+const fetchUserAppointments = async () => {
+  try {
+    console.log('=== 获取用户预约记录 ===')
+    
+    // 获取当前登录用户信息
+    const currentUserStr = localStorage.getItem('currentUser')
+    if (!currentUserStr) {
+      console.error('未找到用户信息')
+      loading.value = false
+      return
+    }
+    
+    const currentUser = JSON.parse(currentUserStr)
+    const userId = currentUser.userId
+    
+    if (!userId) {
+      console.error('用户ID不存在')
+      loading.value = false
+      return
+    }
+    
+    try {
+      // 调用后端API获取预约记录
+      const response = await axios.get(`${API_BASE_URL}/getAppointmentsByIdType`, {
+        params: { 
+          idType: 'userId',
+          id: userId 
+        }
+      })
+      
+      console.log('后端预约记录响应:', response.data)
+      
+      if (response.data && response.data.code === 200) {
+        appointments.value = response.data.data || []
+        console.log('从后端加载预约记录成功:', appointments.value.length, '条')
+      } else {
+        throw new Error('获取预约记录失败: ' + (response.data?.msg || '未知错误'))
+      }
+      
+    } catch (apiError) {
+      console.log('后端API不可用，使用本地降级数据:', apiError.message)
+      
+      // API降级：使用本地模拟数据
+      loadLocalAppointments(userId)
+    }
+    
+  } catch (error) {
+    console.error('获取预约记录时发生错误:', error)
+    
+    // 错误处理：显示空数据
+    appointments.value = []
+  } finally {
+    loading.value = false
   }
-]
+}
+
+// 本地降级数据
+const loadLocalAppointments = (userId) => {
+  // 模拟预约数据（根据数据库结构）
+  const mockAppointments = [
+    {
+      appointmentId: 1,
+      userId: userId,
+      doctorId: 1,
+      scheduleId: 1,
+      date: '2025-08-01',
+      time: '09:30',
+      appointmentNum: 'APT20250801001',
+      status: 'pending',
+      createdAt: '2025-07-28 09:12:00'
+    },
+    {
+      appointmentId: 2,
+      userId: userId,
+      doctorId: 2,
+      scheduleId: 2,
+      date: '2025-07-15',
+      time: '14:00',
+      appointmentNum: 'APT20250715002',
+      status: 'approved',
+      createdAt: '2025-07-10 14:23:00'
+    },
+    {
+      appointmentId: 3,
+      userId: userId,
+      doctorId: 3,
+      scheduleId: 3,
+      date: '2025-07-05',
+      time: '10:15',
+      appointmentNum: 'APT20250705003',
+      status: 'rejected',
+      createdAt: '2025-07-01 10:05:00'
+    }
+  ]
+  
+  appointments.value = mockAppointments
+  console.log('加载本地降级预约数据:', appointments.value.length, '条')
+}
+
+// 状态文本转换
+const getStatusText = (status) => {
+  const statusMap = {
+    'pending': '待处理',
+    'approved': '已通过',
+    'rejected': '已拒绝'
+  }
+  return statusMap[status] || status
+}
+
+// 格式化日期时间
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch (error) {
+    return dateStr
+  }
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  console.log('预约记录组件挂载，开始获取数据...')
+  fetchUserAppointments()
+})
 </script>
 
 <style scoped>
@@ -87,6 +208,19 @@ const bookings = [
   box-sizing: border-box;
   margin: 0 auto;
 }
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-tip {
+  font-size: 14px;
+  color: #999;
+  margin-top: 8px;
+}
+
 .booking-card {
   background: #f7fafd;
   border-radius: 14px;
@@ -132,12 +266,12 @@ const bookings = [
   color: #fbc02d;
   border-color: #ffe082;
 }
-.booking-status.success {
+.booking-status.approved {
   background: #e8f5e9;
   color: #43a047;
   border-color: #a5d6a7;
 }
-.booking-status.fail {
+.booking-status.rejected {
   background: #ffebee;
   color: #d32f2f;
   border-color: #ffcdd2;

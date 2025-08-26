@@ -2,7 +2,7 @@
   <div class="user-center-bg">
     <!-- 顶部用户信息卡片 -->
     <div class="user-card">
-      <img class="avatar" :src="userInfo.avatar_url || ''" alt="用户头像"/>
+      <img class="avatar" :src="getAvatarUrl(userInfo.avatar_url)" alt="用户头像"/>
       <div class="user-info">
         <div class="user-row">
           <span class="user-username">@ {{ userInfo.username || 'loading...' }}</span>
@@ -44,9 +44,9 @@ import { onMounted, computed, ref } from 'vue'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
 import CasesRecord from './CasesRecord.vue'
-
 import CouponRecord from './components/CouponRecord.vue'
-
+import BookingRecord from './BookingRecord.vue'
+import OrderRecord from './OrderRecord.vue'
 
 // 用户信息响应式数据
 const userInfo = ref({
@@ -70,8 +70,6 @@ const tabs = [
 const activeTab = ref('cases')
 
 // 组件映射
-const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
-const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
 
 const currentComponent = computed(() => {
   switch (activeTab.value) {
@@ -135,8 +133,6 @@ const fetchUserInfo = async () => {
           avatar_url: userData.avatar_url || '',
           address: userData.address || ''
         }
-        
-        console.log('用户信息更新成功:', userInfo.value)
       } else {
         throw new Error(response.data?.msg || '获取用户信息失败')
       }
@@ -156,14 +152,14 @@ const fetchUserInfo = async () => {
           address: currentUser.userData.address || ''
         }
       } else {
-        // 如果没有详细数据，使用基本信息
+        // 如果没有详细数据，使用基本信息，添加一个示例头像
         userInfo.value = {
           userId: userId,
           username: currentUser.username || 'unknown',
           level: 1,
           phone: '',
           email: '',
-          avatar_url: '',
+          avatar_url: '/uploads/avatars/default-user.jpg', // 示例头像路径
           address: ''
         }
       }
@@ -185,6 +181,25 @@ const fetchUserInfo = async () => {
       address: ''
     }
   }
+}
+
+// 获取完整的头像URL
+const getAvatarUrl = (avatarPath) => {
+  if (!avatarPath) {
+    // 返回默认头像，可以是一个占位图或默认头像
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMzciIHI9IjE1IiBmaWxsPSIjQzRDNEM0Ii8+CjxwYXRoIGQ9Ik0yMCA4MEMyMCA2NS44NTc5IDMxLjQzMTUgNTUgNDUgNTVINTVDNjguNTY4NSA1NSA4MCA2NS44NTc5IDgwIDgwVjEwMEgyMFY4MFoiIGZpbGw9IiNDNEM0QzQiLz4KPC9zdmc+'
+  }
+  
+  // 如果avatar_url已经是完整的URL（包含http或https），直接返回
+  if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+    return avatarPath
+  }
+  
+  // 否则拼接基本网址
+  const baseUrl = 'http://47.113.205.34:8085'
+  // 确保路径以/开头
+  const path = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`
+  return `${baseUrl}${path}`
 }
 
 // 页面加载时自动获取用户信息
