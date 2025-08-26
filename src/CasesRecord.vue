@@ -135,7 +135,7 @@ function nextRecord() {
 }
 .carousel-wrapper {
   position: relative;
-  width: 720px;
+  width: 600px;
   overflow: hidden;
   min-height: 360px;
 }
@@ -145,8 +145,8 @@ function nextRecord() {
   width: 100%;
 }
 .prescription-root {
-  min-width: 720px;
-  max-width: 720px;
+  min-width: 600px;
+  max-width: 600px;
   min-height: 340px;
   margin: 0;
   background: #fff;
@@ -214,7 +214,7 @@ function nextRecord() {
   border-top: 2px solid #222;
   margin-top: 12px;
   margin-bottom: 0;
-  min-height: 160px;
+  min-height: 100px;
   position: relative;
   transition: transform 0.3s;
 }
@@ -229,7 +229,7 @@ function nextRecord() {
   margin-bottom: 8px;
 }
 .main-content {
-  min-height: 80px;
+  min-height: 48px;
   font-size: 16px;
   margin-left: 8px;
   margin-top: 4px;

@@ -40,6 +40,8 @@
 import { computed, ref } from 'vue'
 import CasesRecord from './CasesRecord.vue'
 import CouponRecord from './CouponRecord.vue'
+import BookingRecord from './BookingRecord.vue'
+
 const tabs = [
   { key: 'cases',   label: '病例记录',   icon: '📋' },
   { key: 'booking', label: '预约记录',   icon: '📅' },
@@ -59,73 +61,84 @@ const currentComponent = computed(() => {
   }
 })
 
-const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
 const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
 </script>
 
 <style scoped>
 .user-center-bg {
-  background: #f5f7fa;
+  background: linear-gradient(120deg, #f5f7fa 60%, #e3f0ff 100%);
   min-height: 100vh;
-  width: 100vw;           /* 改为视口宽度，确保更宽 */
-  padding: 1px 0 0 0;    /* 顶部增加64px内边距，不覆盖导航栏 */
-  box-sizing: border-box; /* 防止溢出 */
+  width: 100vw;
+  padding: 1px 0 0 0;
+  box-sizing: border-box;
 }
 
+/* 顶部用户信息卡片美化 */
 .user-card {
   display: flex;
   align-items: center;
-  background: #f3cdf6;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(200, 209, 223, 0.15);
-  padding: 32px 100px;
-  margin: 24px auto 0 auto;
-  max-width: 900px;
+  background: linear-gradient(90deg, #f3cdf6 80%, #e3f0ff 100%);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(200, 209, 223, 0.18);
+  padding: 36px 80px;
+  margin: 32px auto 0 auto;
+  max-width: 935px;
   position: relative;
+  transition: box-shadow 0.2s;
 }
-
+.user-card:hover {
+  box-shadow: 0 8px 32px rgba(200, 209, 223, 0.22);
+}
 .avatar {
-  width: 96px;
-  height: 96px;
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 32px;
-  border: 4px solid #e3eaf2;
+  margin-right: 40px;
+  border: 5px solid #fff;
+  box-shadow: 0 2px 12px rgba(200, 209, 223, 0.18);
+  background: #e3f0ff;
 }
 
 .user-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .user-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 22px;
+  gap: 16px;
+  font-size: 26px;
   font-weight: bold;
   color: #222;
+  margin-bottom: 6px;
 }
 
 .level {
-  background: #e3f0ff;
+  background: linear-gradient(90deg, #e3f0ff 60%, #f3cdf6 100%);
   color: #305aa2;
-  border-radius: 8px;
-  padding: 2px 10px;
-  font-size: 14px;
+  border-radius: 10px;
+  padding: 3px 16px;
+  font-size: 16px;
   font-weight: 600;
+  box-shadow: 0 1px 6px #e3f0ff;
 }
 
 .user-id {
-  font-size: 13px;
+  font-size: 15px;
   color: #888;
+  margin-top: 2px;
+  letter-spacing: 1px;
 }
 
 .user-username {
-  font-size: 15px;
+  font-size: 18px;
   color: #e57373;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
 .user-stats {
@@ -143,15 +156,17 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   background: #fff;
   border: 1px solid #b6d0f7;
   color: #305aa2;
-  border-radius: 8px;
-  padding: 6px 24px;
-  font-size: 15px;
+  border-radius: 10px;
+  padding: 8px 28px;
+  font-size: 16px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #e3f0ff;
 }
 
 .edit-btn:hover {
   background: #e3f0ff;
+  box-shadow: 0 4px 16px #e3f0ff;
 }
 
 /* 主体区域布局 */
@@ -159,7 +174,7 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   display: flex;
   width: 1090px;             /* 与卡片同宽 */
   margin: 32px auto 0;      /* 增加上间距 */
-  gap: 24px;
+  gap: 28px;
   box-sizing: border-box;
 }
 
@@ -169,32 +184,34 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 16px rgba(200, 209, 223, 0.10);
-  padding: 24px 0;
+  padding: 28px 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .nav-item {
-  padding: 12px 32px;
-  font-size: 16px;
+  padding: 14px 36px;
+  font-size: 17px;
   color: #305aa2;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 10px;
   transition: background 0.2s, color 0.2s;
-  margin: 0 8px;
+  margin: 0 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  font-weight: 500;
 }
 
 .nav-icon {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .nav-item.active {
-  background: #e3f0ff;
+  background: linear-gradient(90deg, #e3f0ff 70%, #f3cdf6 100%);
   color: #222;
   font-weight: bold;
+  box-shadow: 0 2px 8px #e3f0ff;
 }
 
 .nav-item:hover {
