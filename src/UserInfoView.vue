@@ -42,6 +42,7 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue'
 import axios from 'axios'
+
 import { API_BASE_URL } from '@/config/index.js'
 import CasesRecord from './CasesRecord.vue'
 

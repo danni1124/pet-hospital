@@ -7,6 +7,7 @@ import QuestionnaireView from '../QuestionnaireView.vue'
 import Forum from '@/Forum.vue'
 import Introduction from '@/Introduction.vue'
 import UserInfoView from '@/UserInfoView.vue';
+import Shopmallment from '@/Shopmallment.vue'
 const routes = [
   {
     path: '/',
@@ -51,6 +52,12 @@ const routes = [
     path: '/user-info',
     name: 'UserInfoView',
     component: UserInfoView,
+    props: true
+  },
+  {
+    path: '/shopment',
+    name: 'Shopmallment',
+    component: Shopmallment,
     props: true
   },
 ];
