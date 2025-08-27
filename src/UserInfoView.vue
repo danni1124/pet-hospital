@@ -44,6 +44,7 @@ import { onMounted, computed, ref } from 'vue'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
 import CasesRecord from './CasesRecord.vue'
+
 import CouponRecord from './components/CouponRecord.vue'
 import BookingRecord from './BookingRecord.vue'
 import OrderRecord from './OrderRecord.vue'
@@ -70,6 +71,7 @@ const tabs = [
 const activeTab = ref('cases')
 
 // 组件映射
+
 
 const currentComponent = computed(() => {
   switch (activeTab.value) {
@@ -212,8 +214,9 @@ onMounted(() => {
 
 <style scoped>
 .user-center-bg {
-  background: linear-gradient(120deg, #f5f7fa 60%, #e3f0ff 100%);
+  background-image: url('./assets/userinfo3.webp');
   min-height: 100vh;
+  background-size: cover; 
   width: 100vw;
   padding: 1px 0 0 0;
   box-sizing: border-box;
@@ -223,9 +226,10 @@ onMounted(() => {
 .user-card {
   display: flex;
   align-items: center;
-  background: linear-gradient(90deg, #f3cdf6 80%, #e3f0ff 100%);
-  border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(200, 209, 223, 0.18);
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.01);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(144, 202, 249, 0.01); /* 浅蓝色阴影 */
   padding: 36px 80px;
   margin: 32px auto 0 auto;
   max-width: 935px;
@@ -241,8 +245,8 @@ onMounted(() => {
   border-radius: 50%;
   object-fit: cover;
   margin-right: 40px;
-  border: 5px solid #fff;
-  box-shadow: 0 2px 12px rgba(200, 209, 223, 0.18);
+  border: 2px solid #fff; /* 白色边框 */
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
   background: #e3f0ff;
 }
 
@@ -264,18 +268,18 @@ onMounted(() => {
 }
 
 .level {
-  background: linear-gradient(90deg, #e3f0ff 60%, #f3cdf6 100%);
-  color: #305aa2;
+  background: #FFC107; /* 黄色等级标签 */
+  color: #000; /* 黑色文字 */
   border-radius: 10px;
   padding: 3px 16px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: bold;
   box-shadow: 0 1px 6px #e3f0ff;
 }
 
 .user-id {
-  font-size: 15px;
-  color: #888;
+  font-size: 17px;
+  color: rgba(6, 95, 210, 0.9); /* 半透明白色ID */
   margin-top: 2px;
   letter-spacing: 1px;
 }
@@ -289,8 +293,8 @@ onMounted(() => {
 }
 
 .user-username {
-  font-size: 18px;
-  color: #e57373;
+  font-size: 19px;
+  color: rgba(6, 101, 210, 0.9);
   font-weight: bold;
   letter-spacing: 1px;
 }
@@ -335,8 +339,9 @@ onMounted(() => {
 /* 左侧导航 */
 .side-nav {
   width: 220px;
-  background: #fff;
-  border-radius: 12px;
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
   box-shadow: 0 2px 16px rgba(200, 209, 223, 0.10);
   padding: 28px 0;
   display: flex;
@@ -346,7 +351,7 @@ onMounted(() => {
 .nav-item {
   padding: 14px 36px;
   font-size: 17px;
-  color: #305aa2;
+  color: #063793;
   cursor: pointer;
   border-radius: 10px;
   transition: background 0.2s, color 0.2s;
@@ -362,8 +367,8 @@ onMounted(() => {
 }
 
 .nav-item.active {
-  background: linear-gradient(90deg, #e3f0ff 70%, #f3cdf6 100%);
-  color: #222;
+  background: #1E88E5; /* 蓝色选中状态 */
+  color: white;
   font-weight: bold;
   box-shadow: 0 2px 8px #e3f0ff;
 }
@@ -371,19 +376,24 @@ onMounted(() => {
 .nav-item:hover {
   background: #f5f7fa;
 }
-
+.nav-item:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
 /* 右侧内容区 */
 .content-area {
   flex: 1 1 0;
-  background: #fff;
+  background: rgba(255,255,255,0.05);
   border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(200, 209, 223, 0.10);
+  box-shadow: 0 4px 32px rgba(41,122,184,0.10);
   padding: 32px 32px;
   min-height: 400px;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
   position: relative;
+  backdrop-filter: blur(8px); /* 背景模糊融合 */
+  transition: box-shadow 0.2s;
 }
 
 .placeholder {
@@ -392,9 +402,9 @@ onMounted(() => {
   color: #305aa2;
 }
 .prescription-wrapper {
-  background: #fff;
-  border: 1px solid #bbb;
-  border-radius: 6px;
+  background: rgba(255,255,255,0.32);           /* 更透明 */
+  border: 1.5px solid rgba(41,122,184,0.18);    /* 淡蓝色半透明边框 */
+  border-radius: 18px;
   padding: 24px 32px 12px 32px;
   font-family: 'SimSun', 'serif';
   color: #222;
@@ -402,12 +412,17 @@ onMounted(() => {
   max-width: 800px;
   margin: 0 auto;
   position: relative;
+  box-shadow: 0 8px 32px rgba(41,122,184,0.18); /* 柔和阴影 */
+  backdrop-filter: blur(12px);                  /* 更强模糊融合 */
+  transition: box-shadow 0.2s;
 }
 .prescription-title {
+  color: #0D47A1; /* 深蓝色标题 */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
   text-align: center;
   font-size: 24px;
   font-weight: bold;
-  letter-spacing: 4px;
+  letter-spacing: 5px;
   margin-bottom: 12px;
 }
 .prescription-table {
