@@ -440,7 +440,7 @@
             <p>专业呵护 · 爱心相伴 · 科技守护</p>
             <br></br>
             <div class="contact-info">
-              <p><i class="fas fa-map-marker-alt"></i> 东湖市德扬区西街路123号</p>
+              <p><i class="fas fa-map-marker-alt"></i> 北京市朝阳区西街路123号</p>
               <p><i class="fas fa-phone-alt"></i> 400-123-4567</p>
               
             </div>
@@ -490,7 +490,7 @@
 </template>
 
 <script>
-import { departments} from '../src/doctorData.js';
+import { departments} from '/src/doctorData.js';
 export default {
   name: 'PetHospitalOverview',
   data() {

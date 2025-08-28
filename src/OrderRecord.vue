@@ -1,11 +1,11 @@
 <template>
   <div class="order-list">
-    <!-- 加载状态 -->
+    <!-- 鍔犺浇鐘舵€� -->
     <div v-if="loading" class="loading-state">
-      <p>🔄 正在加载订单记录...</p>
+      <p>馃攧 姝ｅ湪鍔犺浇璁㈠崟璁板綍...</p>
     </div>
     
-    <!-- 订单记录列表 -->
+    <!-- 璁㈠崟璁板綍鍒楄〃 -->
     <div v-else-if="orders.length > 0">
       <div
         v-for="item in orders"
@@ -13,28 +13,28 @@
         class="order-card"
       >
         <div class="order-row">
-          <span class="order-label">商品名称</span>
+          <span class="order-label">鍟嗗搧鍚嶇О</span>
           <span class="order-value">{{ item.productName }}</span>
         </div>
         <div class="order-row">
-          <span class="order-label">数量</span>
+          <span class="order-label">鏁伴噺</span>
           <span class="order-value">{{ item.quantity }}</span>
         </div>
         <div class="order-row">
-          <span class="order-label">价格</span>
-          <span class="order-value">¥{{ item.price }}</span>
+          <span class="order-label">浠锋牸</span>
+          <span class="order-value">楼{{ item.price }}</span>
         </div>
         <div class="order-row">
-          <span class="order-label">下单时间</span>
+          <span class="order-label">涓嬪崟鏃堕棿</span>
           <span class="order-value">{{ formatDate(item.createTime) }}</span>
         </div>
       </div>
     </div>
     
-    <!-- 空状态 -->
+    <!-- 绌虹姸鎬� -->
     <div v-else class="empty-state">
-      <p>�️ 暂无订单记录</p>
-      <p class="empty-tip">您还没有任何订单记录哦~</p>
+      <p>锟斤笍 鏆傛棤璁㈠崟璁板綍</p>
+      <p class="empty-tip">鎮ㄨ繕娌℃湁浠讳綍璁㈠崟璁板綍鍝</p>
     </div>
   </div>
 </template>
@@ -44,19 +44,19 @@ import { onMounted, ref } from 'vue'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
 
-// 响应式数据
+// 鍝嶅簲寮忔暟鎹�
 const orders = ref([])
 const loading = ref(true)
 
-// 获取用户订单记录
+// 鑾峰彇鐢ㄦ埛璁㈠崟璁板綍
 const fetchUserOrders = async () => {
   try {
-    console.log('=== 获取用户订单记录 ===')
+    console.log('=== 鑾峰彇鐢ㄦ埛璁㈠崟璁板綍 ===')
     
-    // 获取当前登录用户信息
+    // 鑾峰彇褰撳墠鐧诲綍鐢ㄦ埛淇℃伅
     const currentUserStr = localStorage.getItem('currentUser')
     if (!currentUserStr) {
-      console.error('未找到用户信息')
+      console.error('鏈壘鍒扮敤鎴蜂俊鎭�')
       loading.value = false
       return
     }
@@ -65,53 +65,53 @@ const fetchUserOrders = async () => {
     const userId = currentUser.userId
     
     if (!userId) {
-      console.error('用户ID不存在')
+      console.error('鐢ㄦ埛ID涓嶅瓨鍦�')
       loading.value = false
       return
     }
     
     try {
-      // 调用后端API获取订单记录
+      // 璋冪敤鍚庣API鑾峰彇璁㈠崟璁板綍
       const response = await axios.get(`${API_BASE_URL}/getOrderInfoByUserId`, {
         params: { 
           userId: userId
         }
       })
       
-      console.log('后端订单记录响应:', response.data)
+      console.log('鍚庣璁㈠崟璁板綍鍝嶅簲:', response.data)
       
       if (response.data && response.data.code === 200) {
         orders.value = response.data.data || []
-        console.log('从后端加载订单记录成功:', orders.value.length, '条')
+        console.log('浠庡悗绔姞杞借鍗曡褰曟垚鍔�:', orders.value.length, '鏉�')
       } else {
-        throw new Error('获取订单记录失败: ' + (response.data?.msg || '未知错误'))
+        throw new Error('鑾峰彇璁㈠崟璁板綍澶辫触: ' + (response.data?.msg || '鏈煡閿欒'))
       }
       
     } catch (apiError) {
-      console.log('后端API不可用，使用本地降级数据:', apiError.message)
+      console.log('鍚庣API涓嶅彲鐢紝浣跨敤鏈湴闄嶇骇鏁版嵁:', apiError.message)
       
-      // API降级：使用本地模拟数据
+      // API闄嶇骇锛氫娇鐢ㄦ湰鍦版ā鎷熸暟鎹�
       loadLocalOrders(userId)
     }
     
   } catch (error) {
-    console.error('获取订单记录时发生错误:', error)
+    console.error('鑾峰彇璁㈠崟璁板綍鏃跺彂鐢熼敊璇�:', error)
     
-    // 错误处理：显示空数据
+    // 閿欒澶勭悊锛氭樉绀虹┖鏁版嵁
     orders.value = []
   } finally {
     loading.value = false
   }
 }
 
-// 本地降级数据（API不可用时的备用方案）
+// 鏈湴闄嶇骇鏁版嵁锛圓PI涓嶅彲鐢ㄦ椂鐨勫鐢ㄦ柟妗堬級
 const loadLocalOrders = (userId) => {
-  // 模拟订单数据（根据后端接口返回的数据结构）
+  // 妯℃嫙璁㈠崟鏁版嵁锛堟牴鎹悗绔帴鍙ｈ繑鍥炵殑鏁版嵁缁撴瀯锛�
   const mockOrders = [
     {
       orderId: 1,
       userId: userId,
-      productName: '宠物营养膏（猫用）',
+      productName: '瀹犵墿钀ュ吇鑶忥紙鐚敤锛�',
       quantity: 2,
       price: 89.00,
       createTime: '2025-07-20 10:30:00'
@@ -119,7 +119,7 @@ const loadLocalOrders = (userId) => {
     {
       orderId: 2,
       userId: userId,
-      productName: '膨润土猫砂 10kg',
+      productName: '鑶ㄦ鼎鍦熺尗鐮� 10kg',
       quantity: 1,
       price: 56.00,
       createTime: '2025-07-25 15:20:00'
@@ -127,7 +127,7 @@ const loadLocalOrders = (userId) => {
     {
       orderId: 3,
       userId: userId,
-      productName: '皇家狗粮 5kg装',
+      productName: '鐨囧鐙楃伯 5kg瑁�',
       quantity: 1,
       price: 128.00,
       createTime: '2025-07-28 09:45:00'
@@ -135,7 +135,7 @@ const loadLocalOrders = (userId) => {
     {
       orderId: 4,
       userId: userId,
-      productName: '宠物玩具套装（3件套）',
+      productName: '瀹犵墿鐜╁叿濂楄锛�3浠跺锛�',
       quantity: 1,
       price: 45.00,
       createTime: '2025-07-30 16:10:00'
@@ -143,10 +143,10 @@ const loadLocalOrders = (userId) => {
   ]
   
   orders.value = mockOrders
-  console.log('使用本地降级订单数据:', orders.value.length, '条')
+  console.log('浣跨敤鏈湴闄嶇骇璁㈠崟鏁版嵁:', orders.value.length, '鏉�')
 }
 
-// 格式化日期时间
+// 鏍煎紡鍖栨棩鏈熸椂闂�
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   try {
@@ -163,9 +163,9 @@ const formatDate = (dateStr) => {
   }
 }
 
-// 组件挂载时获取数据
+// 缁勪欢鎸傝浇鏃惰幏鍙栨暟鎹�
 onMounted(() => {
-  console.log('订单记录组件挂载，开始获取数据...')
+  console.log('璁㈠崟璁板綍缁勪欢鎸傝浇锛屽紑濮嬭幏鍙栨暟鎹�...')
   fetchUserOrders()
 })
 </script>
