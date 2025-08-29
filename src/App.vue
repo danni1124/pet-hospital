@@ -586,7 +586,14 @@ const handleLogin = async () => {
         localStorage.removeItem('rememberedUser')
       }
       
-      alert('✅ ' + (response.data.msg || '登录成功！'))
+      alert('✅ ' + (response.data.msg || '登录成功！')),
+      //保存登录用户信息到 localStorage
+      localStorage.setItem('currentUser', JSON.stringify({
+        userId: response.data.user.userId,   // 后端返回的用户ID
+        username: response.data.user.username ,// 后端返回的用户名
+        avatar: username.substring(0, 2).toUpperCase(),
+      }));
+
       closeLoginModal()
     } else {
       // 登录失败 - 显示后端返回的错误信息
