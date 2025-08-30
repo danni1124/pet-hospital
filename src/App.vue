@@ -24,6 +24,9 @@
         <router-link to="/introduction" class="nav-btn" active-class="active" exact>
           <i class="fas fa-info"></i>概况
         </router-link>
+        <router-link to="/adaptpet" class="nav-btn" active-class="active" exact>
+          <i class="fas fa-info"></i>领养
+        </router-link>
       </div>
       
       <!-- 右侧用户区域 -->

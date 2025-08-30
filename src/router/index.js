@@ -7,6 +7,7 @@ import QuestionnaireView from '../QuestionnaireView.vue'
 import Forum from '@/Forum.vue'
 import Introduction from '@/Introduction.vue'
 import UserInfoView from '@/UserInfoView.vue';
+import AdaptPet from '../AdaptPet.vue';
 const routes = [
   {
     path: '/',
@@ -53,6 +54,12 @@ const routes = [
     component: UserInfoView,
     props: true
   },
+  {
+    path: '/adaptpet',
+    name: 'AdaptPet',
+    component: AdaptPet,
+    props: true 
+  }
 ];
 
 const router = createRouter({
