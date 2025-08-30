@@ -51,9 +51,6 @@ const tabs = [
 
 const activeTab = ref('cases')
 
-const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
-const CouponRecord  = { template: `<div class="placeholder">🎟 优惠券记录</div>` }
-const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
 
 const currentComponent = computed(() => {
   switch (activeTab.value) {
