@@ -12,13 +12,12 @@ export function getComments(postId) {
 }
 // 更新帖子统计数据（浏览量、点赞数、收藏数）
 // 修改后的 updatePostStats 方法
-export const updatePostStats = (postId, type, newNum) => {
-  return api.get('/updateNum', {
-    params: {
-      id: postId,
-      type: type,
-      newNum: newNum
-    }
+export const updatePostStats = (type, postId, newNum) => {
+  console.log('请求参数', type, postId, newNum)
+  return api.post('/updateNumInPost', {
+    type: type,
+    id: postId,
+    newNum: newNum
   }).then(response => {
     console.log('后端返回的数据:', response.data);
     return response;

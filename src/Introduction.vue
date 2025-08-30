@@ -24,7 +24,7 @@
           <div class="intro-content">
             <h2>医院简介</h2>
             <div class="intro-text">
-              <p><i class="fas fa-heart icon-highlight"></i> 德扬宠物医院成立于2015年，是东湖地区规模最大、设备最先进的综合性宠物医疗机构。医院占地1500平方米，设有眼科、骨科、外科、皮肤科、内科、牙科、肿瘤科和康复科等专科中心。</p>
+              <p><i class="fas fa-heart icon-highlight"></i> 德扬宠物医院成立于2015年，是朝阳区规模最大、设备最先进的综合性宠物医疗机构。医院占地1500平方米，设有眼科、骨科、外科、皮肤科、内科、牙科、肿瘤科和康复科等专科中心。</p>
               <p><i class="fas fa-flask icon-highlight"></i> 我们拥有国际先进的诊疗设备，包括宠物专用CT、DR数字影像系统、全自动生化分析仪等，为宠物提供全方位的医疗健康服务。</p>
             </div>
           </div>
