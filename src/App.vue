@@ -31,11 +31,6 @@
       
       <!-- 右侧用户区域 -->
       <div class="user-area">
-        <!-- 调试按钮 -->
-        <button class="debug-btn" @click="showDebugPanel = !showDebugPanel" title="调试面板">
-          🔧
-        </button>
-        
         <!-- 未登录时显示登录按钮 -->
         <div v-if="!isLoggedIn" class="login-btn-wrapper">
           <button class="login-btn-nav" @click="showLoginModal = true">
@@ -354,41 +349,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 调试面板 -->
-    <div v-if="showDebugPanel" class="debug-panel">
-      <div class="debug-header">
-        <h3>调试面板</h3>
-        <button class="close-debug" @click="showDebugPanel = false">&times;</button>
-      </div>
-      <div class="debug-content">
-        <div class="debug-section">
-          <h4>已注册用户 ({{ getRegisteredUsers().length }})</h4>
-          <div class="registered-users" v-if="getRegisteredUsers().length > 0">
-            <div v-for="user in getRegisteredUsers()" :key="user.username" class="user-item">
-              <strong>{{ user.username }}</strong> | 密码: {{ user.password }}
-              <span v-if="user.gender"> | 性别: {{ user.gender }}</span>
-              <span v-if="user.phone"> | 电话: {{ user.phone }}</span>
-              <span v-if="user.email"> | 邮箱: {{ user.email }}</span>
-              <br><small v-if="user.address">地址: {{ user.address }}</small>
-            </div>
-          </div>
-          <p v-else class="no-users">暂无注册用户</p>
-          <div class="debug-actions">
-            <button class="debug-action-btn" @click="addTestUser">添加测试用户</button>
-            <button class="clear-users-btn" @click="clearRegisteredUsers">清空所有用户</button>
-          </div>
-        </div>
-        
-        <div class="debug-section">
-          <h4>API 配置</h4>
-          <p><strong>Base URL:</strong> {{ API_BASE_URL }}</p>
-          <p><strong>模拟模式:</strong> 启用 (本地 localStorage)</p>
-          <p><strong>当前登录状态:</strong> {{ isLoggedIn ? '已登录' : '未登录' }}</p>
-          <p v-if="isLoggedIn"><strong>当前用户:</strong> {{ currentUser.name }}</p>
-        </div>
-      </div>
-    </div>
   
 </template>
 
@@ -589,27 +549,34 @@ const handleLogin = async () => {
       console.log('后端响应:', response.data)
       
     } catch (apiError) {
-      console.log('真实API不可用，使用本地模拟:', apiError.message)
-      
-      // 如果真实接口失败，使用模拟数据
-      response = await mockLogin(loginForm.value.username, loginForm.value.password)
-      console.log('模拟响应:', response.data)
+      console.error('登录API调用失败:', apiError.message)
+      loginErrorMsg.value = '网络连接失败，请检查网络或联系管理员'
+      return
     }
     
     // 严格检查后端返回的code是否为200
     if (response.data && response.data.code === 200) {
       // 登录成功
       isLoggedIn.value = true
+      
+      // 处理后端返回的用户数据
+      const userData = response.data.user || response.data.data || {}
+      const username = userData.username || loginForm.value.username
+      const userId = userData.userId || userData.user_id || userData.id
+      
       currentUser.value = {
-        name: loginForm.value.username,
-        avatar: loginForm.value.username.substring(0, 2).toUpperCase()
+        name: username,
+        avatar: username.substring(0, 2).toUpperCase(),
+        userId: userId
       }
       
-      // 保存当前登录状态到localStorage（与记住密码功能分开）
+      // 保存当前登录状态到localStorage（包含userId等信息）
       localStorage.setItem('currentUser', JSON.stringify({
-        username: loginForm.value.username,
-        avatar: loginForm.value.username.substring(0, 2).toUpperCase(),
-        loginTime: new Date().toISOString()
+        username: username,
+        userId: userId,
+        avatar: username.substring(0, 2).toUpperCase(),
+        loginTime: new Date().toISOString(),
+        userData: userData  // 保存完整的用户数据
       }))
       
       // 记住密码功能（可选）
@@ -622,7 +589,14 @@ const handleLogin = async () => {
         localStorage.removeItem('rememberedUser')
       }
       
-      alert('✅ ' + (response.data.msg || '登录成功！'))
+      alert('✅ ' + (response.data.msg || '登录成功！')),
+      //保存登录用户信息到 localStorage
+      localStorage.setItem('currentUser', JSON.stringify({
+        userId: response.data.user.userId,   // 后端返回的用户ID
+        username: response.data.user.username ,// 后端返回的用户名
+        avatar: username.substring(0, 2).toUpperCase(),
+      }));
+
       closeLoginModal()
     } else {
       // 登录失败 - 显示后端返回的错误信息
@@ -643,40 +617,7 @@ const handleLogin = async () => {
   }
 }
 
-// 模拟登录请求
-const mockLogin = async (username, password) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 从 localStorage 获取已注册用户
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-      
-      console.log('=== 模拟登录调试信息 ===')
-      console.log('尝试登录用户:', username)
-      console.log('localStorage 中的用户数据:', registeredUsers)
-      
-      // 查找匹配的用户
-      const user = registeredUsers.find(u => u.username === username && u.password === password)
-      
-      if (user) {
-        console.log('找到匹配用户，登录成功')
-        resolve({
-          data: {
-            msg: "登录成功",
-            code: 200
-          }
-        })
-      } else {
-        console.log('未找到匹配用户，登录失败')
-        resolve({
-          data: {
-            msg: "用户名或密码错误",
-            code: 400
-          }
-        })
-      }
-    }, 500) // 模拟网络延迟
-  })
-}
+
 
 // 处理注册
 const handleRegister = async () => {
@@ -737,11 +678,9 @@ const handleRegister = async () => {
       console.log('后端响应:', response.data)
       
     } catch (apiError) {
-      console.log('真实API不可用，使用本地模拟:', apiError.message)
-      
-      // 如果真实接口失败，使用模拟数据
-      response = await mockRegister(registerForm.value)
-      console.log('模拟响应:', response.data)
+      console.error('注册API调用失败:', apiError.message)
+      alert('❌ 网络连接失败，请检查网络或联系管理员')
+      return
     }
     
     // 严格检查后端返回的code是否为200
@@ -781,57 +720,7 @@ const handleRegister = async () => {
   }
 }
 
-// 模拟注册请求
-const mockRegister = async (userData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 从 localStorage 获取已注册用户
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-      
-      console.log('=== 模拟注册调试信息 ===')
-      console.log('注册用户数据:', userData)
-      console.log('当前 localStorage 中的用户:', registeredUsers)
-      
-      // 检查用户名是否已存在
-      const existingUser = registeredUsers.find(u => u.username === userData.username)
-      
-      if (existingUser) {
-        console.log('注册失败 - 用户名已存在')
-        resolve({
-          data: {
-            msg: "用户名已存在",
-            code: 400
-          }
-        })
-      } else {
-        // 添加新用户 - 按照后端数据格式
-        const newUser = {
-          username: userData.username,
-          password: userData.password,
-          gender: userData.gender || "女",
-          phone: userData.phone || "",
-          email: userData.email || "",
-          address: userData.address || "",
-          avatar_url: null,
-          registeredAt: new Date().toISOString()
-        }
-        
-        registeredUsers.push(newUser)
-        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers))
-        
-        console.log('注册成功 - 新用户:', newUser)
-        console.log('更新后的 localStorage:', JSON.parse(localStorage.getItem('registeredUsers')))
-        
-        resolve({
-          data: {
-            msg: "添加用户成功",
-            code: 200
-          }
-        })
-      }
-    }, 500) // 模拟网络延迟
-  })
-}
+
 
 // 处理登出
 const handleLogout = () => {
@@ -842,48 +731,9 @@ const handleLogout = () => {
   localStorage.removeItem('currentUser')
   
   alert('已退出登录')
-}
-
-// 调试面板状态
-const showDebugPanel = ref(false)
-
-// 获取已注册用户（用于调试）
-const getRegisteredUsers = () => {
-  return JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-}
-
-// 清空已注册用户（用于调试）
-const clearRegisteredUsers = () => {
-  localStorage.removeItem('registeredUsers')
-  localStorage.removeItem('rememberedUser')
-  alert('已清空所有注册用户和记住的密码')
-}
-
-// 添加测试用户（用于调试）
-const addTestUser = () => {
-  const testUser = {
-    username: 'hmm',
-    password: '999999',
-    gender: '女',
-    phone: '13800138000',
-    email: 'zhangsan@example.com',
-    address: '北京市海淀区中关村大街1号',
-    avatar_url: null,
-    registeredAt: new Date().toISOString()
-  }
   
-  const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-  
-  // 检查是否已存在
-  const exists = registeredUsers.find(u => u.username === testUser.username)
-  if (exists) {
-    alert('测试用户已存在')
-    return
-  }
-  
-  registeredUsers.push(testUser)
-  localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers))
-  alert('✅ 测试用户已添加\n用户名: hmm\n密码: 999999')
+  // 自动跳转到首页
+  router.push('/')
 }
 
 // 页面加载时检查记住的密码
@@ -1908,168 +1758,4 @@ onMounted(() => {
         }
       }
 
-      /* 调试面板样式 */
-      .debug-btn {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #ff6b6b;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-        cursor: pointer;
-        box-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
-        z-index: 1000;
-        transition: all 0.3s ease;
-      }
-
-      .debug-btn:hover {
-        background: #ff5252;
-        transform: scale(1.1);
-      }
-
-      .debug-panel {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        width: 350px;
-        max-height: 500px;
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        z-index: 999;
-        overflow: hidden;
-      }
-
-      .debug-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 12px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .debug-header h3 {
-        margin: 0;
-        font-size: 16px;
-      }
-
-      .close-debug {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 20px;
-        cursor: pointer;
-        padding: 0;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .debug-content {
-        padding: 16px;
-        max-height: 400px;
-        overflow-y: auto;
-      }
-
-      .debug-section {
-        margin-bottom: 16px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid #f0f0f0;
-      }
-
-      .debug-section:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-      }
-
-      .debug-section h4 {
-        margin: 0 0 8px 0;
-        font-size: 14px;
-        color: #333;
-      }
-
-      .registered-users {
-        max-height: 150px;
-        overflow-y: auto;
-        border: 1px solid #e0e0e0;
-        border-radius: 4px;
-        padding: 8px;
-        margin-bottom: 8px;
-      }
-
-      .user-item {
-        padding: 4px 8px;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 12px;
-        color: #666;
-      }
-
-      .user-item:last-child {
-        border-bottom: none;
-      }
-
-      .no-users {
-        color: #999;
-        font-style: italic;
-        font-size: 12px;
-        margin: 8px 0;
-      }
-
-      .clear-users-btn {
-        background: #ff6b6b;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-        margin-left: 8px;
-      }
-
-      .clear-users-btn:hover {
-        background: #ff5252;
-      }
-
-      .debug-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 8px;
-      }
-
-      .debug-action-btn {
-        background: #4CAF50;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-      }
-
-      .debug-action-btn:hover {
-        background: #45a049;
-      }
-
-      .user-item {
-        padding: 6px 8px;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 11px;
-        color: #666;
-        line-height: 1.4;
-      }
-
-      .user-item small {
-        color: #999;
-        font-size: 10px;
-      }
     </style>

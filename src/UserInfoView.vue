@@ -2,15 +2,18 @@
   <div class="user-center-bg">
     <!-- 顶部用户信息卡片 -->
     <div class="user-card">
-      <img class="avatar" src=""/>
+      <img class="avatar" :src="getAvatarUrl(userInfo.avatar_url)" alt="用户头像"/>
       <div class="user-info">
         <div class="user-row">
-          <span class="user-username">@ jack</span>
-          <span class="level">Lv.5</span>
+          <span class="user-username">@ {{ userInfo.username || 'loading...' }}</span>
+          <span class="level">Lv.{{ userInfo.level || 1 }}</span>
         </div>
-        <div class="user-id">通行证ID:291423473</div>
+        <div class="user-id">通行证ID:{{ userInfo.userId || 'loading...' }}</div>
+        <div v-if="userInfo.phone || userInfo.email" class="user-contact">
+          <span v-if="userInfo.phone">📱 {{ userInfo.phone }}</span>
+          <span v-if="userInfo.email">📧 {{ userInfo.email }}</span>
+        </div>
       </div>
-
     </div>
 
     <!-- 主体区域 -->
@@ -37,11 +40,27 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-
+import { onMounted, computed, ref } from 'vue'
+import axios from 'axios'
+import { API_BASE_URL } from '@/config/index.js'
 import CasesRecord from './CasesRecord.vue'
-import CouponRecord from './CouponRecord.vue'
 
+import CouponRecord from './components/CouponRecord.vue'
+import BookingRecord from './BookingRecord.vue'
+import OrderRecord from './OrderRecord.vue'
+
+// 用户信息响应式数据
+const userInfo = ref({
+  userId: null,
+  username: '',
+  level: 1,
+  phone: '',
+  email: '',
+  avatar_url: '',
+  address: ''
+})
+
+// Tab数据和状态
 const tabs = [
   { key: 'cases',   label: '病例记录',   icon: '📋' },
   { key: 'booking', label: '预约记录',   icon: '📅' },
@@ -50,6 +69,7 @@ const tabs = [
 ]
 
 const activeTab = ref('cases')
+
 
 
 const currentComponent = computed(() => {
@@ -62,75 +82,220 @@ const currentComponent = computed(() => {
   }
 })
 
+// 获取用户详细信息
+const fetchUserInfo = async () => {
+  try {
+    // 首先从localStorage获取当前登录用户的基本信息
+    const currentUserStr = localStorage.getItem('currentUser')
+    if (!currentUserStr) {
+      console.error('未找到登录用户信息')
+      return
+    }
+    
+    const currentUser = JSON.parse(currentUserStr)
+    const userId = currentUser.userId
+    
+    if (!userId) {
+      console.error('用户ID不存在，无法获取详细信息')
+      // 使用localStorage中的基本信息作为降级方案
+      userInfo.value = {
+        userId: 'unknown',
+        username: currentUser.username || 'unknown',
+        level: 1,
+        phone: '',
+        email: '',
+        avatar_url: '',
+        address: ''
+      }
+      return
+    }
+    
+    console.log('获取用户详细信息，userId:', userId)
+    
+    let response
+    
+    try {
+      // 调用后端API获取用户详细信息
+      response = await axios.get(`${API_BASE_URL}/getUser`, {
+        params: { userId: userId }
+      })
+      
+      console.log('后端用户信息响应:', response.data)
+      
+      if (response.data && response.data.code === 200) {
+        // 成功获取用户信息
+        const userData = response.data.user || response.data.data || {}
+        userInfo.value = {
+          userId: userData.userId || userId,
+          username: userData.username || currentUser.username,
+          level: userData.level || 1,
+          phone: userData.phone || '',
+          email: userData.email || '',
+          avatar_url: userData.avatar_url || '',
+          address: userData.address || ''
+        }
+      } else {
+        throw new Error(response.data?.msg || '获取用户信息失败')
+      }
+      
+    } catch (apiError) {
+      console.log('真实API不可用，使用本地降级:', apiError.message)
+      
+      // API降级：使用localStorage中已保存的用户数据
+      if (currentUser.userData) {
+        userInfo.value = {
+          userId: currentUser.userData.userId || userId,
+          username: currentUser.userData.username || currentUser.username,
+          level: currentUser.userData.level || 1,
+          phone: currentUser.userData.phone || '',
+          email: currentUser.userData.email || '',
+          avatar_url: currentUser.userData.avatar_url || '',
+          address: currentUser.userData.address || ''
+        }
+      } else {
+        // 如果没有详细数据，使用基本信息，添加一个示例头像
+        userInfo.value = {
+          userId: userId,
+          username: currentUser.username || 'unknown',
+          level: 1,
+          phone: '',
+          email: '',
+          avatar_url: '/uploads/avatars/default-user.jpg', // 示例头像路径
+          address: ''
+        }
+      }
+      
+      console.log('降级用户信息:', userInfo.value)
+    }
+    
+  } catch (error) {
+    console.error('获取用户信息时发生错误:', error)
+    
+    // 错误处理：显示默认信息
+    userInfo.value = {
+      userId: 'error',
+      username: '加载失败',
+      level: 1,
+      phone: '',
+      email: '',
+      avatar_url: '',
+      address: ''
+    }
+  }
+}
 
-const BookingRecord = { template: `<div class="placeholder">📅 预约记录</div>` }
-const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</div>` }
+// 获取完整的头像URL
+const getAvatarUrl = (avatarPath) => {
+  if (!avatarPath) {
+    // 返回默认头像，可以是一个占位图或默认头像
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMzciIHI9IjE1IiBmaWxsPSIjQzRDNEM0Ii8+CjxwYXRoIGQ9Ik0yMCA4MEMyMCA2NS44NTc5IDMxLjQzMTUgNTUgNDUgNTVINTVDNjguNTY4NSA1NSA4MCA2NS44NTc5IDgwIDgwVjEwMEgyMFY4MFoiIGZpbGw9IiNDNEM0QzQiLz4KPC9zdmc+'
+  }
+  
+  // 如果avatar_url已经是完整的URL（包含http或https），直接返回
+  if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+    return avatarPath
+  }
+  
+  // 否则拼接基本网址
+  const baseUrl = 'http://47.113.205.34:8085'
+  // 确保路径以/开头
+  const path = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`
+  return `${baseUrl}${path}`
+}
+
+// 页面加载时自动获取用户信息
+onMounted(() => {
+  console.log('个人中心页面加载，开始获取用户信息...')
+  fetchUserInfo()
+})
 
 </script>
 
 <style scoped>
 .user-center-bg {
-  background: #f5f7fa;
+  background-image: url('./assets/userinfo3.webp');
   min-height: 100vh;
-  width: 100vw;           /* 改为视口宽度，确保更宽 */
-  padding: 1px 0 0 0;    /* 顶部增加64px内边距，不覆盖导航栏 */
-  box-sizing: border-box; /* 防止溢出 */
+  background-size: cover; 
+  width: 100vw;
+  padding: 1px 0 0 0;
+  box-sizing: border-box;
 }
 
+/* 顶部用户信息卡片美化 */
 .user-card {
   display: flex;
   align-items: center;
-  background: #f3cdf6;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(200, 209, 223, 0.15);
-  padding: 32px 100px;
-  margin: 24px auto 0 auto;
-  max-width: 900px;
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.01);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(144, 202, 249, 0.01); /* 浅蓝色阴影 */
+  padding: 36px 80px;
+  margin: 32px auto 0 auto;
+  max-width: 935px;
   position: relative;
+  transition: box-shadow 0.2s;
 }
-
+.user-card:hover {
+  box-shadow: 0 8px 32px rgba(200, 209, 223, 0.22);
+}
 .avatar {
-  width: 96px;
-  height: 96px;
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 32px;
-  border: 4px solid #e3eaf2;
+  margin-right: 40px;
+  border: 2px solid #fff; /* 白色边框 */
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  background: #e3f0ff;
 }
 
 .user-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .user-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 22px;
+  gap: 16px;
+  font-size: 26px;
   font-weight: bold;
   color: #222;
+  margin-bottom: 6px;
 }
 
 .level {
-  background: #e3f0ff;
-  color: #305aa2;
-  border-radius: 8px;
-  padding: 2px 10px;
-  font-size: 14px;
-  font-weight: 600;
+  background: #FFC107; /* 黄色等级标签 */
+  color: #000; /* 黑色文字 */
+  border-radius: 10px;
+  padding: 3px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 1px 6px #e3f0ff;
 }
 
 .user-id {
-  font-size: 13px;
-  color: #888;
+  font-size: 17px;
+  color: rgba(6, 95, 210, 0.9); /* 半透明白色ID */
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+
+.user-contact {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  display: flex;
+  gap: 16px;
 }
 
 .user-username {
-  font-size: 15px;
-  color: #e57373;
+  font-size: 19px;
+  color: rgba(6, 101, 210, 0.9);
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
 .user-stats {
@@ -148,15 +313,17 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   background: #fff;
   border: 1px solid #b6d0f7;
   color: #305aa2;
-  border-radius: 8px;
-  padding: 6px 24px;
-  font-size: 15px;
+  border-radius: 10px;
+  padding: 8px 28px;
+  font-size: 16px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #e3f0ff;
 }
 
 .edit-btn:hover {
   background: #e3f0ff;
+  box-shadow: 0 4px 16px #e3f0ff;
 }
 
 /* 主体区域布局 */
@@ -164,60 +331,68 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   display: flex;
   width: 1090px;             /* 与卡片同宽 */
   margin: 32px auto 0;      /* 增加上间距 */
-  gap: 24px;
+  gap: 28px;
   box-sizing: border-box;
 }
 
 /* 左侧导航 */
 .side-nav {
   width: 220px;
-  background: #fff;
-  border-radius: 12px;
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
   box-shadow: 0 2px 16px rgba(200, 209, 223, 0.10);
-  padding: 24px 0;
+  padding: 28px 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .nav-item {
-  padding: 12px 32px;
-  font-size: 16px;
-  color: #305aa2;
+  padding: 14px 36px;
+  font-size: 17px;
+  color: #063793;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 10px;
   transition: background 0.2s, color 0.2s;
-  margin: 0 8px;
+  margin: 0 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  font-weight: 500;
 }
 
 .nav-icon {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .nav-item.active {
-  background: #e3f0ff;
-  color: #222;
+  background: #1E88E5; /* 蓝色选中状态 */
+  color: white;
   font-weight: bold;
+  box-shadow: 0 2px 8px #e3f0ff;
 }
 
 .nav-item:hover {
   background: #f5f7fa;
 }
-
+.nav-item:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
 /* 右侧内容区 */
 .content-area {
   flex: 1 1 0;
-  background: #fff;
+  background: rgba(255,255,255,0.05);
   border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(200, 209, 223, 0.10);
+  box-shadow: 0 4px 32px rgba(41,122,184,0.10);
   padding: 32px 32px;
   min-height: 400px;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
   position: relative;
+  backdrop-filter: blur(8px); /* 背景模糊融合 */
+  transition: box-shadow 0.2s;
 }
 
 .placeholder {
@@ -226,9 +401,9 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   color: #305aa2;
 }
 .prescription-wrapper {
-  background: #fff;
-  border: 1px solid #bbb;
-  border-radius: 6px;
+  background: rgba(255,255,255,0.32);           /* 更透明 */
+  border: 1.5px solid rgba(41,122,184,0.18);    /* 淡蓝色半透明边框 */
+  border-radius: 18px;
   padding: 24px 32px 12px 32px;
   font-family: 'SimSun', 'serif';
   color: #222;
@@ -236,12 +411,17 @@ const OrderRecord   = { template: `<div class="placeholder">📦 订单记录</d
   max-width: 800px;
   margin: 0 auto;
   position: relative;
+  box-shadow: 0 8px 32px rgba(41,122,184,0.18); /* 柔和阴影 */
+  backdrop-filter: blur(12px);                  /* 更强模糊融合 */
+  transition: box-shadow 0.2s;
 }
 .prescription-title {
+  color: #0D47A1; /* 深蓝色标题 */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
   text-align: center;
   font-size: 24px;
   font-weight: bold;
-  letter-spacing: 4px;
+  letter-spacing: 5px;
   margin-bottom: 12px;
 }
 .prescription-table {
