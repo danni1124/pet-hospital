@@ -120,15 +120,33 @@ export default {
         }
         
         try {
-          // 尝试从后端API获取优惠券
-          const response = await axios.get(`${API_BASE_URL}/getUserCoupons`, {
+          // 调用后端API获取优惠券（根据接口文档）
+          const response = await axios.get(`${API_BASE_URL}/getCouponByUserId`, {
             params: { userId: userId }
           })
           
           console.log('后端优惠券数据:', response.data)
           
           if (response.data && response.data.code === 200) {
-            this.coupons = response.data.data || response.data.userCoupons || []
+            // 根据接口返回格式，优惠券数据直接在data数组中
+            const couponsData = response.data.data || []
+            
+            // 转换数据格式以适配前端组件
+            this.coupons = couponsData.map(coupon => ({
+              couponId: coupon.couponId,
+              used: false, // 根据实际情况调整
+              acquiredAt: new Date().toISOString(), // 获得时间，可根据实际数据调整
+              source: 'system', // 来源，可根据实际数据调整
+              coupon: {
+                code: coupon.code,
+                discountType: coupon.discountType,
+                discountValue: coupon.discountValue,
+                minAmount: coupon.minAmount,
+                validFrom: coupon.validFrom,
+                validTo: coupon.validTo
+              }
+            }))
+            
             console.log('从后端加载优惠券成功:', this.coupons.length, '张')
           } else {
             throw new Error('获取优惠券失败: ' + (response.data?.msg || '未知错误'))
