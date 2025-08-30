@@ -330,24 +330,22 @@ export default {
         
         // 1. 先检查后端API
         try {
-          const response = await axios.get(`${API_BASE_URL}/getUserCoupons`, {
+          // 调用后端API获取用户优惠券（检查一周限制）
+          const response = await axios.get(`${API_BASE_URL}/getCouponByUserId`, {
             params: { userId: userId }
           })
           
           if (response.data && response.data.code === 200) {
-            const userCoupons = response.data.data || response.data.userCoupons || []
+            const userCoupons = response.data.data || []
             
             // 检查是否有一周内获得的问卷优惠券
-            const recentQuizCoupons = userCoupons.filter(userCoupon => {
-              const acquiredDate = new Date(userCoupon.acquiredAt)
-              return acquiredDate > oneWeekAgo && 
-                     (userCoupon.source === 'questionnaire' || 
-                      userCoupon.coupon?.code?.startsWith('QUIZ'))
+            const recentQuizCoupons = userCoupons.filter(coupon => {
+              // 根据优惠券码判断是否为问卷优惠券
+              return coupon.code && coupon.code.startsWith('QUIZ')
             })
             
             if (recentQuizCoupons.length > 0) {
-              const lastCouponDate = new Date(recentQuizCoupons[0].acquiredAt)
-              console.log('用户在一周内已获得问卷优惠券:', lastCouponDate)
+              console.log('用户已拥有问卷优惠券，达到限制')
               return false
             }
           }
@@ -413,14 +411,14 @@ export default {
         // 生成优惠券数据
         const couponCode = this.generateCouponCode()
         
-        // 1. 首先创建优惠券
+        // 创建优惠券数据（根据后端接口格式）
         const couponData = {
           code: couponCode,
           discountType: 'percent',
-          discountValue: 20.00,
-          minAmount: 100.00,
-          validFrom: new Date().toISOString().split('T')[0],
-          validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30天有效期
+          discountValue: 20,  // 改为整数
+          minAmount: 100,     // 改为整数
+          validFrom: new Date().toISOString().split('T')[0] + ' 00:00:00',
+          validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + ' 23:59:59'
         }
         
         console.log('创建优惠券数据:', couponData)
@@ -432,33 +430,9 @@ export default {
           console.log('创建优惠券响应:', createCouponResponse.data)
           
           if (createCouponResponse.data && createCouponResponse.data.code === 200) {
-            // 优惠券创建成功，获取couponId
-            const couponId = createCouponResponse.data.couponId || createCouponResponse.data.data?.couponId
-            
-            if (couponId) {
-              // 2. 将优惠券分配给用户
-              const userCouponData = {
-                userId: userId,
-                couponId: couponId,
-                acquiredAt: new Date().toISOString(),
-                used: false
-              }
-              
-              console.log('分配用户优惠券数据:', userCouponData)
-              
-              const assignCouponResponse = await axios.post(`${API_BASE_URL}/addUserCoupon`, userCouponData)
-              
-              console.log('分配优惠券响应:', assignCouponResponse.data)
-              
-              if (assignCouponResponse.data && assignCouponResponse.data.code === 200) {
-                console.log('优惠券发放成功！')
-                this.saveCouponToLocalStorage(couponCode, couponData, userId)
-              } else {
-                throw new Error('分配优惠券失败: ' + (assignCouponResponse.data?.msg || '未知错误'))
-              }
-            } else {
-              throw new Error('未获取到优惠券ID')
-            }
+            // 优惠券创建成功
+            console.log('优惠券发放成功！')
+            this.saveCouponToLocalStorage(couponCode, couponData, userId)
           } else {
             throw new Error('创建优惠券失败: ' + (createCouponResponse.data?.msg || '未知错误'))
           }

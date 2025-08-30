@@ -103,10 +103,13 @@ const fetchUserAppointments = async () => {
       }
       
     } catch (apiError) {
-      console.log('后端API不可用，使用本地降级数据:', apiError.message)
+      console.log('后端API不可用:', apiError.message)
       
-      // API降级：使用本地模拟数据
-      loadLocalAppointments(userId)
+      // API降级方案已注释，只保留真实API调用
+      // loadLocalAppointments(userId)
+      
+      // 显示空数据
+      appointments.value = []
     }
     
   } catch (error) {
@@ -119,7 +122,8 @@ const fetchUserAppointments = async () => {
   }
 }
 
-// 本地降级数据
+// 本地降级数据函数（已注释，不再使用）
+/*
 const loadLocalAppointments = (userId) => {
   // 模拟预约数据（根据数据库结构）
   const mockAppointments = [
@@ -161,6 +165,7 @@ const loadLocalAppointments = (userId) => {
   appointments.value = mockAppointments
   console.log('加载本地降级预约数据:', appointments.value.length, '条')
 }
+*/
 
 // 状态文本转换
 const getStatusText = (status) => {

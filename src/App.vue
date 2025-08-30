@@ -173,8 +173,8 @@
                 class="form-select"
               >
                 <option value="">请选择性别</option>
-                <option value="male">男</option>
-                <option value="female">女</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
               </select>
             </div>
             <div class="form-group">
@@ -185,6 +185,7 @@
                 v-model="registerForm.phone" 
                 placeholder="请输入手机号码"
                 pattern="[0-9]{11}"
+                maxlength="20"
               />
             </div>
             <div class="form-group">
@@ -547,12 +548,16 @@ const handleLogin = async () => {
       
     } catch (apiError) {
       console.error('登录API调用失败:', apiError.message)
+      console.error('完整错误信息:', apiError)
       loginErrorMsg.value = '网络连接失败，请检查网络或联系管理员'
       return
     }
     
     // 严格检查后端返回的code是否为200
     if (response.data && response.data.code === 200) {
+      console.log('登录成功，后端返回数据结构:', response.data)
+      console.log('用户数据部分:', response.data.user || response.data.data)
+      
       // 登录成功
       isLoggedIn.value = true
       
@@ -586,13 +591,18 @@ const handleLogin = async () => {
         localStorage.removeItem('rememberedUser')
       }
       
-      alert('✅ ' + (response.data.msg || '登录成功！')),
-      //保存登录用户信息到 localStorage
+      alert('✅ ' + (response.data.msg || '登录成功！'))
+      
+      // 保存登录用户信息到 localStorage，使用安全的数据访问
+      const userInfo = response.data.user || response.data.data || {}
+      const safeUserId = userInfo.userId || userInfo.user_id || userInfo.id || userId
+      const safeUsername = userInfo.username || username
+      
       localStorage.setItem('currentUser', JSON.stringify({
-        userId: response.data.user.userId,   // 后端返回的用户ID
-        username: response.data.user.username ,// 后端返回的用户名
+        userId: safeUserId,   // 后端返回的用户ID，带有安全检查
+        username: safeUsername, // 后端返回的用户名，带有安全检查
         avatar: username.substring(0, 2).toUpperCase(),
-      }));
+      }))
 
       closeLoginModal()
     } else {
@@ -661,16 +671,21 @@ const handleRegister = async () => {
     let response
     
     try {
-      // 发送真实的注册请求（POST方式，根据图片显示的数据格式）
-      response = await axios.post(`${API_BASE_URL}/register`, {
-        username: registerForm.value.username,
+      // 准备注册数据，确保与数据库表结构匹配
+      const registrationData = {
+        username: registerForm.value.username.trim(),
         password: registerForm.value.password,
-        gender: registerForm.value.gender || "女",  // 根据图片中的数据
-        phone: registerForm.value.phone || "",
-        email: registerForm.value.email || "",
-        address: registerForm.value.address || "",
-        avatar_url: null  // 根据图片中显示的字段
-      })
+        gender: registerForm.value.gender || "女",  // 默认女，匹配数据库ENUM('女', '男')
+        phone: registerForm.value.phone.trim() || "",
+        email: registerForm.value.email.trim() || "",
+        address: registerForm.value.address.trim() || "",
+        avatar_url: null  // 头像URL，初始为null
+      }
+      
+      console.log('准备发送的注册数据:', registrationData)
+      
+      // 发送真实的注册请求（POST方式）
+      response = await axios.post(`${API_BASE_URL}/register`, registrationData)
       
       console.log('后端响应:', response.data)
       
