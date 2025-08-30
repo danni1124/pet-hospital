@@ -1,40 +1,39 @@
 <template>
-  <div class="user-center-bg">
-    <!-- 顶部用户信息卡片 -->
-    <div class="user-card">
-      <img class="avatar" :src="getAvatarUrl(userInfo.avatar_url)" alt="用户头像"/>
-      <div class="user-info">
-        <div class="user-row">
-          <span class="user-username">@ {{ userInfo.username || 'loading...' }}</span>
-          <span class="level">Lv.{{ userInfo.level || 1 }}</span>
-        </div>
-        <div class="user-id">通行证ID:{{ userInfo.userId || 'loading...' }}</div>
-        <div v-if="userInfo.phone || userInfo.email" class="user-contact">
-          <span v-if="userInfo.phone">📱 {{ userInfo.phone }}</span>
-          <span v-if="userInfo.email">📧 {{ userInfo.email }}</span>
+  <div class="user-center-container">
+    <!-- 上部背景区域 -->
+    <div class="header-background">
+      <!-- 用户信息区域 -->
+      <div class="user-profile">
+        <img class="user-avatar" :src="getAvatarUrl(userInfo.avatar_url)" alt="用户头像"/>
+        <div class="user-details">
+          <div class="username-row">
+            <span class="username">{{ userInfo.username || 'loading...' }}</span>
+            <span class="user-level">Lv.{{ userInfo.level || 1 }}</span>
+          </div>
+          <div class="user-id">ID: {{ userInfo.userId || 'loading...' }}</div>
         </div>
       </div>
     </div>
-
-    <!-- 主体区域 -->
-    <div class="main-area">
-      <!-- 左侧导航 -->
-      <aside class="side-nav">
+    
+    <!-- 下部内容区域 -->
+    <div class="content-section">
+      <!-- 导航标签 -->
+      <div class="nav-tabs">
         <div
           v-for="tab in tabs"
           :key="tab.key"
-          :class="['nav-item', { active: activeTab === tab.key }]"
+          :class="['tab-item', { active: activeTab === tab.key }]"
           @click="activeTab = tab.key"
         >
-          <span class="nav-icon">{{ tab.icon }}</span>
+          <span class="tab-icon">{{ tab.icon }}</span>
           {{ tab.label }}
         </div>
-      </aside>
-
-      <!-- 右侧内容 -->
-      <main class="content-area">
+      </div>
+      
+      <!-- 内容展示区 -->
+      <div class="tab-content">
         <component :is="currentComponent" />
-      </main>
+      </div>
     </div>
   </div>
 </template>
@@ -43,7 +42,7 @@
 import { onMounted, computed, ref } from 'vue'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
-import CasesRecord from './CasesRecord.vue'
+import CasesPage from './CasesPage.vue'
 
 import CouponRecord from './components/CouponRecord.vue'
 import BookingRecord from './BookingRecord.vue'
@@ -62,23 +61,21 @@ const userInfo = ref({
 
 // Tab数据和状态
 const tabs = [
-  { key: 'cases',   label: '病例记录',   icon: '📋' },
-  { key: 'booking', label: '预约记录',   icon: '📅' },
   { key: 'coupon',  label: '优惠券记录', icon: '🎟' },
-  { key: 'order',   label: '订单记录',   icon: '📦' }
+  { key: 'booking', label: '预约记录',   icon: '📅' },
+  { key: 'order',   label: '订单记录',   icon: '📦' },
+  { key: 'cases',   label: '病例记录',   icon: '📋' }
 ]
 
-const activeTab = ref('cases')
-
-
+const activeTab = ref('coupon')
 
 const currentComponent = computed(() => {
   switch (activeTab.value) {
-    case 'cases':   return CasesRecord
+    case 'cases':   return CasesPage
     case 'booking': return BookingRecord
     case 'coupon':  return CouponRecord
     case 'order':   return OrderRecord
-    default:        return BookingRecord
+    default:        return CouponRecord
   }
 })
 
@@ -212,305 +209,183 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-center-bg {
-  background-image: url('./assets/userinfo3.webp');
+/* 整体容器 */
+.user-center-container {
+  width: 100%;
   min-height: 100vh;
-  background-size: cover; 
-  width: 100vw;
-  padding: 1px 0 0 0;
-  box-sizing: border-box;
+  background-color: #f5f5f5;
+  overflow-x: hidden;
 }
 
-/* 顶部用户信息卡片美化 */
-.user-card {
-  display: flex;
-  align-items: center;
-  backdrop-filter: blur(10px);
-  background: rgba(255,255,255,0.01);
-  border-radius: 24px;
-  box-shadow: 0 4px 20px rgba(144, 202, 249, 0.01); /* 浅蓝色阴影 */
-  padding: 36px 80px;
-  margin: 32px auto 0 auto;
-  max-width: 935px;
+/* 上部背景区域 */
+.header-background {
+  width: 100%;
+  height: 35vh;
+  background-image: url('./assets/userinfo3.webp');
+  background-size: cover;
+  background-position: center;
   position: relative;
-  transition: box-shadow 0.2s;
-}
-.user-card:hover {
-  box-shadow: 0 8px 32px rgba(200, 209, 223, 0.22);
-}
-.avatar {
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 40px;
-  border: 2px solid #fff; /* 白色边框 */
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-  background: #e3f0ff;
 }
 
-.user-info {
-  flex: 1;
+/* 用户信息区域 */
+.user-profile {
+  position: absolute;
+  bottom: 20px;
+  left: 80px;
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  z-index: 10;
+}
+
+/* 用户头像 */
+.user-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  object-fit: cover;
+}
+
+/* 用户详细信息 */
+.user-details {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  margin-bottom: 20px;
 }
 
-.user-row {
+.username-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: 26px;
-  font-weight: bold;
-  color: #222;
-  margin-bottom: 6px;
+  gap: 12px;
+  margin-bottom: 4px;
 }
 
-.level {
-  background: #FFC107; /* 黄色等级标签 */
-  color: #000; /* 黑色文字 */
-  border-radius: 10px;
-  padding: 3px 16px;
-  font-size: 16px;
+.username {
+  font-size: 24px;
   font-weight: bold;
-  box-shadow: 0 1px 6px #e3f0ff;
+  color: #ffffff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.user-level {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #2c3e50;
+  padding: 4px 14px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
 }
 
 .user-id {
-  font-size: 17px;
-  color: rgba(6, 95, 210, 0.9); /* 半透明白色ID */
-  margin-top: 2px;
-  letter-spacing: 1px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
 }
 
-.user-contact {
-  font-size: 12px;
-  color: #666;
-  margin-top: 4px;
-  display: flex;
-  gap: 16px;
-}
-
-.user-username {
-  font-size: 19px;
-  color: rgba(6, 101, 210, 0.9);
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.user-stats {
-  display: flex;
-  gap: 32px;
-  margin-top: 8px;
-  font-size: 15px;
-  color: #888;
-}
-
-.edit-btn {
-  position: absolute;
-  right: 32px;
-  top: 32px;
-  background: #fff;
-  border: 1px solid #b6d0f7;
-  color: #305aa2;
-  border-radius: 10px;
-  padding: 8px 28px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px #e3f0ff;
-}
-
-.edit-btn:hover {
-  background: #e3f0ff;
-  box-shadow: 0 4px 16px #e3f0ff;
-}
-
-/* 主体区域布局 */
-.main-area {
-  display: flex;
-  width: 1090px;             /* 与卡片同宽 */
-  margin: 32px auto 0;      /* 增加上间距 */
-  gap: 28px;
+/* 下部内容区域 */
+.content-section {
+  width: 100%;
+  background-color: #f5f5f5;
+  min-height: 65vh;
+  padding: 40px 80px 40px 80px;
   box-sizing: border-box;
 }
 
-/* 左侧导航 */
-.side-nav {
-  width: 220px;
-  background: rgba(255,255,255,0.10);
-  backdrop-filter: blur(6px);
-  border-radius: 16px;
-  box-shadow: 0 2px 16px rgba(200, 209, 223, 0.10);
-  padding: 28px 0;
+/* 导航标签 */
+.nav-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.nav-item {
-  padding: 14px 36px;
-  font-size: 17px;
-  color: #063793;
-  cursor: pointer;
+  gap: 0;
+  margin-bottom: 24px;
+  background: #ffffff;
   border-radius: 10px;
-  transition: background 0.2s, color 0.2s;
-  margin: 0 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.tab-item {
+  flex: 1;
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 500;
+  justify-content: center;
+  gap: 6px;
+  border-right: 1px solid #e8e8e8;
 }
 
-.nav-icon {
-  font-size: 20px;
+.tab-item:last-child {
+  border-right: none;
 }
 
-.nav-item.active {
-  background: #1E88E5; /* 蓝色选中状态 */
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 2px 8px #e3f0ff;
+.tab-item.active {
+  background: #4A90E2;
+  color: #ffffff;
 }
 
-.nav-item:hover {
-  background: #f5f7fa;
-}
-.nav-item:first-child {
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-/* 右侧内容区 */
-.content-area {
-  flex: 1 1 0;
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-  box-shadow: 0 4px 32px rgba(41,122,184,0.10);
-  padding: 32px 32px;
-  min-height: 400px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  position: relative;
-  backdrop-filter: blur(8px); /* 背景模糊融合 */
-  transition: box-shadow 0.2s;
+.tab-item:hover:not(.active) {
+  background: #f8f9fa;
+  color: #4A90E2;
 }
 
-.placeholder {
-  font-size: 20px;
-  font-weight: 500;
-  color: #305aa2;
-}
-.prescription-wrapper {
-  background: rgba(255,255,255,0.32);           /* 更透明 */
-  border: 1.5px solid rgba(41,122,184,0.18);    /* 淡蓝色半透明边框 */
-  border-radius: 18px;
-  padding: 24px 32px 12px 32px;
-  font-family: 'SimSun', 'serif';
-  color: #222;
-  min-width: 600px;
-  max-width: 800px;
-  margin: 0 auto;
-  position: relative;
-  box-shadow: 0 8px 32px rgba(41,122,184,0.18); /* 柔和阴影 */
-  backdrop-filter: blur(12px);                  /* 更强模糊融合 */
-  transition: box-shadow 0.2s;
-}
-.prescription-title {
-  color: #0D47A1; /* 深蓝色标题 */
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  letter-spacing: 5px;
-  margin-bottom: 12px;
-}
-.prescription-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 8px;
+.tab-icon {
   font-size: 16px;
 }
-.prescription-table td {
-  padding: 4px 8px 4px 0;
-  border: none;
-  white-space: nowrap;
+
+/* 内容展示区 */
+.tab-content {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  min-height: 350px;
 }
-.line {
-  display: inline-block;
-  min-width: 60px;
-  border-bottom: 1px solid #888;
-  margin-left: 4px;
-  margin-right: 12px;
-  height: 22px;
-  vertical-align: bottom;
-}
-.prescription-main {
-  display: flex;
-  border-top: 1px solid #888;
-  border-bottom: 1px solid #888;
-  margin: 12px 0;
-  min-height: 120px;
-}
-.diagnosis, .rp {
-  flex: 1;
-  padding: 12px 8px;
-  font-size: 16px;
-}
-.diag-content, .rp-content {
-  min-height: 60px;
-  padding-top: 8px;
-}
-.prescription-footer {
-  display: flex;
-  justify-content: space-between;
-  font-size: 15px;
-  margin-top: 16px;
-  border-top: 1px solid #888;
-  padding-top: 8px;
-}
-.prescription-note {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  writing-mode: vertical-rl;
-  font-size: 13px;
-  color: #888;
-  letter-spacing: 2px;
-}
-/* 响应式 */
-@media (max-width: 900px) {
-  .user-card,
-  .main-area {
-    width: 100%;
-    padding: 0 24px;        /* 小屏时也保持左右 padding 一致 */
-    margin: 16px;
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header-background {
+    height: 30vh;
+  }
+  
+  .user-profile {
+    left: 20px;
+    bottom: -50px;
+    gap: 16px;
+  }
+  
+  .user-avatar {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .username {
+    font-size: 18px;
+  }
+  
+  .content-section {
+    padding: 20px 20px 20px 20px;
+  }
+  
+  .nav-tabs {
     flex-direction: column;
-    gap: 0;
   }
-}
-@media (max-width: 900px) {
-  .user-card, .main-area {
-    max-width: 100%;
-    margin: 16px;
-    flex-direction: column;
-    gap: 0;
-    padding: 0 8px;
+  
+  .tab-item {
+    border-right: none;
+    border-bottom: 1px solid #e8e8e8;
   }
-  .side-nav {
-    width: 100%;
-    flex-direction: row;
-    padding: 12px 0;
-    gap: 0;
-    margin-bottom: 12px;
-  }
-  .nav-item {
-    flex: 1;
-    margin: 0;
-    text-align: center;
-  }
-  .content-area {
-    padding: 16px;
-    min-height: 200px;
+  
+  .tab-item:last-child {
+    border-bottom: none;
   }
 }
 </style>
