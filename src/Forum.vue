@@ -190,7 +190,7 @@
             </div>
             <div v-else class="text-avatar">
               {{ currentPost.author.slice(0, 2).toUpperCase() }}
-            </div>`
+            </div>
             <span class="author-name">{{ currentPost.author }}</span>
           </span>
           <span class="post-time">
@@ -199,12 +199,12 @@
             </svg>
             {{ currentPost.time }}
           </span>
-          <span class="post-views">
+          <!-- <span class="post-views">
             <svg viewBox="0 0 24 24" class="meta-icon">
               <path fill="#3B82F6" d="M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M3.18,12C4.83,15.36 8.24,17.5 12,17.5C15.76,17.5 19.17,15.36 20.82,12C19.17,8.64 15.76,6.5 12,6.5C8.24,6.5 4.83,8.64 3.18,12Z" />
             </svg>
             {{ currentPost.views }}
-          </span>
+          </span> -->
         </div>
         
        
@@ -1384,7 +1384,7 @@ export default {
         : this.currentPost.likes + 1;
 
       try {
-        const res = await updatePostStats(postId, 'like', newLikes);
+        const res = await updatePostStats('like',postId, newLikes);
         if (res.data?.code === 200) {
           this.currentPost.likes = newLikes;
           this.currentPost.isLiked = !this.currentPost.isLiked;
@@ -1403,7 +1403,7 @@ export default {
         : this.currentPost.collections + 1;
 
       try {
-        const res = await updatePostStats(postId, 'collect', newCollections);
+        const res = await updatePostStats('collect',postId, newCollections);
         if (res.data?.code === 200) {
           this.currentPost.collections = newCollections;
           this.currentPost.isCollected = !this.currentPost.isCollected;
@@ -1845,19 +1845,19 @@ export default {
 
 
     // 更新浏览量的方法
-    async updateViewCount(postId) {
-      const newViews = this.currentPost.views + 1;
-      try {
-        const res = await updatePostStats(postId, 'view', newViews);
-        if (res.data?.code === 200) {
-          this.currentPost.views = newViews;
-        } else {
-          alert('浏览量更新失败');
-        }
-      } catch (err) {
-        console.error('浏览量请求失败:', err);
-      }
-    },
+    // async updateViewCount(postId) {
+    //   const newViews = this.currentPost.views + 1;
+    //   try {
+    //     const res = await updatePostStats(postId, 'view', newViews);
+    //     if (res.data?.code === 200) {
+    //       //this.currentPost.views = newViews;
+    //     } else {
+    //      // alert('浏览量更新失败');
+    //     }
+    //   } catch (err) {
+    //     //console.error('浏览量请求失败:', err);
+    //   }
+    // },
     splitImagePaths(imageString) {
       if (!imageString) return [];
       return imageString.split(',').filter(path => path.trim() !== '');
