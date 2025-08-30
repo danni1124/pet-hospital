@@ -72,18 +72,24 @@
             </button>
           </div>
 
-          <!-- 在帖子列表上方添加 -->
-          <div class="search-results-info" v-if="searchQuery.trim()">
-            <span>搜索"{{ searchQuery }}"的结果 ({{ filteredPosts.length }}条)</span>
-            <button @click="clearSearch" class="clear-search-btn">清除搜索</button>
+          <div v-if="isLoading" class="loading-indicator">
+            <div class="spinner"></div>
+            <span>加载中...</span>
           </div>
 
           <!-- 帖子列表 -->
-          <div class="post-list">
-            <div class="post-item" 
-              v-for="post in paginatedPosts" :key="post.id" 
-              @click="viewPost(post.id)"
-            >
+          <div class="post-list" >
+             
+              <div v-if="paginatedPosts.length === 0 && !isLoading" class="empty-state">
+                <svg viewBox="0 0 24 24" class="empty-icon">
+                  <path fill="#9CA3AF" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z" />
+                </svg>
+                <p>暂无帖子数据</p>
+              </div>
+              <div class="post-item" 
+                v-for="post in paginatedPosts" :key="post.id" 
+                @click="viewPost(post.postId || post.id)"
+              >
               <div class="post-thumbnail" v-if="post.thumbnail">
                 <img :src="post.thumbnail" :alt="post.title">
               </div>
@@ -91,24 +97,28 @@
                 <div class="post-header">
                     <span class="post-title">{{ post.title || post.content.substring(0, 50) + (post.content.length > 50 ? '...' : '') }}</span>
                   <div class="post-tags right-aligned" v-if="post.tags && post.tags.length > 0">
-                    <span 
-                      class="post-tag" 
-                      v-for="tag in post.tags" 
+                    <span
+                      v-for="tag in post.tags.split(',')"
                       :key="tag"
-                      :style="{ backgroundColor: getTagColor(tag), color: '#fff' }"
+                      :style="{ backgroundColor: getTagColor(tag.trim()), color: '#fff', borderRadius: '10px' }"
                     >
-                      {{ tag }}
+                      {{ tag.trim() }}
                     </span>
                   </div>
                 </div>
                 <div class="post-excerpt" v-if="post.excerpt">{{ post.excerpt }}</div>
                 <div class="post-meta">
                   <span class="post-author">
-                    <img :src="post.authorAvatar || defaultAvatar" class="author-avatar">
+                    <div v-if="post.authorAvatar" class="author-avatar">
+                      <img :src="post.authorAvatar" alt="头像">
+                    </div>
+                    <div v-else class="text-avatar">
+                      {{ post.author.slice(0, 2).toUpperCase() }}
+                    </div>
                     {{ post.author }}
                   </span>
-                  <span class="post-time">{{ post.time }}</span>
-                  <span class="post-views">
+                  <span class="post-time">{{ formatTime(post.time) }}</span>
+                  <!-- <span class="post-views">
                     <svg viewBox="0 0 24 24" class="meta-icon">
                       <path fill="#3B82F6" d="M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M3.18,12C4.83,15.36 8.24,17.5 12,17.5C15.76,17.5 19.17,15.36 20.82,12C19.17,8.64 15.76,6.5 12,6.5C8.24,6.5 4.83,8.64 3.18,12Z" />
                     </svg>
@@ -119,14 +129,30 @@
                       <path fill="#EC4899" d="M12,23A1,1 0 0,1 11,22V19H7A2,2 0 0,1 5,17V7A2,2 0 0,1 7,5H21A2,2 0 0,1 23,7V17A2,2 0 0,1 21,19H16.9L13.2,22.71C13,22.89 12.76,23 12.5,23H12M13,17V20.08L16.08,17H21V7H7V17H13M3,15H1V3A2,2 0 0,1 3,1H19V3H3V15M9,9H19V11H9V9M9,13H17V15H9V13Z" />
                     </svg>
                     {{ post.comments }}
-                  </span>
+                    <pre>{{ post }}</pre>
+                  </span> -->
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 分页控件 -->
+          <!-- 修改分页信息显示 -->
+          <div class="pagination-info">
+            显示 {{ (currentPage - 1) * postsPerPage + 1 }}-{{ Math.min(currentPage * postsPerPage, totalPosts) }} 条，
+            共 {{ totalPosts }} 条帖子
+            <span v-if="searchQuery.trim()">(搜索结果)</span>
+            <span v-else-if="currentTag !== 'all'">(标签筛选结果)</span>
+          </div>
+         
+
           <div class="pagination">
+            <button 
+              @click="debugPageChange(currentPage - 1, 'prev')"
+              :disabled="currentPage === 1"
+            >
+              &laquo; 上一页
+            </button>
+                      
             <button 
               v-for="page in totalPages" 
               :key="page" 
@@ -134,6 +160,13 @@
               @click="changePage(page)"
             >
               {{ page }}
+            </button>
+                      
+            <button 
+              @click="debugPageChange(currentPage + 1, 'next')"
+              :disabled="currentPage === totalPages"
+            >
+              下一页 &raquo;
             </button>
           </div>
         </div>
@@ -152,7 +185,12 @@
         <h2 class="post-detail-title">{{ currentPost.title }}</h2>
         <div class="post-detail-meta">
           <span class="author-info">
-            <img :src="currentPost.authorAvatar || defaultAvatar" class="author-avatar">
+            <div v-if="currentPost.authorAvatar" class="author-avatar">
+              <img :src="currentPost.authorAvatar" alt="头像">
+            </div>
+            <div v-else class="text-avatar">
+              {{ currentPost.author.slice(0, 2).toUpperCase() }}
+            </div>`
             <span class="author-name">{{ currentPost.author }}</span>
           </span>
           <span class="post-time">
@@ -285,24 +323,30 @@
           
           <!-- 评论列表 -->
           <div class="comment-list">
-            <div 
-              class="comment-item" 
-              v-for="comment in flatComments" 
-              :key="comment.id"
-              :class="{ 
-                'is-reply': comment.parentId,
-                'self-reply': comment.isSelfReply
-              }"
-              :style="{ marginLeft: comment.depth * 20 + 'px' }"
-            >
+              <div 
+                class="comment-item" 
+                v-for="comment in flatComments" 
+                :key="comment.id"
+                :class="{ 
+                  'is-reply': comment.parentId,
+                  'self-reply': comment.isSelfReply
+                }"
+                :style="{ marginLeft: comment.depth * 20 + 'px' }"
+              >
 
               <div class="comment-header">
-                <img :src="comment.authorAvatar || defaultAvatar" class="comment-avatar">
+                <div v-if="comment.authorAvatar" class="comment-avatar">
+                  <img :src="comment.authorAvatar" alt="头像">
+                </div>
+                <div v-else class="text-avatar" style="width: 36px; height: 36px; font-size: 12px;">
+                  {{ comment.username.slice(0, 2).toUpperCase() }}
+                </div>
                 <div class="comment-author-info">
-                  <span class="comment-author">{{ comment.author }}</span>
-                  <span class="comment-time">{{ comment.time }}</span>
+                  <span class="comment-author">{{ comment.username }}</span>
+                  <span class="comment-time">{{ comment.commentTime }}</span>
                 </div>
               </div>
+
 
 
               <div class="comment-content">
@@ -312,14 +356,15 @@
                 {{ comment.content }}
               </div>
 
-              <div class="comment-images" v-if="comment.images && comment.images.length > 0">
-                <img 
-                  v-for="(image, index) in comment.images" 
-                  :key="index" 
-                  :src="image.url" 
+             <!-- 评论循环中 -->
+              <div class="comment-images" v-if="comment.imageList && comment.imageList.length">
+                <img
+                  v-for="(img, idx) in comment.imageList"
+                  :key="idx"
+                  :src="img"
                   class="comment-image"
-                  @click="showImagePreview(image.url)"
-                >
+                  @click="showImagePreview(img)"
+                />
               </div>
               <div class="comment-actions">
                 <button 
@@ -328,10 +373,10 @@
                   :class="{ liked: comment.isLiked }"
                 >
                   <svg viewBox="0 0 24 24" class="action-icon">
-                    <path fill="currentColor" :d="comment.isLiked ? 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' : 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'" />
-                  </svg>
-                  <span>{{ comment.likes }}</span>
-                </button>
+                      <path fill="currentColor" :d="comment.isLiked ? 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' : 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'" />
+                    </svg>
+                    <span>{{ comment.likes }}</span>
+                  </button>
                 
                 <button class="reply-btn" @click.stop="openReplyDialog(comment)">
                   <svg viewBox="0 0 24 24" class="reply-icon">
@@ -342,15 +387,15 @@
 
                 <!-- 删除评论 -->
                   <button 
-                  v-if="isCurrentUserComment(comment)" 
-                  @click.stop="confirmDeleteComment(comment)" 
-                  class="delete-btn"
-                >
-                  <svg viewBox="0 0 24 24" class="action-icon">
-                    <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
-                  </svg>
-                  <span>删除</span>
-                </button>
+                    v-if="isCurrentUserComment(comment)" 
+                    @click.stop="confirmDeleteComment(comment)" 
+                    class="delete-btn"
+                  >
+                    <svg viewBox="0 0 24 24" class="action-icon">
+                      <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
+                    </svg>
+                    <span>删除</span>
+                  </button>
               </div>
             </div>
           </div>
@@ -553,12 +598,25 @@
         </button>
       </div>
     </div>
+    
   </div>
 </template>
 
 <script>
+import { addPost, uploadImages } from '@/api/post';
+import { getPostsByPage, getPostNum } from '@/api/post';
+import { addComment, getComments,updatePostStats,getFullImageUrl} from '@/api/post';
+import { deleteImage } from '@/api/post';
+import { deletePost, deleteComment ,updateCommentLikes} from '@/api/post';
+import { ref, onMounted } from 'vue'
+const currentUserId = ref(null);
+const currentUsername = ref('');
 
-
+onMounted(() => {
+  const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
+  currentUserId.value = user.userId || 1
+  currentUsername.value = user.username || '游客'
+});
 export default {
   directives: {
     autoResize: {
@@ -575,11 +633,15 @@ export default {
   data() {
     return {
 
-      currentSlide: 0, 
 
+      currentUserId: null,
+      currentUsername: '',
       currentTag: 'all',
       postsPerPage: 10, // 每页显示的帖子数量
       currentPage: 1,
+      totalPosts: 0,
+      totalPostsFromAPI: 0,
+      isLoading: false,
 
       showNewPostModal: false,
       newPostTitle: '',
@@ -587,7 +649,10 @@ export default {
       newPostImages: [],
       newPostSelectedTag:[] ,
 
-      defaultAvatar: 'https://via.placeholder.com/40',
+      currentSlide: 0,
+      allPosts:[],
+
+      defaultAvatar: '',
       searchQuery: '',
       isSearching: false,
       originalPosts: [],
@@ -622,100 +687,8 @@ export default {
         }
       ],
       currentTag: 'all',
-      posts: [
-        {
-          id: 1,
-          title: '幼犬接种疫苗的注意事项及常见问题解答',
-          author: '王兽医',
-          authorAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-          time: '2023-05-15 10:30',
-          views: 1250,
-          comments: 32,
-          excerpt: '幼犬疫苗接种是保障狗狗健康的重要环节，但很多新手家长对疫苗接种的时间和注意事项不太了解，本文将详细介绍幼犬疫苗接种的流程和常见问题...',
-          content: '幼犬疫苗接种是保障狗狗健康的重要环节，但很多新手家长对疫苗接种的时间和注意事项不太了解。本文将详细介绍幼犬疫苗接种的流程和注意事项。\n\n1. 疫苗接种时间表：\n- 6-8周：首次接种犬瘟热、细小病毒等核心疫苗\n- 10-12周：第二次接种，加强免疫效果\n- 14-16周：第三次接种，完成基础免疫程序\n- 1年后：年度加强免疫\n\n2. 注意事项：\n- 接种前确保幼犬健康，无发热、腹泻等症状\n- 接种后观察30分钟，防止过敏反应\n- 接种后24小时内避免剧烈运动和洗澡\n- 保持接种部位的清洁干燥\n\n3. 常见不良反应：\n- 轻微发热、食欲下降（1-2天可恢复）\n- 接种部位轻微肿胀（通常3天内消退）\n- 若出现严重过敏反应（如呼吸困难、面部肿胀）应立即就医',
-          thumbnail: 'https://images.unsplash.com/photo-1583511655826-05700d52f4d9?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80',
-          likes: 45,
-          isLiked: false,
-          collections: 12,
-          isCollected: false,
-          tag: '犬科',
-          image: 'https://images.unsplash.com/photo-1583511655826-05700d52f4d9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=500&q=80'
-        },
-        {
-          id: 2,
-          title: '猫咪绝育手术后的护理指南：从术前准备到术后恢复',
-          author: '李医生',
-          authorAvatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-          time: '2023-05-14 15:20',
-          views: 980,
-          comments: 18,
-          excerpt: '猫咪绝育手术后需要特别的护理，本文将介绍术前准备、术后护理的要点和常见问题，帮助猫咪顺利恢复...',
-          content: '猫咪绝育手术后需要特别的护理，本文将介绍术前准备、术后护理的要点和常见问题。\n\n术前准备：\n- 术前8-12小时禁食，4小时禁水\n- 准备舒适的猫窝和干净的猫砂盆\n- 提前修剪猫咪指甲，防止术后抓挠伤口\n\n术后护理：\n- 保持环境安静，避免剧烈运动\n- 佩戴伊丽莎白圈防止舔舐伤口\n- 按医嘱给予止痛药和抗生素\n- 观察伤口是否有红肿、渗液等异常\n- 术后24小时后可少量喂食易消化食物\n\n常见问题：\nQ: 猫咪术后不吃不喝怎么办？\nA: 可能是麻醉后反应，可尝试喂食罐头或加热食物刺激食欲\n\nQ: 伤口多久能愈合？\nA: 通常7-10天拆线，公猫恢复更快\n\nQ: 术后行为异常怎么办？\nA: 麻醉完全代谢需要24-48小时，期间可能出现走路不稳、嗜睡等情况',
-          thumbnail: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80',
-          likes: 30,
-          isLiked: false,
-          collections: 8,
-          isCollected: false,
-          tag: '猫科',
-          image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=500&q=80'
-        },
-        {
-          id: 3,
-          title: '如何识别宠物皮肤病？常见症状与家庭处理方法',
-          author: '张兽医',
-          authorAvatar: 'https://randomuser.me/api/portraits/men/67.jpg',
-          time: '2023-05-13 09:10',
-          views: 2100,
-          comments: 56,
-          excerpt: '宠物皮肤病是常见问题，早期识别和治疗非常重要。本文将介绍常见皮肤病的症状、原因和家庭处理方法...',
-          content: '宠物皮肤病是常见问题，早期识别和治疗非常重要。本文将介绍常见皮肤病的症状、原因和家庭处理方法。\n\n常见皮肤病类型：\n1. 过敏性皮炎\n- 症状：剧烈瘙痒、皮肤发红、脱毛\n- 原因：食物过敏、环境过敏原\n\n2. 真菌感染（如癣菌病）\n- 症状：圆形脱毛、皮屑、红斑\n- 原因：真菌感染，具有传染性\n\n3. 寄生虫感染（如螨虫）\n- 症状：剧烈瘙痒、结痂、皮肤增厚\n- 原因：疥螨、蠕形螨等寄生虫\n\n家庭处理方法：\n- 定期梳毛，检查皮肤状况\n- 使用宠物专用沐浴露\n- 保持环境干燥清洁\n- 补充Omega-3脂肪酸改善皮肤健康\n\n何时就医：\n- 症状持续超过3天\n- 出现大面积脱毛或溃烂\n- 宠物明显不适或食欲下降\n- 家庭治疗无效时',
-          thumbnail: 'https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80',
-          likes: 78,
-          isLiked: false,
-          collections: 25,
-          isCollected: false,
-          tag: '疾病预防',
-          image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=500&q=80'
-        },
-        {
-          id: 4,
-          title: '宠物营养指南：如何为不同年龄段的狗狗选择合适食物',
-          author: '营养师陈',
-          authorAvatar: 'https://randomuser.me/api/portraits/women/28.jpg',
-          time: '2023-05-12 14:45',
-          views: 870,
-          comments: 22,
-          excerpt: '不同年龄段的狗狗对营养需求各不相同，本文将详细介绍幼犬、成犬和老年犬的营养需求及食物选择建议...',
-          content: '不同年龄段的狗狗对营养需求各不相同，本文将详细介绍幼犬、成犬和老年犬的营养需求及食物选择建议。\n\n1. 幼犬（0-12个月）\n- 营养需求：高蛋白、高热量、易消化\n- 推荐食物：幼犬专用粮、煮熟的鸡肉、蛋黄\n- 喂养频率：每天3-4次\n\n2. 成犬（1-7岁）\n- 营养需求：均衡蛋白质、适量脂肪和碳水化合物\n- 推荐食物：优质成犬粮、蔬菜、水果（如胡萝卜、苹果）\n- 喂养频率：每天2次\n\n3. 老年犬（7岁以上）\n- 营养需求：低热量、高纤维、关节保健成分\n- 推荐食物：老年犬专用粮、鱼类、南瓜\n- 喂养频率：每天2-3次少量多餐\n\n注意事项：\n- 避免喂食巧克力、葡萄、洋葱等有毒食物\n- 根据活动量调整喂食量\n- 提供充足清洁饮水\n- 定期监测体重，防止肥胖',
-          thumbnail: 'https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80',
-          likes: 42,
-          isLiked: false,
-          collections: 15,
-          isCollected: false,
-          tag: '营养饮食',
-          image: 'https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=500&q=80'
-        },
-        {
-          id: 5,
-          title: '解决猫咪乱尿问题的实用技巧与行为矫正方法',
-          author: '行为学家刘',
-          authorAvatar: 'https://randomuser.me/api/portraits/men/53.jpg',
-          time: '2023-05-11 11:20',
-          views: 1560,
-          comments: 34,
-          excerpt: '猫咪乱尿是常见行为问题，可能由多种原因引起。本文将分析常见原因并提供实用解决方案...',
-          content: '猫咪乱尿是常见行为问题，可能由多种原因引起。本文将分析常见原因并提供实用解决方案。\n\n常见原因：\n1. 医疗问题\n- 尿路感染、膀胱炎、结石等\n- 解决方案：及时就医检查\n\n2. 猫砂盆问题\n- 猫砂盆不干净、位置不合适、猫砂类型不喜欢\n- 解决方案：\n  - 每天清理猫砂盆\n  - 提供多个猫砂盆（数量=猫数量+1）\n  - 尝试不同猫砂类型\n\n3. 压力或焦虑\n- 环境变化、新宠物、陌生人\n- 解决方案：\n  - 提供安全隐蔽空间\n  - 使用费洛蒙扩散剂\n  - 保持规律作息\n\n4. 标记行为\n- 未绝育公猫常见\n- 解决方案：尽早绝育\n\n行为矫正技巧：\n- 彻底清洁被尿区域（使用酶清洁剂）\n- 在被尿区域放置食盆或猫床\n- 提供垂直空间（猫树、架子）\n- 避免惩罚，采用正向强化',
-          thumbnail: 'https://images.unsplash.com/photo-1519052537078-e6302a4968d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=200&q=80',
-          likes: 63,
-          isLiked: false,
-          collections: 28,
-          isCollected: false,
-          tag: '行为问题',
-          image: 'https://images.unsplash.com/photo-1519052537078-e6302a4968d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=500&q=80'
-        }
-      ],
-      currentPage: 1,
-      totalPages: 5,
+    
+      
       showPostDetail: false,
       currentPost: {},
       comments: [
@@ -760,7 +733,7 @@ export default {
         isLiked: false   // 当前用户是否已点赞
         
       }
-    ],
+      ],
       newComment: '',
       commentImages: [],
       showReplyDialog: false,
@@ -774,7 +747,7 @@ export default {
       currentUser: {
         id: 1,
         name: '当前用户',
-        avatar: 'https://randomuser.me/api/portraits/men/1.jpg'
+        avatar: ''
       },
       // 删除功能相关状态
       showDeleteConfirm: false,
@@ -784,45 +757,93 @@ export default {
     }
   },
    
+ 
   created() {
-    // 保存原始帖子数据
-    this.originalPosts = [...this.posts];
-  },
-   computed: {
-
-    paginatedPosts() {
-      const start = (this.currentPage - 1) * this.postsPerPage;
-      const end = start + this.postsPerPage;
-      return this.filteredPosts.slice(start, end);
-    },
+    console.log('组件已创建');
+    this.initializePagination();
     
-    totalPages() {
-      return Math.ceil(this.filteredPosts.length / this.postsPerPage);
-    },
+    // 添加全局错误处理
+    window.addEventListener('click', (e) => {
+      if (e.target.classList.contains('pagination') || 
+          e.target.closest('.pagination')) {
+        console.log('点击了分页区域', e.target);
+      }
+    });
+  },
 
+
+  computed: {
+
+    // 过滤帖子
     filteredPosts() {
-    if (this.searchQuery.trim()) {
-      const query = this.searchQuery.trim().toLowerCase();
-      return this.originalPosts.filter(post => {
-        return (
-          (post.title && post.title.toLowerCase().includes(query)) ||
-          (post.content && post.content.toLowerCase().includes(query)) ||
-          (post.tags && post.tags.some(tag => tag.toLowerCase().includes(query))) ||
-          post.author.toLowerCase().includes(query)
+      let filtered = this.allPosts;
+      
+      // 搜索过滤
+      if (this.searchQuery.trim()) {
+        const query = this.searchQuery.trim().toLowerCase();
+        filtered = filtered.filter(post => {
+          return (
+            (post.title && post.title.toLowerCase().includes(query)) ||
+            (post.content && post.content.toLowerCase().includes(query)) ||
+            (post.tags && post.tags.toLowerCase().includes(query)) ||
+            (post.author && post.author.toLowerCase().includes(query))
+          );
+        });
+      }
+      
+      // 标签过滤
+      if (this.currentTag !== 'all') {
+        const selectedTagName = this.tags.find(tag => tag.id === this.currentTag)?.name;
+        filtered = filtered.filter(post => 
+          post.tags && post.tags.includes(selectedTagName)
         );
-      });
-    }
+      }
+      
+      return filtered;
+    },
     
-    if (this.currentTag === 'all') {
-      return this.posts;
-    }
-    
-    const selectedTagName = this.tags.find(tag => tag.id === this.currentTag)?.name;
-    return this.posts.filter(post => 
-      post.tags && post.tags.includes(selectedTagName)
-    );
-  },
 
+
+    totalPages() {
+      let totalPosts;
+      
+      // 如果有搜索或标签筛选，使用过滤后的帖子数量
+      if (this.searchQuery.trim() || this.currentTag !== 'all') {
+        totalPosts = this.filteredPosts.length;
+      } else {
+        totalPosts = Number(this.totalPostsFromAPI) || 0;
+      }
+      
+      const postsPerPage = Number(this.postsPerPage) || 10;
+      
+      if (totalPosts <= 0 || postsPerPage <= 0) {
+        return 1;
+      }
+      
+      const pages = Math.ceil(totalPosts / postsPerPage);
+      return Math.max(1, pages); // 确保至少1页
+    },
+    
+    totalPosts() {
+      // 显示当前状态下的总帖子数
+      if (this.searchQuery.trim() || this.currentTag !== 'all') {
+        return this.filteredPosts.length;
+      }
+      return this.totalPostsFromAPI;
+    },
+
+  
+    paginatedPosts() {
+      // 如果有搜索词或标签筛选，使用filteredPosts进行前端分页
+      if (this.searchQuery.trim() || this.currentTag !== 'all') {
+        const start = (this.currentPage - 1) * this.postsPerPage;
+        const end = start + this.postsPerPage;
+        return this.filteredPosts.slice(start, end);
+      }
+      // 否则使用原始帖子数据（后端分页）
+      return this.originalPosts;
+    },
+      
 
     canSubmitPost() {
       return (this.newPostContent.trim() || this.newPostImages.length > 0) && 
@@ -847,6 +868,11 @@ export default {
       };
       
       return flatten(this.comments);
+    },
+     
+    isCurrentUserPost() {
+      if (!this.currentPost || !this.currentUser) return false;
+      return this.currentPost.userId === this.currentUser.id;
     }
   },
   methods: {
@@ -863,9 +889,7 @@ export default {
       return colorMap[tagName] || '#6B7280'; // 默认灰色
     },
 
-    
-
-
+  
 
     clearSearch() {
       this.searchQuery = '';
@@ -881,28 +905,30 @@ export default {
     },
 
 
-    searchPosts() {
+    async searchPosts() {
       const query = this.searchQuery.trim().toLowerCase();
+      
+      // 重置到第一页
+      this.currentPage = 1;
+      
       if (!query) {
-        this.posts = [...this.originalPosts];
-        this.isSearching = false;
+        await this.loadPage(1);
         return;
       }
+      
       this.isSearching = true;
-    
-        // 搜索逻辑 - 在标题、内容、标签和作者中查找匹配项
-        this.posts = this.originalPosts.filter(post => {
-          return (
-            post.title.toLowerCase().includes(query) ||
-            (post.content && post.content.toLowerCase().includes(query)) ||
-            post.tag.toLowerCase().includes(query) ||
-            post.author.toLowerCase().includes(query)
-          );
-        });
-        
-        // 重置分页到第一页
-        this.currentPage = 1;
-  
+    },
+
+    selectTag(tagId) {
+      this.currentTag = tagId;
+      this.currentPage = 1; // 重置到第一页
+      
+      if (tagId === 'all') {
+        console.log('显示所有帖子');
+      } else {
+        const tagName = this.tags.find(tag => tag.id === tagId)?.name;
+        console.log('筛选标签:', tagName, '结果:', this.filteredPosts.length, '条');
+      }
     },
 
     newPost() {
@@ -930,91 +956,269 @@ export default {
       }
     },
     
-    handlePostImageUpload(e) {
-      const files = e.target.files;
-      if (files.length === 0) return;
-      
-      // 限制最多5张图片
-      if (this.newPostImages.length + files.length > 5) {
-        alert('最多只能上传5张图片');
-        return;
-      }
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.match('image.*')) {
-          alert('请上传图片文件');
-          continue;
-        }
-        
-        // 检查图片大小（限制为5MB）
-        if (file.size > 5 * 1024 * 1024) {
-          alert('图片大小不能超过5MB');
-          continue;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.newPostImages.push({
-            file: file,
-            preview: e.target.result
-          });
-        };
-        reader.readAsDataURL(file);
-      }
-      
-      // 清空input值，允许重复选择同一文件
-      this.$refs.postFileInput.value = '';
-    },
+    // 修改 handlePostImageUpload 方法
+    
+
+
     
     removePostImage(index) {
-      this.newPostImages.splice(index, 1);
+      const removed = this.newPostImages.splice(index, 1)[0];
+      if (removed.uploadedPath) {
+        // 如果已经上传了，调用后端删除
+        this.deleteUploadedImage(removed.uploadedPath);
+      }
     },
     
     async submitNewPost() {
-      // 移除标题验证
-      if (!this.newPostContent.trim() && this.newPostImages.length === 0) {
-        alert('帖子内容或图片不能为空');
-        return;
+      if (!this.canSubmitPost) return;
+
+      try {
+        const filesToUpload = this.newPostImages.map(img => img.file);
+        const uploadedPaths = await uploadImages(filesToUpload); 
+
+        // 更新图片对象的上传路径
+        this.newPostImages.forEach((img, index) => {
+          img.uploadedPath = uploadedPaths[index];
+        });
+
+        const postData = {
+          userId: this.currentUserId, //当前登录用户
+          username: this.currentUsername, //用当前登录用户名
+          content: this.newPostContent.trim(),
+          tags: this.newPostSelectedTag.map(id => this.tags.find(t => t.id === id)?.name).filter(Boolean).join(','),
+          imagesUrl: uploadedPaths.join(','),
+          viewCount: 0,
+          commentCount: 0,
+          likeCount: 0,
+          collectCount: 0,
+
+        };
+
+        const res = await addPost(postData);
+        console.log('发布成功', res.data);
+        this.closeNewPostModal();
+        this.resetPostForm();
+        this.refreshPosts();
+      } catch (err) {
+        console.error('发布失败', err);
       }
-      
-      if (this.newPostSelectedTag.length === 0) {
-        alert('请选择至少一个帖子标签');
-        return;
-      }
-      
-      // 上传图片到服务器（模拟）
-      const uploadedImages = await this.uploadImages(this.newPostImages);
-      
-      // 创建新帖子
-      const newPost = {
-        id: this.posts.length + 1,
-        title: this.newPostTitle.trim() || '', // 允许空标题
-        author: '当前用户',
-        authorAvatar: this.defaultAvatar,
-        time: new Date().toLocaleString(),
-        views: 0,
-        comments: 0,
-        content: this.newPostContent,
-        images: uploadedImages,
-        thumbnail: uploadedImages.length > 0 ? uploadedImages[0].thumbnail : null,
-        likes: 0,
-        isLiked: false,
-        collections: 0,
-        isCollected: false,
-        tags: this.newPostSelectedTag.map(tagId => {
-          const tag = this.tags.find(t => t.id === tagId);
-          return tag ? tag.name : '';
-        }).filter(name => name)
-      };
-      
-      // 添加到帖子列表开头
-      this.posts.unshift(newPost);
-      this.originalPosts.unshift(newPost);
-      
-      this.closeNewPostModal();
     },
 
+    // 修改 deleteUploadedImage 方法
+    async deleteUploadedImage(imagePath) {
+      try {
+        const success = await deleteImage(imagePath);
+        if (success) {
+          console.log('图片删除成功');
+        } else {
+          console.warn('图片删除失败');
+        }
+        return success;
+      } catch (error) {
+        console.error('删除图片时发生错误:', error);
+        return false;
+      }
+    },
+
+    //显示图片
+    processedImages() {
+      if (!this.currentPost.imagesUrl) return [];
+      
+      return this.currentPost.imagesUrl.split(',').map(url => ({
+        url: getFullImageUrl(url),
+        thumbnail: getFullImageUrl(url)
+      }));
+    },
+    async initializePagination() {
+      await this.refreshComments();
+      this.isLoading = true;
+      try {
+
+        // 从后端获取所有帖子数据
+        const allPostsResponse = await getPostsByPage(10000, 0); // 假设一次获取所有帖子
+        this.allPosts = allPostsResponse.data.data.map(post => {
+          const imageUrls = post.imagesUrl
+                    ? getFullImageUrl(post.imagesUrl)   // ← 直接调用
+                    : [];
+          return {
+            ...post,
+            id: post.postId,
+            author: post.username,
+            authorAvatar: '',
+            time: new Date().toLocaleString(),
+            views: post.viewCount || 0,
+            comments: post.commentCount || 0,
+            likes: post.likeCount || 0,
+            collections: post.collectCount || 0,
+            isLiked: false,
+            isCollected: false,
+            thumbnail: imageUrls.length ? imageUrls[0] : '',
+            images: imageUrls.map(url => ({ url }))
+          };
+        });
+
+        const response = await getPostNum();
+        console.log('帖子总数API返回:', response);
+
+        if (response && response.data && response.data.data !== undefined) {
+          this.totalPostsFromAPI = Number(response.data.data);
+          console.log('成功获取帖子总数:', this.totalPostsFromAPI);
+        } else {
+          console.warn('帖子总数API返回格式错误，使用默认值');
+          this.totalPostsFromAPI = 0;
+        }
+
+        // 关键：根据总条数算总页数
+        this.totalPages = Math.ceil(this.totalPostsFromAPI / this.postsPerPage);
+
+        // 加载第一页
+        await this.loadPage(1);
+      } catch (error) {
+        console.error('分页初始化失败:', error);
+        this.totalPostsFromAPI = 0;
+        this.totalPages = 1;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    // 修改 loadPage 方法
+    async loadPage(page) {
+      console.group('loadPage方法调试');
+      console.log('加载页面参数:', {
+        page: page, 
+        postsPerPage: this.postsPerPage, 
+        offset: this.postsPerPage * (page - 1)
+      });
+      this.isLoading = true;
+      try {
+        const offset = this.postsPerPage * (page - 1);
+        const response = await getPostsByPage(this.postsPerPage, offset);
+        console.log('API响应数据:', response.data);
+
+        if (!response.data || response.data.code !== 200) {
+          console.error('API返回数据格式错误或请求失败', response.data);
+          return;
+        }
+
+    
+
+        const newPosts = response.data.data.map(post => {
+          const imageUrls = post.imagesUrl
+                ? getFullImageUrl(post.imagesUrl)   // ← 直接调用
+                : [];
+          return {
+            ...post,
+            id: post.postId,
+            author: post.username,
+            authorAvatar: '',
+            time: post.createDate || post.publishTime || post.createdAt || '2025-01-01 00:00:00',
+            views: post.viewCount || 0,
+            comments: post.commentCount || 0,
+            likes: post.likeCount || 0,
+            collections: post.collectCount || 0,
+            isLiked: false,
+            isCollected: false,
+            thumbnail: imageUrls.length ? imageUrls[0] : '',
+            images: imageUrls.map(url => ({ url }))
+          };
+        });
+        console.log('转换后的帖子数据:', newPosts);
+        this.originalPosts = [...newPosts];
+        console.log('打印原始数据',this.originalPosts);
+        this.currentPage = page;
+      } catch (error) {
+        console.error('加载页面失败:', error);
+      } finally {
+        this.isLoading = false;
+        console.groupEnd();
+      }
+    },
+
+
+    debugPageChange(page, type) {
+      console.group('分页调试详细信息');
+      console.log('点击的分页按钮类型:', type);
+      console.log('目标页码:', page);
+      console.log('当前页码:', this.currentPage);
+      console.log('总页数:', this.totalPages);
+      console.log('每页数量:', this.postsPerPage);
+      console.log('API总帖子数:', this.totalPostsFromAPI);
+      console.log('是否禁用:', page < 1 || page > this.totalPages);
+      console.log('计算属性totalPages值:', this.totalPages);
+      console.log('计算属性paginatedPosts值:', this.paginatedPosts);
+      console.groupEnd();
+      
+      this.changePage(page);
+    }, 
+    
+
+    // 修改 changePage 方法
+    async changePage(page) {
+      console.group('changePage方法调试');
+      console.log('传入的页码:', page);
+      console.log('当前页码:', this.currentPage);
+      console.log('总页数:', this.totalPages);
+      
+      if (page < 1 || page > this.totalPages) {
+        console.log('无效的页码，取消操作');
+        console.groupEnd();
+        return;
+      }
+      
+      try {
+        console.log('开始加载页面:', page);
+
+        if (this.searchQuery.trim() || this.currentTag !== 'all') {
+          this.currentPage = page;
+        } else {
+          // 否则从后端加载对应页码的数据
+          await this.loadPage(page);
+        }
+        console.log('页面加载完成');
+        
+        // 检查数据是否更新到界面
+        console.log('检查界面数据:');
+        console.log('originalPosts长度:', this.originalPosts.length);
+        console.log('paginatedPosts计算属性:', this.paginatedPosts);
+        
+      } catch (error) {
+        console.error('加载页面失败:', error);
+      } finally {
+        console.groupEnd();
+      }
+    },
+
+
+
+    // 添加时间格式化方法
+    formatTime(dateString) {
+      if (!dateString) return '';
+     // console.log(dateString)
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = now - date;
+      
+      // 如果是今天内，显示相对时间
+      if (diff < 24 * 60 * 60 * 1000) {
+        const hours = Math.floor(diff / (60 * 60 * 1000));
+        if (hours > 0) return `${hours}小时前`;
+        
+        const minutes = Math.floor(diff / (60 * 1000));
+        if (minutes > 0) return `${minutes}分钟前`;
+        
+        return '刚刚';
+      }
+      
+      // 否则显示完整日期
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).replace(/\//g, '-');
+    },
     uploadImages(images) {
       return new Promise(resolve => {
         // 模拟上传延迟
@@ -1028,64 +1232,64 @@ export default {
       });
     },
 
-    toggleLike(comment, event) {
-        // 确保likes是数字类型，默认为0
-        const currentLikes = Number(comment.likes) || 0;
-        const isLiked = !comment.isLiked;
-        
-        // 创建新对象确保Vue响应性
-        const updatedComment = {
-          ...comment,
-          isLiked,
-          likes: isLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1) // 确保不小于0
-        };
+   
+    async toggleLike(comment) {
+      const isLiked = comment.isLiked;
+      const newLikes = isLiked ? Math.max(0, comment.likes - 1) : comment.likes + 1;
 
-        // 递归更新评论列表
-        const updateComments = (comments) => {
-          return comments.map(c => {
-            if (c.id === comment.id) {
-              return updatedComment;
-            }
-            if (c.replies && c.replies.length > 0) {
-              return {
-                ...c,
-                replies: updateComments(c.replies)
-              };
-            }
-            return c;
+      try {
+        const res = await updateCommentLikes(comment.commentId, newLikes);
+        if (res.data?.code === 200) {
+          // 更新本地状态
+          this.comments = this.updateCommentInTree(this.comments, comment.commentId, {
+            isLiked: !isLiked,
+            likes: newLikes
           });
-        };
-
-        this.comments = updateComments(this.comments);
-        
-        // 点赞动画
-        if (isLiked && event) {
-          this.playLikeAnimation(event);
+        } else {
+          alert(`点赞失败：${res.data?.msg || '未知错误'}`);
         }
-      },
+      } catch (err) {
+        console.error('点赞请求失败:', err);
+        alert('网络错误，点赞失败');
+      }
+    },
+    updateCommentInTree(comments, targetId, updates) {
+      return comments.map(c => {
+        if (c.commentId === targetId) {
+          return { ...c, ...updates };
+        }
+        if (c.replies && c.replies.length > 0) {
+          return {
+            ...c,
+            replies: this.updateCommentInTree(c.replies, targetId, updates)
+          };
+        }
+        return c;
+      });
+    },
 
-      deepUpdateComments(comments, targetComment) {
-        return comments.map(c => {
-          // 找到目标评论
-          if (c.id === targetComment.id) {
-            return {
-              ...c,
-              isLiked: !c.isLiked,
-              likes: c.likes + (c.isLiked ? -1 : 1)
-            };
-          }
+    deepUpdateComments(comments, targetComment) {
+      return comments.map(c => {
+        // 找到目标评论
+        if (c.id === targetComment.id) {
+          return {
+            ...c,
+            isLiked: !c.isLiked,
+            likes: c.likes + (c.isLiked ? -1 : 1)
+          };
+        }
           
-          // 递归处理回复
-          if (c.replies && c.replies.length > 0) {
-            return {
-              ...c,
-              replies: this.deepUpdateComments(c.replies, targetComment)
-            };
-          }
+        // 递归处理回复
+        if (c.replies && c.replies.length > 0) {
+          return {
+            ...c,
+            replies: this.deepUpdateComments(c.replies, targetComment)
+          };
+        }
           
-          return c;
-        });
-      },
+        return c;
+      });
+    },
     
     playLikeAnimation(event) {
       const heart = document.createElement('div');
@@ -1100,74 +1304,119 @@ export default {
       }, 1000);
     },
 
-    searchPosts() {
-      console.log('搜索:', this.searchQuery);
-      // 实际项目中这里会有搜索逻辑
-    },
-    selectTag(tagId) {
-      this.currentTag = tagId;
-      // 重置到第一页
-      this.currentPage = 1;
-      
-      // 如果选择"全部"标签，则显示所有帖子
-      if (tagId === 'all') {
-        return;
-      }
-      
-      // 实际项目中这里会有API请求获取对应标签的帖子
-      // 这里我们只是在前端过滤
-    },
-    changePage(page) {
-      this.currentPage = page;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-
-    nextSlide() {
-      this.currentSlide = (this.currentSlide + 1) % this.currentPost.images.length;
-    },
     
+    
+    
+
     prevSlide() {
-      this.currentSlide = (this.currentSlide - 1 + this.currentPost.images.length) % this.currentPost.images.length;
+      if (this.currentSlide > 0) this.currentSlide--;
+    },
+    nextSlide() {
+      if (this.currentSlide < this.currentPost.images.length - 1) this.currentSlide++;
     },
     
     goToSlide(index) {
       this.currentSlide = index;
     },
 
-    viewPost(postId) {
-      this.currentPost = this.posts.find(post => post.id === postId);
-      this.currentSlide = 0; // 重置轮播图索引
+    async viewPost(postId) {
+      console.log('尝试查看帖子ID:', postId);
+      
+      
+      // 在所有数据源中查找帖子
+      let post = null;
+      
+      // 1. 首先在originalPosts中查找
+      if (this.originalPosts && this.originalPosts.length > 0) {
+        post = this.originalPosts.find(p => 
+          p.postId === postId || p.id === postId || p.id === parseInt(postId)
+        );
+      }
+      
+      // 2. 如果在originalPosts中没找到，尝试在posts中查找
+      if (!post && this.posts && this.posts.length > 0) {
+        post = this.posts.find(p => 
+          p.postId === postId || p.id === postId || p.id === parseInt(postId)
+        );
+      }
+      
+      if (!post) {
+        console.error('找不到ID为', postId, '的帖子');
+        alert('无法找到该帖子，可能已被删除');
+        return;
+      }
+      
+      console.log('找到帖子:', post);
+      console.log('帖子原始imagesUrl:', post.imagesUrl);
+      console.log('解析后的图片URLs:', getFullImageUrl(post.imagesUrl));
+      this.currentPost = {
+        ...post,
+        // 确保所有字段都有默认值
+        views: post.viewCount || post.views || 0,
+        comments: post.commentCount || post.comments || 0,
+        likes: post.likeCount || post.likes || 0,
+        collections: post.collectCount || post.collections || 0,
+        time: post.createDate || post.time || '',
+        isLiked: post.isLiked || false,
+        isCollected: post.isCollected || false,
+        thumbnail: post.thumbnail || post.image || '',
+        // 确保 images 数组存在
+        images: post.imagesUrl
+                    ? getFullImageUrl(post.imagesUrl).map(url => ({ url }))
+                    : []
+      };
+      console.log('最终图片数组:', this.currentPost.images);
+      await this.refreshComments();
+      this.currentSlide = 0;
       this.showPostDetail = true;
       document.body.style.overflow = 'hidden';
       
-      // 模拟增加浏览量
+      // 增加浏览量并更新后端
       this.currentPost.views++;
+      await this.updateViewCount(postId,'view');
     },
 
-    closeModal() {
-      this.showPostDetail = false;
-      document.body.style.overflow = '';
-      this.commentImages = [];
-    },
-    likePost() {
-      this.currentPost.isLiked = !this.currentPost.isLiked;
-      this.currentPost.likes += this.currentPost.isLiked ? 1 : -1;
-      
-      // 点赞特效
-      if (this.currentPost.isLiked) {
-        this.createLikeEffect();
+  
+    async likePost() {
+      const postId = this.currentPost.postId || this.currentPost.id;
+      const newLikes = this.currentPost.isLiked
+        ? this.currentPost.likes - 1
+        : this.currentPost.likes + 1;
+
+      try {
+        const res = await updatePostStats(postId, 'like', newLikes);
+        if (res.data?.code === 200) {
+          this.currentPost.likes = newLikes;
+          this.currentPost.isLiked = !this.currentPost.isLiked;
+          if (this.currentPost.isLiked) this.createLikeEffect();
+        } else {
+          alert('点赞操作失败');
+        }
+      } catch (err) {
+        console.error('点赞请求失败:', err);
       }
     },
-    collectPost() {
-      this.currentPost.isCollected = !this.currentPost.isCollected;
-      this.currentPost.collections += this.currentPost.isCollected ? 1 : -1;
-      
-      // 收藏特效
-      if (this.currentPost.isCollected) {
-        this.createCollectEffect();
+    async collectPost() {
+      const postId = this.currentPost.postId || this.currentPost.id;
+      const newCollections = this.currentPost.isCollected
+        ? this.currentPost.collections - 1
+        : this.currentPost.collections + 1;
+
+      try {
+        const res = await updatePostStats(postId, 'collect', newCollections);
+        if (res.data?.code === 200) {
+          this.currentPost.collections = newCollections;
+          this.currentPost.isCollected = !this.currentPost.isCollected;
+          if (this.currentPost.isCollected) this.createCollectEffect();
+        } else {
+          alert('收藏操作失败');
+        }
+      } catch (err) {
+        console.error('收藏请求失败:', err);
       }
     },
-    createLikeEffect(event) {
+
+    createLikeEffect() {
       const effect = document.createElement('div');
       effect.className = 'like-effect';
       effect.innerHTML = '❤️';
@@ -1178,7 +1427,6 @@ export default {
       effect.style.top = (event.clientY - 15) + 'px';
       effect.style.animation = 'likeAnimation 1s forwards';
       document.body.appendChild(effect);
-      
       setTimeout(() => {
         effect.remove();
       }, 1000);
@@ -1194,11 +1442,17 @@ export default {
       effect.style.top = (event.clientY - 15) + 'px';
       effect.style.animation = 'collectAnimation 1s forwards';
       document.body.appendChild(effect);
-      
       setTimeout(() => {
         effect.remove();
       }, 1000);
     },
+
+    closeModal() {
+      this.showPostDetail = false;
+      document.body.style.overflow = '';
+      this.commentImages = [];
+    },
+
     openReplyDialog(comment) {
       this.replyingTo = comment;
       this.showReplyDialog = true;
@@ -1212,158 +1466,207 @@ export default {
       this.replyContent = '';
       this.replyImages = [];
     },
+    handlePostImageUpload(e) {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+
+      const remainingSlots = 5 - this.newPostImages.length;
+      const validFiles = files.slice(0, remainingSlots);
+
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.newPostImages.push({
+            file,
+            preview: e.target.result,
+            uploadedPath: null // 先不上传，等发布时再统一上传
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+
+      this.$refs.postFileInput.value = ''; // 允许重复选同一张图
+    },
+
     handleCommentImageUpload(e) {
-      const files = e.target.files;
-      if (files.length === 0) return;
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.match('image.*')) {
-          alert('请上传图片文件');
-          continue;
-        }
-        
-        // 检查图片大小（限制为5MB）
-        if (file.size > 5 * 1024 * 1024) {
-          alert('图片大小不能超过5MB');
-          continue;
-        }
-        
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+
+      const remainingSlots = 5 - this.commentImages.length;
+      const validFiles = files.slice(0, remainingSlots);
+
+      validFiles.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
           this.commentImages.push({
-            file: file,
-            preview: e.target.result
+            file,
+            preview: e.target.result,
+            uploadedPath: null // 先不上传，等发布时再统一上传
           });
         };
         reader.readAsDataURL(file);
-      }
-      
-      // 清空input值，允许重复选择同一文件
-      this.$refs.commentFileInput.value = '';
+      });
+
+     // this.$refs.commentImages.value = ''; // 允许重复选同一张图
     },
     handleReplyImageUpload(e) {
-      const files = e.target.files;
-      if (files.length === 0) return;
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.match('image.*')) {
-          alert('请上传图片文件');
-          continue;
-        }
-        
-        // 检查图片大小（限制为5MB）
-        if (file.size > 5 * 1024 * 1024) {
-          alert('图片大小不能超过5MB');
-          continue;
-        }
-        
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+
+      const remainingSlots = 5 - this.replyImages.length;
+      const validFiles = files.slice(0, remainingSlots);
+
+      validFiles.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
           this.replyImages.push({
-            file: file,
-            preview: e.target.result
+            file,
+            preview: e.target.result,
+            uploadedPath: null // 先不上传，等发布时再统一上传
           });
         };
         reader.readAsDataURL(file);
-      }
-      
-      // 清空input值，允许重复选择同一文件
-      this.$refs.replyFileInput.value = '';
+      });
+
+      //this.$refs.replyImages.value = ''; // 允许重复选同一张图
     },
+
+
+    // 修改 removeCommentImage 方法
     removeCommentImage(index) {
-      this.commentImages.splice(index, 1);
+      const removed = this.commentImages.splice(index, 1)[0];
+      if (removed.uploadedPath) {
+        this.deleteUploadedImage(removed.uploadedPath);
+      }
     },
+
     removeReplyImage(index) {
-      this.replyImages.splice(index, 1);
+      const removed = this.replyImages.splice(index, 1)[0];
+      if (removed.uploadedPath) {
+        this.deleteUploadedImage(removed.uploadedPath);
+      }
     },
+
+
+   //提交评论
+  //  async submitComment() {
+  //     if (!this.newComment.trim() && this.commentImages.length === 0) {
+  //       alert('请输入评论内容或上传图片');
+  //       return;
+  //     }
+
+  //     try {
+  //       // 1. 上传图片（复用已有方法）
+  //       const imageUrls = await uploadImages(this.commentImages.map(img => img.file));
+
+  //       // 2. 构造评论数据
+  //       const data = {
+  //         postId: this.currentPost.postId,
+  //         userId: 1, // 当前用户ID（可替换为真实用户）
+  //         username: '当前用户', // 可替换为真实用户名
+  //         content: this.newComment.trim(),
+  //         commentTime: null, // 后端生成时间
+  //         parentComment: null, // 顶级评论
+  //         likeCount: 0,
+  //         image: imageUrls.join(',') // 多张图用逗号分隔
+  //       };
+
+  //       // 3. 调用后端接口
+  //       await addComment(data);
+
+  //       alert('评论成功！');
+  //       this.newComment = '';
+  //       this.commentImages = [];
+  //       this.refreshComments(); // 刷新评论列表
+  //     } catch (error) {
+  //       console.error('评论失败:', error);
+  //       alert('评论失败，请重试');
+  //     }
+  //   },
+    
     async submitComment() {
       if (!this.newComment.trim() && this.commentImages.length === 0) {
-        alert('评论内容或图片不能为空');
+        alert('请输入评论内容或上传图片');
         return;
       }
+
+      try {
+        const imageUrls = await uploadImages(this.commentImages.map(img => img.file));
+
+        this.commentImages.forEach((img, index) => {
+          img.uploadedPath = imageUrls[index];
+        });
+        const payload = {
+          postId: this.currentPost.postId,
+          userId: this.currentUserId, 
+          username: this.currentUsername, 
+          content: this.newComment.trim(),
+          image: imageUrls.join(','),
+          parentComment: null,
+          likeCount: 0
+        };
+
+        // ✅ 打印传给后端的内容
+        console.log('传给后端的评论内容：', payload);
+        
+        await addComment(payload);
+        //console.log('后端返回：', res);
+        //alert('评论成功');
+        this.newComment = '';
+        this.commentImages = [];
+        this.refreshComments();
+      } catch (error) {
+        console.error('评论失败：', error);
+      }
+      // 发布评论后
+      await updatePostStats(this.currentPost.postId, 'comment', this.currentPost.comments + 1);
+    },
+    
+    async refreshComments() {
+      try {
+        const res = await getComments(this.currentPost.postId);
+        console.log('📦 后端返回评论：', res.data);
+
+        if (res.data?.code === 200) {
+          // 将平铺的评论列表转换为嵌套结构
+          this.comments = this.buildCommentTree(res.data.data || []);
+          this.currentPost.comments = res.data.data.length || 0;
+        }
+      } catch (err) {
+        console.error('获取评论失败：', err);
+      }
+    },
+
+    buildCommentTree(comments) {
+      const commentMap = {};
+      const rootComments = [];
       
-      // 上传图片到服务器（实际项目中需要实现）
-      const uploadedImages = await this.uploadImages(this.commentImages);
-      
-      this.comments.push({
-        id: this.comments.length + 1,
-        author: '当前用户',
-        authorAvatar: this.defaultAvatar,
-        content: this.newComment,
-        images: uploadedImages,
-        time: new Date().toLocaleString()
+      // 首先创建所有评论的映射
+      comments.forEach(comment => {
+        commentMap[comment.commentId] = {
+          ...comment,
+          // 确保有isLiked和likes字段
+          isLiked: comment.isLiked || false,
+          likes: comment.likes || 0,
+          replies: [],
+          imageList: comment.image ? comment.image.split(',').map(url => getFullImageUrl(url)) : []
+        };
       });
       
-      this.currentPost.comments++;
-      this.newComment = '';
-      this.commentImages = [];
+      // 构建嵌套结构
+      comments.forEach(comment => {
+        if (comment.parentComment) {
+          const parent = commentMap[comment.parentComment];
+          if (parent) {
+            parent.replies.push(commentMap[comment.commentId]);
+          }
+        } else {
+          rootComments.push(commentMap[comment.commentId]);
+        }
+      });
+      
+      return rootComments;
     },
-    async submitReply() {
-    if (!this.replyContent.trim() && this.replyImages.length === 0) {
-      alert('回复内容或图片不能为空');
-      return;
-    }
-
-    // 上传图片到服务器（模拟）
-    const uploadedImages = await this.uploadImages(this.replyImages);
-    
-    // 创建新回复
-    const newReply = {
-      id: Date.now(),
-      author: '当前用户',
-      authorAvatar: this.defaultAvatar,
-      content: this.replyContent,
-      images: uploadedImages,
-      time: new Date().toLocaleString(),
-      parentId: this.replyingTo.id,
-      replies: [],
-      likes: 0,        // 新增
-      isLiked: false   // 新增
-    };
-    
-    // 确保评论数组是响应式的
-    if (!Array.isArray(this.comments)) {
-      this.comments = [];
-    }
-    
-    // 找到被回复的评论并添加回复
-    const addReplyToComment = (comments) => {
-      for (let i = 0; i < comments.length; i++) {
-        if (comments[i].id === this.replyingTo.id) {
-          // 确保replies数组存在
-          if (!comments[i].replies) {
-            this.$set(comments[i], 'replies', []);
-          }
-          // 使用Vue.set确保响应式
-          this.$set(comments[i].replies, comments[i].replies.length, newReply);
-          return true;
-        }
-        if (comments[i].replies && comments[i].replies.length > 0) {
-          if (addReplyToComment(comments[i].replies)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-    
-    // 添加回复
-    if (!addReplyToComment(this.comments)) {
-      // 如果没找到被回复的评论，则作为顶级评论添加
-      this.comments.push(newReply);
-    }
-    
-    // 强制更新视图
-    this.$forceUpdate();
-    
-    this.currentPost.comments++;
-    this.closeReplyDialog();
-
-  },
-
-    
     showImagePreview(imageUrl) {
       this.currentPreviewImage = imageUrl;
       this.showImagePreviewModal = true;
@@ -1397,7 +1700,7 @@ export default {
     },
     // 检查是否是当前用户的评论
     isCurrentUserComment(comment) {
-      return comment.author === this.currentUser.name;
+      return comment.userId === this.currentUser.id;
     },
     
     // 确认删除帖子
@@ -1416,7 +1719,47 @@ export default {
       this.showDeleteConfirm = true;
     },
     
-    // 取消删除
+   
+     // 删除帖子
+    async deletePost() {
+      
+      try {
+        const res = await deletePost(this.currentPost.postId || this.currentPost.id);
+        if (res.data?.code === 200) {
+          //alert('帖子删除成功');
+          this.showPostDetail = false;
+          this.closeModal();
+          await this.initializePagination(); // 刷新帖子列表
+        } else {
+          //alert('删除失败：' + (res.data?.msg || '未知错误'));
+          console.log('删除帖子请求参数：', this.currentPost.postId);
+          console.log('后端返回：', res.data);
+        }
+        
+      } catch (err) {
+        console.error('删除帖子失败:', err);
+        alert('网络错误，删除失败');
+      }
+    },
+
+     // 删除评论
+    async deleteComment() {
+      try {
+        const res = await deleteComment(this.deleteTarget.commentId || this.deleteTarget.id);
+        if (res.data?.code === 200) {
+          //alert('评论删除成功');
+          await this.refreshComments(); // 刷新评论
+        } else {
+          alert('删除失败：' + (res.data?.msg || '未知错误'));
+        }
+      } catch (err) {
+        console.error('删除评论失败:', err);
+        alert('网络错误，删除失败');
+      }
+      await updatePostStats(this.currentPost.postId, 'comment', this.currentPost.comments - 1);
+    },
+
+     // 取消删除
     cancelDelete() {
       this.showDeleteConfirm = false;
       this.deleteTarget = null;
@@ -1424,117 +1767,59 @@ export default {
     },
     
     // 确认删除
-    confirmDelete() {
+    async confirmDelete() {
       if (this.deleteType === 'post') {
-        this.deletePost();
+        await this.deletePost();
       } else if (this.deleteType === 'comment') {
-        this.deleteComment();
+        await this.deleteComment();
       }
-      
+
       this.showDeleteConfirm = false;
       this.deleteTarget = null;
       this.deleteType = null;
     },
-     // 删除帖子
-    deletePost() {
-      const postIndex = this.posts.findIndex(p => p.id === this.deleteTarget.id);
-      if (postIndex !== -1) {
-        this.posts.splice(postIndex, 1);
-      }
-      
-      const originalIndex = this.originalPosts.findIndex(p => p.id === this.deleteTarget.id);
-      if (originalIndex !== -1) {
-        this.originalPosts.splice(originalIndex, 1);
-      }
-      
-      this.closeModal();
-    },
-     // 删除评论
-    deleteComment() {
-      const commentIndex = this.comments.findIndex(c => c.id === this.deleteTarget.id);
-      if (commentIndex !== -1) {
-        this.comments.splice(commentIndex, 1);
-        this.currentPost.comments--;
-        return;
-      }
-      
-      // 如果是回复评论，在父评论中查找
-      const deleteFromParent = (comments) => {
-        for (let i = 0; i < comments.length; i++) {
-          if (comments[i].replies && comments[i].replies.length > 0) {
-            const replyIndex = comments[i].replies.findIndex(r => r.id === this.deleteTarget.id);
-            if (replyIndex !== -1) {
-              comments[i].replies.splice(replyIndex, 1);
-              this.currentPost.comments--;
-              return true;
-            }
-            
-            if (deleteFromParent(comments[i].replies)) {
-              return true;
-            }
-          }
-        }
-        return false;
-      };
-      
-      deleteFromParent(this.comments);
+
+    async refreshPosts() {
+      await this.initializePagination(); // 重新加载帖子
     },
 
     // 修改提交回复方法
     async submitReply() {
       if (!this.replyContent.trim() && this.replyImages.length === 0) {
-        alert('回复内容或图片不能为空');
+        alert('请输入回复内容或上传图片');
         return;
       }
 
-      // 上传图片到服务器（模拟）
-      const uploadedImages = await this.uploadImages(this.replyImages);
-      
-      // 创建新回复
-      const newReply = {
-        id: Date.now(), // 使用时间戳作为临时ID
-        author: '当前用户',
-        authorAvatar: this.defaultAvatar,
-        content: this.replyContent,
-        images: uploadedImages,
-        time: new Date().toLocaleString(),
-        parentId: this.replyingTo.id,
-        replies: []
-      };
+      try {
+        const imageUrls = await uploadImages(this.replyImages.map(img => img.file));
 
-      // 递归查找并添加回复
-      const addReply = (comments) => {
-        for (let i = 0; i < comments.length; i++) {
-          if (comments[i].id === this.replyingTo.id) {
-            if (!comments[i].replies) {
-              this.$set(comments[i], 'replies', []);
-            }
-            comments[i].replies.push(newReply);
-            return true;
-          }
-          if (comments[i].replies && comments[i].replies.length > 0) {
-            if (addReply(comments[i].replies)) {
-              return true;
-            }
-          }
-        }
-        return false;
-      };
+        this.commentImages.forEach((img, index) => {
+            img.uploadedPath = imageUrls[index];
+          });
+        const payload = {
+          postId: this.currentPost.postId,
+          userId: this.currentUserId, 
+          username: this.currentUsername, 
+          content: this.replyContent.trim(),
+          image: imageUrls.join(','),
+          parentComment: this.replyingTo.commentId || this.replyingTo.id, // 关键：被回复评论的ID
+          likeCount: 0
+        };
 
-      // 添加回复
-      if (!addReply(this.comments)) {
-        // 如果没找到被回复的评论，则作为顶级评论添加
-        this.comments.push(newReply);
+        console.log('回复传给后端：', payload);
+        await addComment(payload);
+
+        //alert('回复成功');
+        this.replyContent = '';
+        this.replyImages = [];
+        this.closeReplyDialog();
+        this.refreshComments(); // 刷新评论列表
+      } catch (err) {
+        console.error('回复失败：', err);
       }
-
-      // 清空回复内容
-      this.replyContent = '';
-      this.replyImages = [];
-      this.closeReplyDialog();
-      
-      // 增加评论数
-      this.currentPost.comments++;
     },
+
+
 
     isSelfReply(comment) {
       if (!comment.parentId) return false;
@@ -1557,6 +1842,34 @@ export default {
       };
       return search(this.comments);
     },
+
+
+    // 更新浏览量的方法
+    async updateViewCount(postId) {
+      const newViews = this.currentPost.views + 1;
+      try {
+        const res = await updatePostStats(postId, 'view', newViews);
+        if (res.data?.code === 200) {
+          this.currentPost.views = newViews;
+        } else {
+          alert('浏览量更新失败');
+        }
+      } catch (err) {
+        console.error('浏览量请求失败:', err);
+      }
+    },
+    splitImagePaths(imageString) {
+      if (!imageString) return [];
+      return imageString.split(',').filter(path => path.trim() !== '');
+    },
+
+    joinImagePaths(imageArray) {
+      return imageArray.filter(path => path).join(',');
+    },
+   
+
+  
+  
   },
   watch: {
     showPostDetail(newVal) {
@@ -1569,8 +1882,35 @@ export default {
       if (!newVal) {
         this.replyImages = [];
       }
+    },
+    currentPage(newVal, oldVal) {
+        console.log('currentPage变化:', oldVal, '->', newVal);
+      },
+      totalPostsFromAPI(newVal, oldVal) {
+        console.log('totalPostsFromAPI变化:', oldVal, '->', newVal);
+      },
+      totalPages(newVal, oldVal) {
+        console.log('totalPages变化:', oldVal, '->', newVal);
+      }
+
+  },
+  mounted() {
+    const paginationEl = document.querySelector('.pagination');
+    if (paginationEl) {
+      paginationEl.addEventListener('click', (e) => {
+        console.log('分页区域点击事件:', e.target);
+        console.log('事件冒泡路径:', e.composedPath());
+      }, true); // 使用捕获阶段
     }
-  }
+     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      this.currentUserId = user.userId || 1;
+      this.currentUsername = user.username || '游客';
+      this.currentUser = {
+        id: this.currentUserId,
+        name: this.currentUsername,
+        avatar: ''
+      };
+  },
 }
 </script>
 
@@ -1586,12 +1926,7 @@ export default {
 }
 
 
-.post-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0;
-}
+
 
 
 .search-results-info {
@@ -1599,7 +1934,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 10px 15px;
-  background-color: rgba(239, 246, 255, 0.5);
+  background-color: rgba(28, 93, 179, 0.5);
   border-radius: 8px;
   margin-bottom: 15px;
   font-size: 14px;
@@ -1655,7 +1990,7 @@ export default {
   position: relative;
   display: flex;
   align-items: center;
-  background-color: rgba(255,255,255,0.95);
+  background-color: rgba(247, 218, 250, 0.95);
   border-radius: 30px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   transition: all 0.3s ease;
@@ -2026,6 +2361,13 @@ export default {
   padding-right: 10px; /* 为标签留出空间 */
 }
 
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
 .post-tags.right-aligned {
   position: absolute;
   top: 0;
@@ -2034,7 +2376,8 @@ export default {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 4px;
-  max-width: 50%; /* 限制标签区域宽度 */
+  font-size: 14px;
+  max-width: 40%; /* 限制标签区域宽度 */
 }
 
 
@@ -2048,6 +2391,13 @@ export default {
   white-space: nowrap;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   transition: all 0.2s ease;
+}
+
+
+
+.tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 
@@ -2076,7 +2426,7 @@ export default {
   background-color: #6366F1;
 }
 
-.post-tag:hover {
+.post-tags:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
@@ -2177,44 +2527,24 @@ export default {
   object-fit: cover;
   border: 1px solid #e5e7eb;
 }
-
+.text-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0EA5E9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  user-select: none;
+}
 .meta-icon {
   width: 14px;
   height: 14px;
   margin-right: 4px;
   vertical-align: middle;
-}
-
-/* 分页控件 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 30px;
-}
-
-.pagination button {
-  padding: 6px 12px;
-  min-width: 36px;
-  border: 1px solid #e5e7eb;
-  background-color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
-  color: #4b5563;
-}
-
-.pagination button.active {
-  background: linear-gradient(135deg, #10B981, #0EA5E9);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 4px 6px rgba(16,185,129,0.2);
-}
-
-.pagination button:hover:not(.active) {
-  background-color: #f3f4f6;
-  border-color: #d1d5db;
 }
 
 /* 帖子详情模态框 */
@@ -2398,8 +2728,8 @@ export default {
   transform: translateY(-50%);
   width: 44px;
   height: 44px;
-  background-color: rgba(15, 14, 14, 0.5);
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  background-color: rgba(250, 247, 247, 0.5);
+  border: 2px solid rgba(8, 8, 8, 0.8);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -2411,14 +2741,14 @@ export default {
 }
 
 .carousel-btn:hover {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(212, 201, 201, 0.7);
   border-color: white;
 }
 
 .carousel-btn svg {
   width: 24px;
   height: 24px;
-  color: white !important;
+  color: rgb(168, 45, 45) !important;
   fill: currentColor !important;  
   /* filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
   transition: transform 0.2s ease; */
@@ -3879,5 +4209,104 @@ textarea {
 .confirm-delete-btn:hover {
   background-color: #DC2626;
 }
+
+
+/* 分页控件 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  min-width: 44px;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  color: #4b5563;
+}
+.pagination button:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.pagination button.active {
+  background: linear-gradient(135deg, #10B981, #0EA5E9);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 6px rgba(16,185,129,0.2);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* 确保按钮可点击 */
+.pagination button:not(:disabled) {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+
+
+/* 加载样式 */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #666;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.pagination-info {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #666;
+  font-size: 14px;
+}
+
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #9CA3AF;
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+
 
 </style>

@@ -88,10 +88,13 @@ const fetchUserOrders = async () => {
       }
       
     } catch (apiError) {
-      console.log('后端API不可用，使用本地降级数据:', apiError.message)
+      console.log('后端API不可用:', apiError.message)
       
-      // API降级：使用本地模拟数据
-      loadLocalOrders(userId)
+      // API降级方案已注释，只保留真实API调用
+      // loadLocalOrders(userId)
+      
+      // 显示空数据
+      orders.value = []
     }
     
   } catch (error) {
@@ -104,7 +107,8 @@ const fetchUserOrders = async () => {
   }
 }
 
-// 本地降级数据（API不可用时的备用方案）
+// 本地降级数据函数（已注释，不再使用）
+/*
 const loadLocalOrders = (userId) => {
   // 模拟订单数据（根据后端接口返回的数据结构）
   const mockOrders = [
@@ -145,6 +149,7 @@ const loadLocalOrders = (userId) => {
   orders.value = mockOrders
   console.log('使用本地降级订单数据:', orders.value.length, '条')
 }
+*/
 
 // 格式化日期时间
 const formatDate = (dateStr) => {

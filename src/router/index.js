@@ -8,6 +8,7 @@ import Forum from '@/Forum.vue'
 import Introduction from '@/Introduction.vue'
 import UserInfoView from '@/UserInfoView.vue';
 import Shopmallment from '@/Shopmallment.vue'
+import AdaptPet from '../AdaptPet.vue';
 const routes = [
   {
     path: '/',
@@ -55,11 +56,19 @@ const routes = [
     props: true
   },
   {
+
     path: '/shopment',
     name: 'Shopmallment',
     component: Shopmallment,
     props: true
   },
+
+    path: '/adaptpet',
+    name: 'AdaptPet',
+    component: AdaptPet,
+    props: true 
+  }
+
 ];
 
 const router = createRouter({

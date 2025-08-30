@@ -71,7 +71,6 @@ const tabs = [
 
 const activeTab = ref('cases')
 
-// 组件映射
 
 
 const currentComponent = computed(() => {
