@@ -86,7 +86,7 @@ const fetchUserAppointments = async () => {
     
     try {
       // 调用后端API获取预约记录
-      const response = await axios.get(`${API_BASE_URL}/getAppointmentsByIdType`, {
+      const response = await axios.get(`${API_BASE_URL}/getAppointmentsById`, {
         params: { 
           idType: 'userId',
           id: userId 
