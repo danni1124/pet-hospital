@@ -9,6 +9,8 @@ import Introduction from '@/Introduction.vue'
 import UserInfoView from '@/UserInfoView.vue';
 import Shopmallment from '@/Shopmallment.vue'
 import AdaptPet from '../AdaptPet.vue';
+import Schedule_manage from '../Schedule_manage.vue';
+import shop_manager from '../shop-manager.vue';
 const routes = [
   {
     path: '/',
@@ -66,7 +68,19 @@ const routes = [
     name: 'AdaptPet',
     component: AdaptPet,
     props: true 
-  }
+  },
+  {
+    path: '/schedule-management',
+    name: 'Schedule_manage',
+    component: Schedule_manage,
+    props: true 
+  },
+  {
+    path: '/shop_manager',
+    name: 'shop_manager',
+    component: shop_manager,
+    props: true 
+  }
 
 ];
 
