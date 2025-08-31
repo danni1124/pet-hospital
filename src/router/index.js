@@ -56,13 +56,12 @@ const routes = [
     props: true
   },
   {
-
     path: '/shopment',
     name: 'Shopmallment',
     component: Shopmallment,
     props: true
   },
-
+  {
     path: '/adaptpet',
     name: 'AdaptPet',
     component: AdaptPet,
