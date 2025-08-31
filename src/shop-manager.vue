@@ -25,7 +25,7 @@
           :class="{ active: currentView === 'add-product' }"
         >
           <i class="fas fa-plus-circle"></i>
-          新增商品
+          商品管理
         </button>
         <button 
           @click="switchView('cart')" 
@@ -126,6 +126,15 @@
                     加入购物车
                   </button>
                 </div>
+                <!-- 添加操作按钮区域 -->
+                <div class="action-area">
+                <button @click="editProduct(product)" class="edit-btn">
+                    <i class="fas fa-edit"></i> 修改
+                </button>
+                <button @click="deleteProduct(product)" class="delete-btn">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
+                </div>
               </div>
             </div>
           </div>
@@ -158,6 +167,15 @@
                       加入购物车
                     </button>
                   </div>
+                  <!-- 添加操作按钮区域 -->
+                <div class="action-area">
+                <button @click="editProduct(product)" class="edit-btn">
+                    <i class="fas fa-edit"></i> 修改
+                </button>
+                <button @click="deleteProduct(product)" class="delete-btn">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
+                </div>
                 </div>
               </div>
             </div>
@@ -182,6 +200,15 @@
                       加入购物车
                     </button>
                   </div>
+                  <!-- 在商品项的价格区域下方添加操作按钮 -->
+                    <div class="action-area">
+                    <button @click="editProduct(product)" class="edit-btn">
+                        <i class="fas fa-edit"></i> 修改
+                    </button>
+                    <button @click="deleteProduct(product)" class="delete-btn">
+                        <i class="fas fa-trash"></i> 删除
+                    </button>
+                    </div>
                 </div>
               </div>
             </div>
@@ -191,8 +218,10 @@
       <!-- 添加商品视图 -->
       <div v-if="currentView === 'add-product'" class="add-product-view">
         <div class="add-product-container">
-          <h2><i class="fas fa-plus-circle"></i> 添加新商品</h2>
-          
+          <h2>
+            <i class="fas" :class="isEditing ? 'fa-edit' : 'fa-plus-circle'"></i> 
+            {{ isEditing ? '编辑商品' : '添加新商品' }}
+          </h2>
           <div class="form-container">
             <form @submit.prevent="submitProductForm" class="product-form">
               <div class="form-row">
@@ -280,12 +309,12 @@
 
               <div class="form-actions">
                 <button type="button" @click="resetProductForm" class="btn-secondary">
-                  <i class="fas fa-redo"></i> 重置
+                  <i class="fas fa-redo"></i> {{ isEditing ? '取消编辑' : '重置' }}
                 </button>
                 <button type="submit" :disabled="addingProduct" class="btn-primary">
-                  <i class="fas fa-plus" v-if="!addingProduct"></i>
+                  <i class="fas" :class="isEditing ? 'fa-save' : 'fa-plus'"></i>
                   <i class="fas fa-spinner fa-spin" v-if="addingProduct"></i>
-                  {{ addingProduct ? '添加中...' : '添加商品' }}
+                  {{ addingProduct ? (isEditing ? '修改中...' : '添加中...') : (isEditing ? '修改商品' : '添加商品') }}
                 </button>
               </div>
             </form>
@@ -637,7 +666,7 @@ export default {
   data() {
     return {
       showCouponModal:false,
-
+      isEditing: false,
       currentView: 'products',
       currentCategory: 'all',
       cart: [],
@@ -759,6 +788,50 @@ export default {
     this.fetchCart();
   },
   methods: {
+    // 编辑商品
+editProduct(product) {
+  // 切换到添加商品视图
+  this.switchView('add-product');
+  // 填充表单数据
+  this.newProduct = {
+    productId: product.productId,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    category: product.category,
+    imageUrl: product.imageUrl || '',
+    isHot: product.hot === '是',
+    stock: product.stock || 0
+  };
+  // 设置编辑模式标志
+  this.isEditing = true;
+},
+
+// 删除商品
+deleteProduct(product) {
+  if (confirm(`确定要删除【${product.name}】吗？此操作无法撤销！`)) {
+    axios.post(`${API_BASE_URL}/deleteProduct`, null, {
+      params: { productId: product.productId }
+    })
+    .then(res => {
+      if (res.data.code === 200) {
+        // 从商品列表中移除
+        this.products = this.products.filter(p => p.productId !== product.productId);
+        this.showNotification = true;
+        this.notificationMessage = '商品已删除';
+        setTimeout(() => {
+          this.showNotification = false;
+        }, 2000);
+      } else {
+        alert('删除失败: ' + res.data.msg);
+      }
+    })
+    .catch(error => {
+      console.error('删除商品失败:', error);
+      alert('删除商品失败，请检查网络连接');
+    });
+  }
+},
     // API请求方法
     fetchProducts() {
       this.loading = true;
@@ -1135,132 +1208,189 @@ export default {
 //       }, 2000);
 //     });
 // },
-    submitPayment() {
-      // 生成订单号（可以使用时间戳+随机数）
-      const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
+    // submitPayment() {
+    //   // 生成订单号（可以使用时间戳+随机数）
+    //   const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
       
-      // 构建订单对象 - 确保字段名与Java类完全匹配
-      const order = {
-        orderNo: orderNo,
-        userId: 1, // 假设用户ID为1
-        totalAmount:this.finalTotal, // 使用 totalAmount 而不是 total
-        status: 1, // 假设1表示待支付状态
-        paymentMethod: this.selectedPayment, // 确保字段名正确
-        createdAt: new Date().toISOString().split('T')[0] + ' ' + 
-                  new Date().toLocaleTimeString('zh-CN', {hour12: false})
-      };
+    //   // 构建订单对象 - 确保字段名与Java类完全匹配
+    //   const order = {
+    //     orderNo: orderNo,
+    //     userId: 1, // 假设用户ID为1
+    //     totalAmount:this.finalTotal, // 使用 totalAmount 而不是 total
+    //     status: 1, // 假设1表示待支付状态
+    //     paymentMethod: this.selectedPayment, // 确保字段名正确
+    //     createdAt: new Date().toISOString().split('T')[0] + ' ' + 
+    //               new Date().toLocaleTimeString('zh-CN', {hour12: false})
+    //   };
       
-      // 构建订单项列表
-      const orderItems = this.cart.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.price
-        // 注意：orderId 和 itemId 通常由后端生成，不需要在前端提供
-      }));
+    //   // 构建订单项列表
+    //   const orderItems = this.cart.map(item => ({
+    //     productId: item.productId,
+    //     quantity: item.quantity,
+    //     price: item.price
+    //     // 注意：orderId 和 itemId 通常由后端生成，不需要在前端提供
+    //   }));
       
-      // 构建符合后端要求的请求数据
-      const orderRequestDTO = {
-        order: order,
-        orderItem: orderItems // 注意字段名与Java类中的orderItem一致
-      };
+    //   // 构建符合后端要求的请求数据
+    //   const orderRequestDTO = {
+    //     order: order,
+    //     orderItem: orderItems // 注意字段名与Java类中的orderItem一致
+    //   };
       
-      console.log('提交的订单数据:', JSON.stringify(orderRequestDTO, null, 2));
+    //   console.log('提交的订单数据:', JSON.stringify(orderRequestDTO, null, 2));
       
-      // 发送请求到正确的端点
-      axios.post(`${API_BASE_URL}/addOrder`, orderRequestDTO)
-        .then((response) => {
-          console.log('订单创建成功:', response.data);
+    //   // 发送请求到正确的端点
+    //   axios.post(`${API_BASE_URL}/addOrder`, orderRequestDTO)
+    //     .then((response) => {
+    //       console.log('订单创建成功:', response.data);
           
-        // 替换原来的删除逻辑
-        const deletePromises = this.cart.map(item => 
-          axios.post(`${API_BASE_URL}/deleteCartsById`, null, {
-            params: { cartId: item.cartId }
-          }).catch(err => {
-            console.warn('删除购物车项失败:', err);
-            return Promise.resolve(); // 继续执行
-          })
+    //     // 替换原来的删除逻辑
+    //     const deletePromises = this.cart.map(item => 
+    //       axios.post(`${API_BASE_URL}/deleteCartsById`, null, {
+    //         params: { cartId: item.cartId }
+    //       }).catch(err => {
+    //         console.warn('删除购物车项失败:', err);
+    //         return Promise.resolve(); // 继续执行
+    //       })
           
-        );
-          console.log('删除购物车成功');
-          return Promise.all(deletePromises);
-        })
-        .then(() => {
-          // 清空本地购物车
-          this.cart = [];
-          this.showNotification = true;
-          this.notificationMessage = '支付成功！订单正在处理中';
+    //     );
+    //       console.log('删除购物车成功');
+    //       return Promise.all(deletePromises);
+    //     })
+    //     .then(() => {
+    //       // 清空本地购物车
+    //       this.cart = [];
+    //       this.showNotification = true;
+    //       this.notificationMessage = '支付成功！订单正在处理中';
           
-          setTimeout(() => {
-            this.showNotification = false;
-            this.switchView('products');
-          }, 2000);
-        })
-        .catch((error) => {
-          console.error('提交订单失败:', error);
+    //       setTimeout(() => {
+    //         this.showNotification = false;
+    //         this.switchView('products');
+    //       }, 2000);
+    //     })
+    //     .catch((error) => {
+    //       console.error('提交订单失败:', error);
           
-          // 更详细的错误信息
-          let errorMessage = '支付失败，请重试';
-          if (error.response && error.response.data) {
-            errorMessage = error.response.data.message || errorMessage;
-            console.error('服务器返回的错误:', error.response.data);
-          }
+    //       // 更详细的错误信息
+    //       let errorMessage = '支付失败，请重试';
+    //       if (error.response && error.response.data) {
+    //         errorMessage = error.response.data.message || errorMessage;
+    //         console.error('服务器返回的错误:', error.response.data);
+    //       }
           
-          this.showNotification = true;
-          this.notificationMessage = errorMessage;
+    //       this.showNotification = true;
+    //       this.notificationMessage = errorMessage;
           
-          setTimeout(() => {
-            this.showNotification = false;
-          }, 3000);
-        });
-    },
+    //       setTimeout(() => {
+    //         this.showNotification = false;
+    //       }, 3000);
+    //     });
+    // },
         
     // 其他方法保持不变
     switchView(view) {
+      if (view !== 'add-product') {
+      this.isEditing = false;
+      this.resetProductForm();
+    }
+      this.searchQuery = '';
       this.currentView = view;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     // 新增商品相关方法
-    submitProductForm() {
-      this.addingProduct = true;
-      this.productMessage = '';
+    // 修改提交表单的方法
+// submitProductForm() {
+//   this.addingProduct = true;
+//   this.productMessage = '';
+  
+//   const productData = {
+//     name: this.newProduct.name,
+//     description: this.newProduct.description,
+//     price: this.newProduct.price,
+//     category: this.newProduct.category,
+//     imageUrl: this.newProduct.imageUrl || this.getDefaultProductImage(),
+//     hot: this.newProduct.isHot ? '是' : '否',
+//     stock: this.newProduct.stock
+//   };
+  
+//   // 如果是编辑模式，添加productId
+//   if (this.isEditing) {
+//     productData.productId = this.newProduct.productId;
+//   }
+  
+//   const url = this.isEditing ? `${API_BASE_URL}/updateProduct` : `${API_BASE_URL}/addProduct`;
+//   const successMessage = this.isEditing ? '商品更新成功!' : '商品添加成功!';
+  
+//   axios.post(url, productData)
+//     .then((res) => {
+//       this.showProductMessage(successMessage, 'success');
+//       this.resetProductForm();
       
-     
-        // 根据Java类属性名构建请求数据
-        const productData = {
-          name: this.newProduct.name,
-          description: this.newProduct.description,
-          price: this.newProduct.price,
-          category: this.newProduct.category,
-          imageUrl: this.newProduct.imageUrl || this.getDefaultProductImage(),
-          // is_hot: this.newProduct.isHot,
-          hot: this.newProduct.isHot ? '是' : '否',
-          stock: this.newProduct.stock
-        };
-        
-        // 发送POST请求到服务器
-        
-       console.log('productData',productData);
+//       // 刷新商品列表
+//       this.fetchProducts();
       
-       // 使用axios发送POST请求，采用Promise链式调用
-      axios.post(`${API_BASE_URL}/addProduct`, productData)
-        .then((res) => {
-          this.showProductMessage('商品添加成功!', 'success');
-          this.resetProductForm();
-          console.log('tianjiachenggong1',res);
-          // 2秒后自动切换回商品列表
-          setTimeout(() => {
-            this.switchView('products');
-          }, 2000);
-        })
-        .catch((error) => {
-          console.error('添加商品失败:', error);
-          const errorMsg = error.response?.data?.message || error.message;
-          this.showProductMessage(`添加失败: ${errorMsg}`, 'error');
-        })
-        .finally(() => {
-          this.addingProduct = false;
-        });
-    },
+//       // 2秒后自动切换回商品列表
+//       setTimeout(() => {
+//         this.switchView('products');
+//         this.isEditing = false;
+//       }, 2000);
+//     })
+//     .catch((error) => {
+//       console.error('操作失败:', error);
+//       const errorMsg = error.response?.data?.message || error.message;
+//       this.showProductMessage(`操作失败: ${errorMsg}`, 'error');
+//     })
+//     .finally(() => {
+//       this.addingProduct = false;
+//     });
+// },
+ submitProductForm() {
+    this.addingProduct = true;
+    this.productMessage = '';
+    
+    const productData = {
+      name: this.newProduct.name,
+      description: this.newProduct.description,
+      price: this.newProduct.price,
+      category: this.newProduct.category,
+      imageUrl: this.newProduct.imageUrl || this.getDefaultProductImage(),
+      hot: this.newProduct.isHot ? '是' : '否',
+      stock: this.newProduct.stock
+    };
+    
+    // 如果是编辑模式，添加productId并使用更新API
+    let url = `${API_BASE_URL}/addProduct`;
+    let successMessage = '商品添加成功!';
+    
+    if (this.isEditing) {
+      productData.productId = this.newProduct.productId;
+      url = `${API_BASE_URL}/updateProduct`;
+      successMessage = '商品更新成功!';
+    }
+    
+    axios.post(url, productData)
+      .then((res) => {
+        this.showProductMessage(successMessage, 'success');
+        this.resetProductForm();
+        
+        // 刷新商品列表
+        this.fetchProducts();
+        
+        // 2秒后自动切换回商品列表
+        setTimeout(() => {
+          this.switchView('products');
+        }, 2000);
+      })
+      .catch((error) => {
+        console.error('操作失败:', error);
+        const errorMsg = error.response?.data?.message || error.message;
+        this.showProductMessage(`操作失败: ${errorMsg}`, 'error');
+      })
+      .finally(() => {
+        this.addingProduct = false;
+      });
+  },
+  
     
     resetProductForm() {
       this.newProduct = {
@@ -1273,6 +1403,7 @@ export default {
         stock: 0
       };
       this.productMessage = '';
+      this.isEditing = false;
     },
     
     getDefaultProductImage() {
@@ -1499,8 +1630,7 @@ export default {
 
 
 <style>
-/* 注释掉可能有问题的Google Fonts导入 */
-/* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
 
 * {
@@ -1530,7 +1660,7 @@ export default {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Noto Sans SC', sans-serif;
   background-color: #f5f9f7;
   color: var(--dark);
   line-height: 1.6;
@@ -3455,5 +3585,40 @@ body {
     justify-content: center;
     border-top: 1px dashed #eee;
   }
+}
+.action-area {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #eee;
+}
+
+.edit-btn, .delete-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.edit-btn {
+  background: #ffc107;
+  color: #000;
+}
+
+.edit-btn:hover {
+  background: #e0a800;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #c82333;
 }
 </style>
