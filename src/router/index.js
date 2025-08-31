@@ -62,13 +62,15 @@ const routes = [
     name: 'Shopmallment',
     component: Shopmallment,
     props: true
-  },
-  {
+
+  },{
+
     path: '/adaptpet',
     name: 'AdaptPet',
     component: AdaptPet,
     props: true 
   },
+
   {
     path: '/schedule-management',
     name: 'Schedule_manage',
@@ -81,6 +83,7 @@ const routes = [
     component: shop_manager,
     props: true 
   }
+
 
 ];
 

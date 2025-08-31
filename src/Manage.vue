@@ -26,8 +26,11 @@
                   :key="application.applicationId" 
                   class="notification-item"
                   @click="viewApplication(application)"
-                  @contextmenu.prevent="handleLongPress(application)"
+                  @contextmenu.prevent="handleRightPress(application)"
                 >
+                <!-- @contextmenu是 Vue 的事件监听语法糖，等价于 v-on:contextmenu，用于监听元素的右键菜单事件（即用户右键点击时触发的默认浏览器菜单）。 -->
+                 <!-- .prevent是事件修饰符，等价于调用 event.preventDefault()，用于阻止浏览器默认的右键菜单弹出。 -->
+
                   <div class="application-pet-info6">
                     <img :src="getPetImage(application.pet)" class="pet-thumbnail">
                   <div class="pet-info6">
@@ -38,16 +41,24 @@
                               {{ application.pet.type === 'dog' ? '狗狗' : '猫咪' }}
                           </span>
                       </div>
-                  </div>
-                    <div class="application-details">
-                      
+                  </div >
+                    <div class="pet-info7">
+                      <div class="pet-name7">{{application.username }}</div>
                       <div class="applicant-info">
                         <span class="application-time">{{ formatTime(application.time) }}</span>
                       </div>
                     </div>
                   </div>
-                  <div class="application-status" :class="getStatusClass1(application.status)">
+                  <!--  动态类名 (:class="getStatusClass1(application.status)") -->
+                  <!-- 根据 application.status 的值（如 "pending"、"approved"）返回一个类名字符串或对象。 -->
+                  <div class="pet-info8">
+                    <div class="application-status1":class="getReadClass1(application.read)">
+                      {{getReadText1(application.read) }}
+                    </div>
+                    <div class="application-status" :class="getStatusClass1(application.status)">
+                    <!-- {{ }} 是 Vue 的文本插值语法，用于显示动态数据。 -->
                     {{ getStatusText1(application.status) }}
+                    </div>
                   </div>
                 </div>
                 <div class="empty-notification" v-if="applications.length === 0">
@@ -96,9 +107,9 @@
                   <label>领养状态：</label>
                   <select v-model="filters.status" class="filter-select">
                       <option value="all">全部</option>
-                      <option value="owned">有主人</option>
-                      <option value="forAdoption">待领养</option>
-                      <option value="adopted">已领养</option>
+                      <option value="有主人">有主人</option>
+                      <option value="待领养">待领养</option>
+                      <option value="已领养">已领养</option>
                   </select>
               </div>
 
@@ -145,8 +156,8 @@
               :key="pet.petId" 
               class="pet-card"
               :class="{
-                  'for-adoption': pet.adoptionStatus === 'forAdoption',
-                  'adopted': pet.adoptionStatus === 'adopted'
+                  'for-adoption': pet.adoptionStatus === '待领养',
+                  'adopted': pet.adoptionStatus === '已领养'
               }"
           >
               <!-- 宠物卡片内容 -->
@@ -155,6 +166,12 @@
                       <img :src="getPetImage(pet)" 
                               alt="宠物图片" 
                               @error="handleImageError">
+                      <!-- type="file"表示这是一个文件上传输入框，用户可以通过它选择本地文件。 -->
+                      <!-- accept="image/*"限制用户只能选择图片文件（如 .jpg, .png, .gif 等）。 -->
+                      <!-- 当用户选择文件后，会触发 handleImageUpload 方法 -->
+                      <!-- :ref 是 Vue 的动态 ref 绑定 -->
+                      <!-- 挂载时：el 是真实的 DOM 元素，调用 setFileInputRef(el, pet.petId) 将该元素的引用存入 fileInputRefs 对象（以 pet.petId 为键）。
+                           卸载时：el 会是 ``，此时 setFileInputRef 会清理对应的引用（避免内存泄漏）。 -->
                       <input type="file" accept="image/*" 
                               @change="handleImageUpload($event, pet)" 
                               :ref="el => setFileInputRef(el, pet.petId)"
@@ -170,9 +187,9 @@
                               {{ getStatusText(pet.adoptionStatus) }}
                           </span>
                           <select v-else v-model="pet.editingData.adoptionStatus" class="edit-select1" @change="onStatusChange(pet)">
-                              <option value="owned">有主人</option>
-                              <option value="forAdoption">待领养</option>
-                              <option value="adopted">已领养</option>
+                              <option value="有主人">有主人</option>
+                              <option value="待领养">待领养</option>
+                              <option value="已领养">已领养</option>
                           </select>
                           
                           <!-- 宠物类型标签 -->
@@ -234,7 +251,7 @@
                   <div class="owner-info">
                       <!-- 编辑状态下显示完整表单 -->
                       <div v-if="pet.editing">
-                          <div v-if="pet.editingData.adoptionStatus !== 'forAdoption'">
+                          <div v-if="pet.editingData.adoptionStatus !== '待领养'">
                               <div class="detail-row1">
                                   <span class="detail-label2">姓名 :</span>
                                   <input v-model="pet.editingData.owner.ownerName" class="edit-input6">
@@ -272,7 +289,8 @@
                       
                       <!-- 查看状态下的显示 -->
                       <div v-else>
-                          <div v-if="pet.adoptionStatus === 'owned'" >
+                          <div v-if="pet.adoptionStatus === '有主人'" >
+
                               <div class="detail-row6">
                                   <span class="detail-label">主人信息 :</span>
                                   <span class="detail-value">{{ pet.owner?.ownerName || '无' }}</span>
@@ -292,7 +310,8 @@
                           </div>
                           
                           <div v-else>
-                              <div v-if="pet.adoptionStatus === 'adopted'">
+                              <div v-if="pet.adoptionStatus === '已领养'">
+
                                   <div class="detail-row6">
                                       <span class="detail-label">领养人信息 :</span>
                                       <span class="detail-value">{{ pet.owner?.ownerName || '无' }}</span>
@@ -372,6 +391,8 @@
                       <div class="form-row6">
                           <div class="form-group1">
                               <label>宠物姓名：</label>
+                              <!-- v-model="newPet.petName"：Vue 的双向数据绑定指令。
+                               用户在输入框中输入的内容会自动同步到 Vue 实例的 newPet.petName 属性。 -->
                               <input type="text" v-model="newPet.petName" placeholder="输入宠物姓名">
                           </div>
                           <div class="form-group1">
@@ -409,18 +430,18 @@
                           </div>
                           
                       </div>
-                      
-                      <!-- PDF上传
-                      <div class="form-row6">
-                          <div class="form-group6 full-width">
-                              <label>病历PDF：</label>
-                              <input type="file" accept=".pdf" @change="handleNewPdfUpload" class="edit-input6">
-                              <span v-if="newPet.pdfCase" class="pdf-name">{{ getPdfName(newPet.pdfCase) }}</span>
-                          </div>
-                      </div> -->
                       <div class="form-row6">
                           <div class="form-group6 full-width">
                               <label>宠物图片：</label>
+                              <!-- 当 isDragOver 为 true 时，添加 dragover 类 -->
+                              <!-- @dragenter.prevent="handleDragEnter"
+                               当拖拽的文件进入区域时触发，.prevent 阻止默认行为（如浏览器直接打开文件）。 -->
+                              <!-- @dragover.prevent="handleDragOver"
+                              文件在区域内悬停时持续触发，通常用于保持 dragover 状态 -->
+                              <!-- @dragleave.prevent="handleDragLeave"
+                               文件拖出区域时触发，移除 dragover 状态。 -->
+                               <!-- @drop.prevent="handleImageDrop"
+                                用户释放文件时触发，处理文件上传逻辑。 -->
                               <div class="upload-area" 
                                     :class="{ 'dragover': isDragOver }"
                                     @dragenter.prevent="handleDragEnter"
@@ -453,14 +474,15 @@
                           <div class="form-group6">
                               <label>领养状态：</label>
                               <select v-model="newPet.adoptionStatus" @change="onNewPetStatusChange">
-                                  <option value="forAdoption">待领养</option>
-                                  <option value="owned">有主人</option>
-                                  <option value="adopted">已领养</option>
+                                  <option value="待领养">待领养</option>
+                                  <option value="有主人">有主人</option>
+                                  <option value="已领养">已领养</option>
                               </select>
                           </div>
                       </div>
                       <!-- 待领养状态显示描述输入框 -->
-                      <div v-if="newPet.adoptionStatus === 'forAdoption'" class="form-row6">
+                      <div v-if="newPet.adoptionStatus === '待领养'" class="form-row6">
+
                           <div class="form-group6 full-width">
                               <label>领养描述：</label>
                               <textarea v-model="newPet.description" placeholder="输入宠物描述，吸引潜在领养者" class="edit-textarea"></textarea>
@@ -468,7 +490,7 @@
                       </div>
                       
                       <!-- 主人信息 -->
-                      <div v-if="newPet.adoptionStatus !== 'forAdoption'" class="owner-form">
+                      <div v-if="newPet.adoptionStatus !== '待领养'" class="owner-form">
                           <h3>主人信息</h3>
                           <div class="form-row6">
                               <div class="form-group1">
@@ -533,7 +555,7 @@
                                       <td style="width: 45px;text-align:left;">{{ getStatusText(pet.adoptionStatus) }}</td>
                                       <td style="width: 90px;text-align:left;">{{ pet.disease || '无' }}</td>
                                       <td style="width: 150px;text-align:left;">
-                                          <span v-if="pet.adoptionStatus !== 'forAdoption'">
+                                          <span v-if="pet.adoptionStatus !== '待领养'">
                                               {{ pet.owner?.ownerName || '无' }}
                                           </span>
                                           <span v-else>{{ pet.description ? pet.description.substring(0, 15) + '...' : '无描述' }}</span>
@@ -676,11 +698,11 @@
                       {{ getStatusText1(selectedApplication.status) }}
                     </span>
                   </div>
-                  <div class="status-actions" v-if="!selectedApplication.status || selectedApplication.status === 'pending'">
-                    <button class="btn approve" @click="updateApplicationStatus(selectedApplication, 'approved')">
+                  <div class="status-actions" v-if="selectedApplication.status ==='提交' || selectedApplication.status === 'pending'">
+                    <button class="btn approve" @click="updateApplicationStatus(selectedApplication, '通过')">
                       <i class="fas fa-check"></i> 批准申请
                     </button>
-                    <button class="btn reject" @click="updateApplicationStatus(selectedApplication, 'rejected')">
+                    <button class="btn reject" @click="updateApplicationStatus(selectedApplication, '拒绝')">
                       <i class="fas fa-times"></i> 拒绝申请
                     </button>
                   </div>
@@ -748,25 +770,32 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { API_BASE_URL } from '@/config/index';
-import axios from 'axios';
-import * as XLSX from 'xlsx';
+
+//1.导入部分
+
+import { ref, computed, onMounted } from 'vue';//ref, computed, onMounted: 从Vue导入响应式API
+import axios from 'axios';//axios: 导入HTTP客户端库
+import * as XLSX from 'xlsx';//XLSX: 导入Excel处理库
 
 export default {
 setup() {
-    const apiBaseUrl = ref('http://47.113.205.34:8085');
+
+//2. 响应式状态声明部分
+
+    const apiBaseUrl = ref('http://47.113.205.34:8085');//apiBaseUrl: 定义API基础URL
     // 状态管理
-    const loading = ref(false);
-    const toast = ref({
+    const loading = ref(false);//loading: 加载状态控制
+    const toast = ref({//toast: 消息提示状态控制
         show: false,
         message: '',
         type: 'info',
         icon: ''
     });
-    
 
-    // 申请管理相关状态
+// 3. 申请管理状态
+
+// 控制申请通知下拉框、申请详情、拨号模态框和删除确认的显示状态
+// 存储申请列表、选中申请和待删除申请
     const showNotificationDropdown = ref(false);
     const applications = ref([]);
     const selectedApplication = ref(null);
@@ -776,57 +805,121 @@ setup() {
     const callingNumber = ref('');
     const showDeleteConfirm = ref(false);
     const deleteCandidate = ref(null);
-    
+
+//4. 计算属性
+
     // 计算未读申请数量
     const unreadCount = computed(() => {
-      return applications.value.filter(app => !app.read).length;
+      return applications.value.filter(app => app.read==='否').length;//回调函数 app => !app.read 表示：保留所有 app.read 为 假值（如 false、undefined、``、0 等）的元素。
     });
-    
+
+//5. 工具函数
+
     // 格式化时间
     const formatTime = (dateTime) => {
       console.log(dateTime)
       if (!dateTime) return '未知时间';
       const date = new Date(dateTime);
-  
+      //${} 是 JavaScript 的模板字符串（Template Literals） 中的语法，用于在字符串中嵌入变量或表达式。它需要配合反引号（`）使用，允许直接在字符串中插入动态内容。
       // 确保显示完整的年月日时分秒
       return `${date.getFullYear()}-${('0' + (date.getMonth() + 1)).slice(-2)}-${('0' + date.getDate()).slice(-2)} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}:${('0' + date.getSeconds()).slice(-2)}`;
     };
     
-    // 获取状态文本
+//6. 状态处理函数
+
+// getStatusText1: 获取申请状态文本
+// getStatusClass1: 获取申请状态CSS类名
+
+
+    // 获取领养申请处理状态文本
     const getStatusText1 = (status) => {
       switch (status) {
-        case 'approved': return '已批准';
-        case 'rejected': return '已拒绝';
+        case '通过': return '已批准';
+        case '拒绝': return '已拒绝';
         case 'pending': return '待处理';
         default: return '待处理';
       }
     };
-    
-    // 获取状态类名
+
+    // 获取领养申请处理状态类名
     const getStatusClass1 = (status) => {
       switch (status) {
-        case 'approved': return 'approved';
-        case 'rejected': return 'rejected';
+        case '通过': return 'approved';
+        case '拒绝': return 'rejected';
         case 'pending': return 'pending';
         default: return 'pending';
       }
     };
-    
+
+    //获取申请已读状态文本
+    const getReadText1 = (status) => {
+      switch (status) {
+        case '是': return '已读';
+        case '否': return '未读';
+        default: return '未读';
+      }
+    };
+
+    // 获取申请已读状态类名
+    const getReadClass1 = (status) => {
+      switch (status) {
+        case '是': return 'true';
+        case '否': return 'false';
+        default: return 'false';
+      }
+    };
+
+    // 获取领养状态文本
+    const getStatusText = (status) => {
+        switch (status) {
+            case '有主人': return '有主人';
+            case '待领养': return '待领养';
+            case '已领养': return '已领养';
+            default: return '';
+        }
+    };
+
+    // 获取领养状态类名
+    const getStatusClass = (status) => {
+        switch (status) {
+            case '有主人': return 'owned';
+            case '待领养': return 'for-adoption';
+            case '已领养': return 'adopted';
+            default: return '';
+        }
+    };
+
+    // 获取宠物类型类名
+    const getTypeClass = (type) => {
+        switch (type) {
+            case 'dog': return 'dog-type';
+            case 'cat': return 'cat-type';
+            default: return '';
+        }
+    };
+
+
+// 7. 界面交互函数
+
+// toggleNotifications: 切换通知下拉菜单显示状态，并标记申请为已读
     // 切换通知下拉菜单
     const toggleNotifications = () => {
       console.log("11")
       showNotificationDropdown.value = !showNotificationDropdown.value;
-      if (showNotificationDropdown.value) {
-        console.log("22")
-        // 标记所有通知为已读
-        applications.value.forEach(app => {
-          app.read = true;
-        });
-      }
+      // if (showNotificationDropdown.value) {
+      //   console.log("22")
+      //   // 标记所有通知为已读
+      //   applications.value.forEach(app => {
+      //     app.read = true;
+      //   });
+      // }
     };
     
+//8. 申请数据获取函数
+
+// loadApplications: 异步加载申请数据，包括关联的宠物信息
     // 加载申请数据
-    const loadApplications = async () => {
+    const loadApplications = async () => {//async 表示函数内部可以使用 await 处理异步操作。
       try {
         loading.value = true;
         // 使用提供的接口获取申请信息
@@ -839,37 +932,39 @@ setup() {
           console.log(petsResponse.data.data);
           if (petsResponse.data.code === 200) {
             // 创建宠物ID到宠物信息的映射
-            const petsMap = {};
+            const petsMap = {};//创建一个空对象 petsMap，用于通过 petId 快速查找宠物信息。
             petsResponse.data.data.forEach(pet => {
-              petsMap[pet.pet.petId] = pet.pet;
+              petsMap[pet.pet.petId] = pet.pet;//遍历宠物数据，将每只宠物的 petId 作为键，宠物对象作为值存入 petsMap。
             });
             
             // 将宠物信息添加到申请中
+            //将申请数据（response.data.data）映射为新的数组：、
+            
             applications.value = response.data.data.map(app => ({
-              ...app,
-              read: false,
-              pet: petsMap[app.petId] || {
+              ...app,//...app 保留申请原有字段
+              read: '否',
+              pet: petsMap[app.petId] || {//pet: 尝试从 petsMap 中匹配宠物信息，如果找不到则使用默认模拟数据。
                 petId: app.petId,
                 petName: `宠物${app.petId}`,
                 type: 'dog',
                 age: 1,
                 gender: '公',
-                adoptionStatus: 'forAdoption',
-
+                adoptionStatus: '待领养',
               }
             }));
+            console.log(applications.value)
           } else {
             // 如果获取所有宠物失败，使用模拟数据
             applications.value = response.data.data.map(app => ({
               ...app,
-              read: false,
+              read: '否',
               pet: {
                 petId: app.petId,
                 petName: `宠物${app.petId}`,
                 type: Math.random() > 0.5 ? 'dog' : 'cat',
                 age: Math.floor(Math.random() * 10) + 1,
                 gender: Math.random() > 0.5 ? '公' : '母',
-                adoptionStatus: 'forAdoption',
+                adoptionStatus: '待领养',
                 image: Math.random() > 0.5 ? 
                   'https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&w=800&q=80' : 
                   'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80'
@@ -890,14 +985,14 @@ setup() {
               environment: '家有院子，适合宠物活动，有养宠经验',
               applicationTime: new Date().toISOString(),
               status: 'pending',
-              read: false,
+              read: '否',
               pet: {
                 petId: 1,
                 petName: '小白',
                 type: 'dog',
                 age: 3,
                 gender: '公',
-                adoptionStatus: 'forAdoption',
+                adoptionStatus: '待领养',
                 image: 'https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&w=800&q=80'
               }
             },
@@ -911,14 +1006,14 @@ setup() {
               environment: '公寓居住，但有充足时间陪伴宠物',
               applicationTime: new Date(Date.now() - 86400000).toISOString(),
               status: 'pending',
-              read: false,
+              read: '否',
               pet: {
                 petId: 2,
                 petName: '喵喵',
                 type: 'cat',
                 age: 2,
                 gender: '母',
-                adoptionStatus: 'forAdoption',
+                adoptionStatus: '待领养',
                 image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80'
               }
             }
@@ -931,21 +1026,47 @@ setup() {
         loading.value = false;
       }
     };
+
+//9. 申请详情管理
+
     // 查看申请详情
-    const viewApplication = (application) => {
-      console.log(application)
-      console.log(application.time)
-      selectedApplication.value = application;
-      showApplicationDetail.value = true;
-      showNotificationDropdown.value = false;
+    const viewApplication = async (application) => {
+        console.log(application);
+        selectedApplication.value = application;
+        showApplicationDetail.value = true;
+        showNotificationDropdown.value = false;
+        console.log(application.read)
+        // 如果申请是未读状态，更新为已读
+        if (application.read === '否') {
+          console.log('234')
+          console.log({
+                    applicationId: application.applicationId,
+                    read: '是'
+                })
+            try {
+                const response = await axios.post(`${apiBaseUrl.value}/updateApplication`, {
+                    applicationId: application.applicationId,
+                    read: '是'
+                });
+                console.log(response)
+                if (response.data.code === 200) {
+                    application.read = '是';
+                }
+            } catch (error) {
+                console.error('更新申请已读状态失败:', error);
+            }
+        }
     };
-    
+
     // 关闭申请详情
     const closeApplicationDetail = () => {
       showApplicationDetail.value = false;
       selectedApplication.value = null;
     };
     
+// 10. 电话功能
+
+    // simulateCall: 模拟拨打电话功能
     // 模拟拨打电话
     const simulateCall = (phone) => {
       if (!phone) {
@@ -957,9 +1078,15 @@ setup() {
       callingNumber.value = phone;
       showCallModal.value = true;
     };
-    
-    // 处理长按事件
-    const handleLongPress = (application) => {
+
+//11. 申请删除功能
+
+// handleRightPress: 处理右击事件触发删除确认
+// confirmDeleteApplication: 确认删除申请
+
+    // 处理右击事件
+    //如果右击了，就true显示出删除界面，并且将该申请赋值给删除变量
+    const handleRightPress = (application) => {
       console.log(application)
       deleteCandidate.value = application;
       showDeleteConfirm.value = true;
@@ -993,29 +1120,85 @@ setup() {
         deleteCandidate.value = null;
       }
     };
-    
+
+// 12. 申请状态更新
+
+// updateApplicationStatus: 更新申请状态（批准/拒绝）
+
     // 更新申请状态
     const updateApplicationStatus = async (application, status) => {
-      try {
-        loading.value = true;
-        // 这里应该调用更新申请状态的API
-        // 由于接口文档中没有明确给出，这里使用模拟操作
-        application.status = status;
-        showToast(`申请已${status === 'approved' ? '批准' : '拒绝'}`, 'success');
-        
-        // 如果是批准申请，更新宠物状态为已领养
-        if (status === 'approved') {
-          // 这里应该调用更新宠物状态的API
-          application.pet.adoptionStatus = 'adopted';
+        try {
+            loading.value = true;
+            console.log('1234')
+            // 更新申请状态
+            const response = await axios.post(`${apiBaseUrl.value}/updateApplication`, {
+                applicationId: application.applicationId,
+                status: status
+            });
+            console.log(response);
+            if (response.data.code === 200) {
+                application.status = status;
+                showToast(`申请已${status === '通过' ? '批准' : '拒绝'}`, 'success');
+                
+                // 如果是批准申请，更新宠物状态为已领养，并添加主人信息
+                if (status === '通过') {
+                    // 添加主人信息
+                    const addOwnerResponse = await axios.post(`${apiBaseUrl.value}/addOwner`, {
+                        ownerName: application.username,
+                        gender: application.gender, // 默认值，实际应用中应该从申请信息中获取
+                        phone: application.phone,
+                        email: application.email
+                    });
+                    console.log(addOwnerResponse)
+                    if (addOwnerResponse.data.code === 200) {
+                        const ownerId = addOwnerResponse.data.data;
+                        
+                        // 关联宠物和主人
+                        const addPetOwnerResponse = await axios.post(`${apiBaseUrl.value}/addPetOwner`, {
+                            petId: application.petId,
+                            ownerId: ownerId
+                        });
+                        console.log(addPetOwnerResponse)
+                        if (addPetOwnerResponse.data.code === 200) {
+                            //更新宠物状态为已领养
+                            const updatePetResponse = await axios.post(`${apiBaseUrl.value}/updatePetAndOwner`, {
+                                pet: {
+                                    petId: application.petId,
+                                    adoptionStatus: '已领养'
+                                },
+                                owner: {
+                                    ownerId: ownerId
+                                }
+                            });
+                            console.log(updatePetResponse)
+                            
+                            if (updatePetResponse.data.code === 200) {
+                                showToast('宠物状态已更新为已领养', 'success');
+                                // 重新加载宠物数据
+                                await loadPets();
+                            } else {
+                                showToast('更新宠物状态失败', 'error');
+                            }
+                        } else {
+                            showToast('关联宠物和主人失败', 'error');
+                        }
+                    } else {
+                        showToast('添加主人信息失败', 'error');
+                    }
+                }
+            } else {
+                showToast('更新申请状态失败', 'error');
+            }
+        } catch (error) {
+            console.error('更新申请状态失败:', error);
+            showToast('更新申请状态失败', 'error');
+        } finally {
+            loading.value = false;
         }
-      } catch (error) {
-        console.error('更新申请状态失败:', error);
-        showToast('更新申请状态失败', 'error');
-      } finally {
-        loading.value = false;
-      }
-    };
-    
+    }
+
+// 13. 宠物管理状态
+
     // 筛选条件
     const filters = ref({
         petName: '',
@@ -1041,7 +1224,7 @@ setup() {
         weight: 3.5,
         disease: '',
         image: null,
-        adoptionStatus: 'forAdoption',
+        adoptionStatus: '待领养',
         description: '',
         pdfCase: null,
         owner: {
@@ -1052,6 +1235,7 @@ setup() {
         }
     });
 
+    //文件上传和PDF预览相关状态
     const isDragOver = ref(false);
     const isPdfDragOver = ref(false);
     const showPdfPreview = ref(false);
@@ -1061,12 +1245,19 @@ setup() {
     const currentPdfUrl = ref('');
     const fileInput = ref(null);
     const pdfInput = ref(null);
+
+
+// 14. 文件引用管理(用于编辑宠物头像，将图片存入fileInputRefs 对象)
+
+// setFileInputRef: 设置文件输入元素的引用
+
     // 文件输入引用映射
     const fileInputRefs = ref({});
                 
     // 设置文件输入引用
     const setFileInputRef = (el, petId) => {
         if (el) {
+          // 如果元素存在（挂载时），将元素引用存入 fileInputRefs 对象
             fileInputRefs.value[petId] = el;
         } else {
             // 当元素被卸载时，删除对应的引用
@@ -1074,6 +1265,9 @@ setup() {
         }
     };
 
+// 15. 消息提示功能
+
+// showToast: 显示消息提示
     // 显示Toast消息
     const showToast = (message, type = 'info') => {
         toast.value = {
@@ -1090,20 +1284,24 @@ setup() {
         }, 3000);
     };
 
+// 16. 图片上传处理
+
+// 处理图片拖拽
+
 // 图片拖拽上传处理
-    const handleDragEnter = () => {
+    const handleDragEnter = () => {//进入该区域，禁止用浏览器打开
         isDragOver.value = true;
     };
 
-    const handleDragOver = () => {
+    const handleDragOver = () => {//悬停，一直保留
         isDragOver.value = true;
     };
 
-    const handleDragLeave = () => {
+    const handleDragLeave = () => {//离开，则取消
         isDragOver.value = false;
     };
 
-    const handleImageDrop = (e) => {
+    const handleImageDrop = (e) => {//释放，则上传图片
         isDragOver.value = false;
         const files = e.dataTransfer.files;
         if (files.length > 0) {
@@ -1111,7 +1309,6 @@ setup() {
         }
     };
 
-    
     const handleImageFile = (file) => {
         if (!file.type.startsWith('image/')) {
             showToast('请选择图片文件', 'error');
@@ -1119,14 +1316,18 @@ setup() {
         }
         
         // 预览图片
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            newPet.value.imageUrl = e.target.result;
-            newPet.value.imageFile = file;
+        const reader = new FileReader();//创建一个 FileReader 实例，用于异步读取文件内容（如图片、文本等）。
+        reader.onload = (e) => {//设置 onload 事件处理函数。当文件成功读取后，这个回调函数会被触发。
+          //e.target 是 FileReader 实例
+          //e.target.result 是读取结果。
+            newPet.value.imageUrl = e.target.result;// 将读取结果（通常是 base64 编码的数据 URL）赋值给 newPet.value.imageUrl
+            //这个 URL 可以直接用作 <img> 标签的 src 属性，显示图片
+            newPet.value.imageFile = file;//将原始文件对象（file）保存到 newPet.value.imageFile 中。
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file);//开始读取 file 对象的内容，并将其转换为数据 URL（base64 编码）。
     };
 
+//图片选择上传功能
     const handleNewImageUpload = (event) => {
       const file = event.target.files[0];
       if (!file || !file.type.startsWith('image/')) {
@@ -1135,6 +1336,10 @@ setup() {
       }
       handleImageFile(file); // 这个函数已经实现了将图片预览设置到newPet.imageUrl和newPet.imageFile
     };
+
+// 17. PDF上传处理
+
+// 处理PDF拖拽上传功能
 
     // PDF拖拽上传处理
     const handlePdfDragEnter = () => {
@@ -1166,6 +1371,25 @@ setup() {
         newPet.value.pdfFile = file;
     };
 
+// 处理新宠物的PDF选择上传
+    const handleNewPdfUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file || file.type !== 'application/pdf') {
+      showToast('请选择PDF文件', 'error');
+      return;
+      }
+
+      // 直接保存文件对象到newPet，而不是尝试上传
+      newPet.value.pdfFile = file;
+      showToast('PDF文件已选择，将在提交时上传', 'success');
+    };
+
+
+// 18. 文件上传功能
+
+// uploadImage: 上传图片到服务器
+// uploadPdf: 上传PDF到服务器 
+
      // 上传图片到服务器
     const uploadImage = async (file) => {
       const formData = new FormData();
@@ -1194,10 +1418,8 @@ setup() {
     // 上传PDF到服务器
     const uploadPdf = async (file) => {
         const formData = new FormData();
-        console.log(formData);
-        console.log(file)
         formData.append('file', file);
-        console.log(formData)
+
         try {
             const response = await axios.post(`${apiBaseUrl.value}/uploadPdf`, formData, {
                 headers: {
@@ -1208,6 +1430,7 @@ setup() {
             if (response.data.code === 200) {
                 return response.data.data; // 返回PDF路径
             } else {
+              console.log(response.data.msg);
                 throw new Error(response.data.msg || 'PDF上传失败');
             }
         } catch (error) {
@@ -1215,6 +1438,12 @@ setup() {
             throw new Error('PDF上传失败');
         }
     };
+
+  // 19. 图片处理功能
+
+// getPetImage: 获取宠物图片URL
+// getFullImageUrl: 获取完整图片URL
+// handleImageError: 处理图片加载错误
 
     // 获取宠物图片
     const getPetImage = (pet) => {
@@ -1240,15 +1469,22 @@ setup() {
     };
 
     
-     
+// 20. 图片编辑功能
+
+// onImageClick: 处理图片点击事件
+// handleImageUpload: 处理图片上传
+
     // 点击图片处理
     const onImageClick = (pet) => {
         if (pet.editing) {
             console.log("点击图片，打开文件选择器");
+            // 假设 fileInputRefs 是一个 Vue 的 ref 或 reactive 对象，存储了多个文件输入框（<input type="file">）的 DOM 引用。
+            // 通过 pet.petId 作为键，动态获取当前宠物对应的文件输入元素。
             const fileInput = fileInputRefs.value[pet.petId];
             console.log("找到文件输入元素:", fileInput);
             if (fileInput) {
-                fileInput.click();
+                fileInput.click();//程序化触发文件输入框的点击事件，弹出系统的文件选择对话框。
+                //用户选择文件后，通常会通过 @change 事件处理文件上传或预览
             } else {
                 console.error("未找到文件输入元素");
                 showToast('无法找到文件输入元素', 'error');
@@ -1273,6 +1509,13 @@ setup() {
      };
      reader.readAsDataURL(file);
  };
+
+// 21. PDF预览功能
+
+// viewPdf: 查看PDF文件（获得完整路径->用pdfjs库输入路径，创建一个加载任务->解析出pdf存储）
+// renderPdfPage: 渲染PDF页面
+//（从pdf存储中，获取指定页码的pdf存储->准备 Canvas 上下文(画布)->设置画布视口（缩放和尺寸）->配置渲染上下文（画布上下文和尺寸）->执行渲染）
+// zoomPdf: PDF缩放功能（点击一下，尺寸乘以多少倍）
 
     // 查看PDF
     const viewPdf = async (pdfPath) => {
@@ -1304,8 +1547,9 @@ setup() {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
         
         // 加载PDF文档
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        pdfDocument.value = await loadingTask.promise;
+        const loadingTask = pdfjsLib.getDocument(pdfUrl);//pdfjsLib.getDocument(pdfUrl)：创建一个加载任务。
+        pdfDocument.value = await loadingTask.promise;//await loadingTask.promise：等待 PDF 解析完成
+        //结果存储在 pdfDocument.value（假设是 Vue 的 ref 或 reactive 对象）。
         
         // 渲染第一页
         await renderPdfPage(1);
@@ -1321,20 +1565,27 @@ setup() {
     const renderPdfPage = async (pageNum) => {
         try {
             pdfPage.value = await pdfDocument.value.getPage(pageNum);
+            //异步获取指定页码的 PDF 页面对象，结果存储在 pdfPage.value（可能是 Vue 的 ref 或 reactive 对象）。
             
             const canvas = document.getElementById('pdf-canvas');
             const context = canvas.getContext('2d');
-            
+            //获取 DOM 中的 <canvas id="pdf-canvas"> 元素及其 2D 绘图上下文（context），用于后续绘制。
+
             const viewport = pdfPage.value.getViewport({ scale: pdfScale.value });
+            // getViewport({ scale })：
+                  // 根据 pdfScale.value（缩放比例，如 1.0 表示 100%）计算页面的实际渲染尺寸。
+                 // 返回一个 viewport 对象，包含页面的宽度、高度等信息。
+
             canvas.height = viewport.height;
             canvas.width = viewport.width;
             
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
+            const renderContext = {//告诉 PDF.js 如何渲染页面：
+                canvasContext: context,//canvasContext：指定绘制目标（Canvas 的 2D 上下文）。
+                viewport: viewport//viewport：控制渲染的尺寸和缩放比例。
             };
             
-            await pdfPage.value.render(renderContext).promise;
+            await pdfPage.value.render(renderContext).promise;//pdfPage.value.render(renderContext)：启动渲染任务。
+            //.promise：PDF.js 的渲染操作返回一个带有 promise 的对象，需等待渲染完成。
         } catch (error) {
             console.error('PDF渲染失败:', error);
             showToast('PDF渲染失败', 'error');
@@ -1345,6 +1596,60 @@ setup() {
     const zoomPdf = async (factor) => {
         pdfScale.value *= factor;
         await renderPdfPage(pdfPage.value.pageNumber);
+    };
+
+    // 处理编辑状态下PDF上传（没用)
+    const handlePdfUpload = async (event, pet) => {
+        const file = event.target.files[0];
+        if (!file || file.type !== 'application/pdf') {
+            showToast('请选择PDF文件', 'error');
+            return;
+        }
+        
+        try {
+            loading.value = true;
+            showToast('正在上传PDF...', 'loading');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await axios.post(`${apiBaseUrl.value}/uploadPdf`, formData
+            );
+            console.log(response);
+            if (response.data.code === 200) {
+                pet.editingData.pdfCase = response.data.data;
+                showToast('PDF上传成功', 'success');
+            } else {
+                showToast('PDF上传失败: ' + response.data.msg, 'error');
+            }
+        } catch (err) {
+            showToast('PDF上传失败: ' + (err.message || '未知错误'), 'error');
+            console.error('PDF上传失败:', err);
+        } finally {
+            loading.value = false;
+        }
+    };
+
+     // 获取PDF文件名（没用)
+     const getPdfName = (pdfUrl) => {
+        if (!pdfUrl) return '';
+        const parts = pdfUrl.split('/');
+        return parts[parts.length - 1];
+    };
+
+// 22. 批量添加功能
+
+// addNewPet：点击添加新宠物
+// openBatchAddModal: 打开批量添加模态框
+// resetNewPetForm: 重置新宠物表单
+// addToBatchList: 将新宠物添加到批量列表
+// submitBatchPets: 提交批量添加的宠物数据
+// closeBatchAddModal：关闭批量添加模态框
+// removeFromBatchList：从批量列表移除
+
+    // 添加新宠物（批量）
+    const addNewPet = () => {
+        openBatchAddModal();
     };
 
     // 打开批量添加模态框
@@ -1366,7 +1671,7 @@ setup() {
             imageUrl: null,
             imageFile: null,
             pdfFile: null,
-            adoptionStatus: 'forAdoption',
+            adoptionStatus: '待领养',
             description: '',
             owner: {
                 ownerName: '',
@@ -1375,6 +1680,20 @@ setup() {
                 email: ''
             }
         };
+    };
+
+    // 新宠物状态变更处理
+    const onNewPetStatusChange = () => {
+        // 如果从待领养变为有主人/已领养，初始化主人信息
+        if (newPet.value.adoptionStatus !== '待领养' && 
+              (!newPet.value.owner || !newPet.value.owner.ownerName)) {
+            newPet.value.owner = {
+                ownerName: '',
+                gender: '男',
+                phone: '',
+                email: ''
+            };
+        }
     };
 
     // 添加到批量列表
@@ -1393,7 +1712,7 @@ setup() {
             }
             
             // 如果有主人/领养人，验证必填字段
-            if (newPet.value.adoptionStatus !== 'forAdoption') {
+            if (newPet.value.adoptionStatus !== '待领养') {
                 if (!newPet.value.owner.ownerName.trim() || !newPet.value.owner.phone.trim()) {
                     alert('请填写主人姓名和联系电话');
                     return;
@@ -1401,7 +1720,7 @@ setup() {
             }
             
             // 待领养宠物验证描述
-            if (newPet.value.adoptionStatus === 'forAdoption' && !newPet.value.description.trim()) {
+            if (newPet.value.adoptionStatus === '待领养' && !newPet.value.description.trim()) {
                 alert('请填写宠物描述');
                 return;
             }
@@ -1409,29 +1728,15 @@ setup() {
             loading.value = true;
             showToast('正在上传文件...', 'loading');
             
-            let imageUrl = null;
-            let pdfUrl = null;
             
-            // 上传图片
-            if (newPet.value.imageFile) {
-                imageUrl = await uploadImage(newPet.value.imageFile);
-            }
-            console.log(imageUrl)
-            console.log(newPet.value.pdfFile)
-            // 上传PDF
-            if (newPet.value.pdfFile) {
-                pdfUrl = await uploadPdf(newPet.value.pdfFile);
-            }
-            console.log(pdfUrl)
             // 创建宠物副本
             const petCopy = {
                 ...newPet.value,
-                image: imageUrl,
-                pdfCase: pdfUrl
+             
             };
             
             // 如果状态是待领养，清除主人信息
-            if (petCopy.adoptionStatus === 'forAdoption') {
+            if (petCopy.adoptionStatus === '待领养') {
                 petCopy.owner = null;
             } else {
                 // 确保owner信息存在
@@ -1462,11 +1767,13 @@ setup() {
       try {
             loading.value = true;
             showToast('正在批量添加宠物...', 'loading');
-            
+
+            let imageUrl = null;
+            let pdfUrl = null;
+
             for (const pet of batchPets.value) {
-              let imageUrl = null;
-              let pdfUrl = null;
-              
+              imageUrl = null;
+              pdfUrl = null;
               // 上传图片
               if (pet.imageFile) {
                 imageUrl = await uploadImage(pet.imageFile);
@@ -1476,7 +1783,7 @@ setup() {
               if (pet.pdfFile) {
                 pdfUrl = await uploadPdf(pet.pdfFile);
               }
-              if (pet.adoptionStatus !== 'forAdoption' && pet.owner) {
+              if (pet.adoptionStatus !== '待领养' && pet.owner) {
                 // 添加宠物和主人
                 console.log("1111");
                 const response = await axios.post(`${apiBaseUrl.value}/addPetAndOwner`, [{
@@ -1487,10 +1794,10 @@ setup() {
                       gender: pet.gender,
                       weight: pet.weight,
                       disease: pet.disease || '',
-                      image: imageUrl || null,
+                      image: imageUrl || pet.image,
                       adoptionStatus: pet.adoptionStatus,
                       description: pet.description || '',
-                      pdfCase: pdfUrl || null
+                      pdfCase: pdfUrl || pet.pdfCase 
                     },
                     owner: pet.owner
                 }]);
@@ -1520,13 +1827,15 @@ setup() {
               pets.value.push({
                   ...pet,
                   editing: false,
-                  editingData: {}
+                  editingData: {},
+                  image:imageUrl,
+                  pdfCase:pdfUrl
               });
         });
         
         // 关闭模态框
         closeBatchAddModal();
-        
+        loadPets();
         showToast(`成功添加 ${batchPets.value.length} 只宠物`, 'success');
         } catch (err) {
         showToast('批量添加失败: ' + (err.message || '未知错误'), 'error');
@@ -1536,6 +1845,19 @@ setup() {
         }
     };
 
+    // 关闭批量添加模态框
+    const closeBatchAddModal = () => {
+        showBatchAddModal.value = false;
+    };
+
+    // 从批量列表移除
+    const removeFromBatchList = (index) => {
+        batchPets.value.splice(index, 1);
+    };
+
+// 25. 数据加载功能
+
+// loadPets: 加载宠物数据
 
     // 加载宠物数据
     const loadPets = async () => {
@@ -1564,6 +1886,11 @@ setup() {
             loading.value = false;
         }
     };
+
+// 26. 筛选功能
+
+// filteredPets: 计算属性，根据筛选条件过滤宠物列表
+// resetFilters：重置筛选条件
 
     // 计算属性 - 筛选后的宠物列表
     const filteredPets = computed(() => {//computed是 Vue.js 中用于声明依赖于其他数据的计算属性的方式,根据其依赖的数据自动更新
@@ -1604,6 +1931,26 @@ setup() {
         });
     });
 
+     // 重置筛选条件
+     const resetFilters = () => {
+        filters.value = {
+            petName: '',
+            disease: '',
+            owner: '',
+            status: 'all',
+            ageRange: 'all',
+            type:'all'
+        };
+    };
+
+
+// 27. 编辑保存功能
+
+// startEditing: 开始编辑宠物信息（获得编辑后的宠物信息，文本框数据一动，编辑后的数据自动动）
+// savePet: 保存宠物编辑信息
+// cancelEditing:取消编辑
+// onStatusChange：编辑变为有主人的默认状态1
+
     // 开始编辑宠物信息
     const startEditing = (pet) => {
         pet.editing = true;
@@ -1630,6 +1977,7 @@ setup() {
             image: pet.image,
         };
     };
+
     // 保存编辑
     const savePet = async (pet) => {
         try {
@@ -1641,10 +1989,7 @@ setup() {
             console.log(originalStatus);
             console.log(newStatus);
             let imagePath = pet.editingData.image;
-            console.log(imagePath)
-            if (pet.editingData.newImageFile) {
-                pet.image = pet.editingData.imagePreview;
-            }               
+            console.log(imagePath)          
 
             // 如果有新图片，先上传图片
             if (pet.editingData.newImageFile) {
@@ -1652,8 +1997,8 @@ setup() {
             }
             console.log(imagePath)
             // 情况1: 从待领养变为有主人/已领养
-            if (originalStatus === 'forAdoption' && 
-                (newStatus === 'owned' || newStatus === 'adopted') && !pet.owner) {
+            if (originalStatus === '待领养' && 
+                (newStatus === '有主人' || newStatus === '已领养') && !pet.owner) {
                 console.log("88");
                 console.log(pet);
                 // 1. 添加主人信息
@@ -1698,7 +2043,7 @@ setup() {
                     },
                     owner: pet.editingData.owner
                 });
-                
+                console.log(updatePetResponse)
                 if (updatePetResponse.data.code !== 200) {
                     throw new Error('更新宠物状态失败');
                 }
@@ -1733,8 +2078,9 @@ setup() {
             }
             
             // 更新本地数据
-            Object.assign(pet, {
+            Object.assign(pet, {//将所有可枚举属性从一个或多个源对象（右侧）复制到目标对象（左侧）
                 ...pet.editingData,
+                image:imagePath,
                 editing: false,
             });
             
@@ -1753,6 +2099,24 @@ setup() {
         pet.editing = false;
         pet.editingData = {};
     };
+
+    // 编辑状态下状态变更处理
+    const onStatusChange = (pet) => {
+        // 如果从待领养变为有主人/已领养，初始化主人信息
+        if (pet.editingData.adoptionStatus !== '待领养' && 
+              (!pet.editingData.owner || !pet.editingData.owner.ownerName)) {
+            pet.editingData.owner = {
+                ownerName: '',
+                gender: '男',
+                phone: '',
+                email: ''
+            };
+        }
+    };
+
+// 28. 删除功能
+
+//deletePet：删除宠物
 
     // 删除宠物
     const deletePet = async (id) => {
@@ -1778,90 +2142,9 @@ setup() {
         }
     };
 
-    // 关闭批量添加模态框
-    const closeBatchAddModal = () => {
-        showBatchAddModal.value = false;
-    };
+// 33. 导出功能
 
-
-    // 从批量列表移除
-    const removeFromBatchList = (index) => {
-        batchPets.value.splice(index, 1);
-    };
-
-    // 添加新宠物（批量）
-    const addNewPet = () => {
-        openBatchAddModal();
-    };
-
-    // 重置筛选条件
-    const resetFilters = () => {
-        filters.value = {
-            petName: '',
-            disease: '',
-            owner: '',
-            status: 'all',
-            ageRange: 'all',
-            type:'all'
-        };
-    };
-
-    // 获取状态文本
-    const getStatusText = (status) => {
-        switch (status) {
-            case 'owned': return '有主人';
-            case 'forAdoption': return '待领养';
-            case 'adopted': return '已领养';
-            default: return '';
-        }
-    };
-
-    // 获取状态类名
-    const getStatusClass = (status) => {
-        switch (status) {
-            case 'owned': return 'owned';
-            case 'forAdoption': return 'for-adoption';
-            case 'adopted': return 'adopted';
-            default: return '';
-        }
-    };
-
-    // 获取类型类名
-    const getTypeClass = (type) => {
-        switch (type) {
-            case 'dog': return 'dog-type';
-            case 'cat': return 'cat-type';
-            default: return '';
-        }
-    };
-
-    // 编辑状态下状态变更处理
-    const onStatusChange = (pet) => {
-        // 如果从待领养变为有主人/已领养，初始化主人信息
-        if (pet.editingData.adoptionStatus !== 'forAdoption' && 
-              (!pet.editingData.owner || !pet.editingData.owner.ownerName)) {
-            pet.editingData.owner = {
-                ownerName: '',
-                gender: '男',
-                phone: '',
-                email: ''
-            };
-        }
-    };
-
-    // 新宠物状态变更处理
-    const onNewPetStatusChange = () => {
-        // 如果从待领养变为有主人/已领养，初始化主人信息
-        if (newPet.value.adoptionStatus !== 'forAdoption' && 
-              (!newPet.value.owner || !newPet.value.owner.ownerName)) {
-            newPet.value.owner = {
-                ownerName: '',
-                gender: '男',
-                phone: '',
-                email: ''
-            };
-        }
-    };
+// exportToExcel: 导出数据到Excel
 
     // 导出功能
     const exportToExcel = () => {
@@ -1881,7 +2164,8 @@ setup() {
                     '宠物病症': pet.disease || '无',
                     '领养状态': getStatusText(pet.adoptionStatus),
                     '宠物描述': pet.description || '',
-                    'PDF病历': pet.pdfCase || '无'
+                    'PDF病历': pet.pdfCase || '无',
+                    '宠物头像':pet.image || '无'
                 };
                 
                 if (pet.owner) {
@@ -1895,10 +2179,10 @@ setup() {
                 } else {
                     return {
                         ...baseInfo,
-                        '主人姓名': '',
-                        '性别': '',
-                        '联系电话': '',
-                        '邮箱': ''
+                        '主人姓名': '无',
+                        '性别': '无',
+                        '联系电话': '无',
+                        '邮箱': '无'
                     };
                 }
             });
@@ -1926,57 +2210,12 @@ setup() {
         }
     };
 
-    // 处理新宠物的PDF上传
-    const handleNewPdfUpload = async (event) => {
-      const file = event.target.files[0];
-      if (!file || file.type !== 'application/pdf') {
-      showToast('请选择PDF文件', 'error');
-      return;
-      }
+// 36. Excel导入功能
 
-      // 直接保存文件对象到newPet，而不是尝试上传
-      newPet.value.pdfFile = file;
-      showToast('PDF文件已选择，将在提交时上传', 'success');
-    };
+// importFromExcel: 导入Excel数据
+// readExcelFile: 读取Excel文件
+// parseExcelData: 解析Excel数据为宠物对象
 
-    // 处理PDF上传
-    const handlePdfUpload = async (event, pet) => {
-        const file = event.target.files[0];
-        if (!file || file.type !== 'application/pdf') {
-            showToast('请选择PDF文件', 'error');
-            return;
-        }
-        
-        try {
-            loading.value = true;
-            showToast('正在上传PDF...', 'loading');
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            const response = await axios.post(`${apiBaseUrl.value}/uploadPdf`, formData
-            );
-            console.log(response);
-            if (response.data.code === 200) {
-                pet.editingData.pdfCase = response.data.data;
-                showToast('PDF上传成功', 'success');
-            } else {
-                showToast('PDF上传失败: ' + response.data.msg, 'error');
-            }
-        } catch (err) {
-            showToast('PDF上传失败: ' + (err.message || '未知错误'), 'error');
-            console.error('PDF上传失败:', err);
-        } finally {
-            loading.value = false;
-        }
-    };
-
-    // 获取PDF文件名
-    const getPdfName = (pdfUrl) => {
-        if (!pdfUrl) return '';
-        const parts = pdfUrl.split('/');
-        return parts[parts.length - 1];
-    };
     // 导入Excel功能
     const importFromExcel = () => {
       // 创建隐藏的文件输入元素
@@ -2003,7 +2242,7 @@ setup() {
           
           // 添加到待添加列表
           batchPets.value = [...batchPets.value, ...importedPets];
-          
+          console.log(batchPets.value)
           showToast(`成功导入 ${importedPets.length} 条宠物数据`, 'success');
         } catch (err) {
           showToast('导入失败: ' + (err.message || '未知错误'), 'error');
@@ -2051,9 +2290,9 @@ setup() {
       return excelData.map((row, index) => {
         // 转换领养状态文本为状态值
         const statusMap = {
-          '有主人': 'owned',
-          '待领养': 'forAdoption',
-          '已领养': 'adopted'
+          '有主人': '有主人',
+          '待领养': '待领养',
+          '已领养': '已领养'
         };
         
         // 转换宠物类型文本为类型值
@@ -2062,7 +2301,7 @@ setup() {
           '猫咪': 'cat'
         };
         
-        const adoptionStatus = statusMap[row['领养状态']] || 'forAdoption';
+        const adoptionStatus = statusMap[row['领养状态']] || '待领养';
         const petType = typeMap[row['宠物类型']] || 'dog';
         
         // 创建宠物对象
@@ -2073,14 +2312,14 @@ setup() {
           gender: row['宠物性别'] || '公',
           weight: parseFloat(row['宠物重量']) || 3.5,
           disease: row['宠物病症'] || '',
-          image: null,
+          image: row['宠物头像'],
           adoptionStatus: adoptionStatus,
           description: row['宠物描述'] || '',
           pdfCase:row['PDF病历']
         };
-        
+        console.log(pet);
         // 如果有主人信息
-        if (adoptionStatus !== 'forAdoption' && row['主人姓名']) {
+        if (adoptionStatus !== '待领养' && row['主人姓名']) {
           pet.owner = {
             ownerName: row['主人姓名'] || '',
             gender: row['性别'] || '男',
@@ -2094,6 +2333,11 @@ setup() {
         return pet;
       });
     };
+
+// 37. 初始化加载
+
+// onMounted: 组件挂载时加载宠物数据和申请数据
+
     // 初始化加载数据
     onMounted(() => {
         loadPets();
@@ -2126,13 +2370,12 @@ setup() {
       getStatusClass,
       getStatusClass1,
       simulateCall,
-      handleLongPress,
+      handleRightPress,
       viewApplication,
       closeApplicationDetail,
       toggleNotifications,
       getTypeClass,
       openBatchAddModal,
-      closeBatchAddModal,
       addToBatchList,
       removeFromBatchList,
       submitBatchPets,
@@ -2162,10 +2405,8 @@ setup() {
       handlePdfDragOver,
       handlePdfDragLeave,
       handlePdfDrop,
-      handlePdfUpload,
       viewPdf,
       zoomPdf,
-      openBatchAddModal,
       closeBatchAddModal: () => showBatchAddModal.value = false,
       addToBatchList,
       submitBatchPets,
@@ -2185,6 +2426,8 @@ setup() {
       callingNumber,
       showDeleteConfirm,
       deleteCandidate,
+      getReadClass1,
+      getReadText1
     };
 }
 };
@@ -2433,11 +2676,27 @@ setup() {
   height: 100px;
 }
 
+.pet-info7 {
+  flex: 1;
+  height: 100px;
+}
+.pet-info8 {
+  height: 100px;
+}
+
 .pet-name6 {
   font-size: 1.3rem;
   font-weight: bold;
   margin-bottom: 2px;
   color: #2c3e50;
+}
+
+.pet-name7 {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+  color: #2c3e50;
+  margin-top: 10px;
 }
 
 .pet-status6 {
@@ -2478,21 +2737,14 @@ setup() {
   background: #f39c12;
   color: white;
 }
-/* 新增：宠物类型标签样式 */
-.type-tag11 {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
+
 .type-tag11 {
   display: inline-block;
   padding: 4px 13px;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 500;
-  margin-left: 20px;
+  margin-left: 29px;
   margin-top: 6px;
 }
 .type-tag11.dog-type {
@@ -3752,7 +4004,24 @@ setup() {
   font-size: 0.75rem;
   font-weight: 500;
 }
+.application-status1 {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  background-color: #155724;
+  margin-top: 17px;
+}
+.application-status1.true {
+  background-color: #d4edda;
+  color: #155724;
+}
 
+.application-status1.false {
+  background-color: #f8d7da;
+  color: #721c24;
+}
 .application-status.pending {
   background-color: #fff3cd;
   color: #856404;
