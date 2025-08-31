@@ -27,7 +27,6 @@
       <div class="notice-content">
         <h2>答题结果</h2>
         <div v-if="score === 100">
-          <!-- 注释掉每周限制逻辑
           <div v-if="couponLimitReached">
             <p style="font-size:1.2em;color:#2a5298;font-weight:bold;">恭喜你全部答对！</p>
             <div style="margin:20px 0; padding:16px; background:#fff3e0; border-radius:8px; border-left:4px solid #ff9800;">
@@ -36,15 +35,11 @@
             </div>
           </div>
           <div v-else>
-          -->
-          <div>
             <p style="font-size:1.2em;color:#2a5298;font-weight:bold;">恭喜你全部答对，送给你一张优惠券！</p>
             <div style="margin:20px 0;">
               <span style="display:inline-block;padding:12px 32px;background:linear-gradient(90deg,#4facfe,#00f2fe);color:#fff;border-radius:16px;font-size:1.2em;font-weight:bold;">🐾 宠物体检优惠券 🐾</span>
             </div>
-            <!-- 注释掉每周限制提示
             <p style="font-size:0.9em;color:#666;margin-top:10px;">* 每用户每周仅可获得一张问卷优惠券</p>
-            -->
           </div>
         </div>
         <div v-else>
@@ -53,9 +48,7 @@
           <p style="margin-top:10px;color:#2a5298;">请继续努力！</p>
         </div>
         <button class="start-btn" style="position:static;margin:20px auto 0 auto;display:block;" @click="closeAndNavigate">
-          <!-- 注释掉每周限制的按钮文本逻辑 -->
-          {{ score === 100 ? '领取' : '关闭' }}
-          <!-- {{ score === 100 ? (couponLimitReached ? '确定' : '领取') : '关闭' }} -->
+          {{ score === 100 ? (couponLimitReached ? '确定' : '领取') : '关闭' }}
         </button>
       </div>
     </div>
@@ -102,7 +95,7 @@ export default {
       showResult: false,
       score: 0,
       wrongQuestions: [],
-      // couponLimitReached: false, // 注释掉：标记用户是否因为一周限制无法领取优惠券
+      couponLimitReached: false, // 启用：标记用户是否因为一周限制无法领取优惠券
       noticeList: [
         "1. 本问卷旨在收集您和您宠物的真实信息，以便我们为您提供更优质的医疗服务，请您认真填写每一项内容。",
         "2. 请确保填写的宠物信息（如品种、年龄、健康状况等）准确无误，便于医生做出科学判断。",
@@ -113,8 +106,7 @@ export default {
         "7. 若您的宠物有特殊病史、过敏史或正在服药，请在相关问题中详细说明。",
         "8. 本问卷仅限宠物主人本人填写，请勿代他人作答，以保证数据的真实性。",
         "9. 问卷填写时间约为5-10分钟，请合理安排时间，确保填写完整。",
-        // "10. 答题满分可获得优惠券奖励，每用户每周仅可获得一张问卷优惠券。", // 注释掉每周限制说明
-        "10. 答题满分可获得优惠券奖励。",
+        "10. 答题满分可获得优惠券奖励，每用户每周仅可获得一张问卷优惠券。",
         "11. 感谢您的配合与支持，您的宝贵意见将帮助我们不断提升服务质量！"
       ],
       questions: [
@@ -284,17 +276,13 @@ export default {
     },
     closeAndNavigate() {
       if (this.score === 100) {
-        // 注释掉每周限制逻辑
-        // if (this.couponLimitReached) {
-        //   // 一周限制情况
-        //   alert('😊 您一周内已经获得过问卷优惠券了！\n请等待一周后再来答题领取新的优惠券。')
-        // } else {
-        //   // 正常领取优惠券
-        //   alert('🎉 优惠券领取成功！请在个人中心查看您的优惠券。')
-        // }
-        
-        // 直接领取优惠券
-        alert('🎉 优惠券领取成功！请在个人中心查看您的优惠券。')
+        if (this.couponLimitReached) {
+          // 一周限制情况
+          alert('😊 您一周内已经获得过问卷优惠券了！\n请等待一周后再来答题领取新的优惠券。')
+        } else {
+          // 正常领取优惠券
+          alert('🎉 优惠券领取成功！请在个人中心查看您的优惠券。')
+        }
         
         // 延迟1秒后跳转到个人中心
         setTimeout(() => {
@@ -333,12 +321,8 @@ export default {
       return `QUIZ${timestamp}${random}` // QUIZ(4) + timestamp(8) + random(6) = 18位
     },
     
-    // 检查用户是否在一周内已经获得过优惠券 - 已注释掉
+    // 检查用户是否在一周内已经获得过优惠券
     async checkCouponLimit(userId) {
-      // 注释掉每周限制检查逻辑，现在直接返回true（允许领取）
-      return true
-      
-      /* 原有的每周限制逻辑：
       try {
         console.log('=== 检查优惠券领取限制 ===')
         
@@ -395,7 +379,6 @@ export default {
         // 发生错误时，为了安全起见，不允许领取
         return false
       }
-      */
     },
 
     // 发放优惠券
@@ -418,17 +401,16 @@ export default {
           return
         }
         
-        // 注释掉每周限制检查逻辑
         // 检查一周内是否已经领取过优惠券
-        // const canReceiveCoupon = await this.checkCouponLimit(userId)
-        // if (!canReceiveCoupon) {
-        //   this.couponLimitReached = true
-        //   console.log('用户一周内已领取过优惠券，设置限制标记')
-        //   return
-        // }
+        const canReceiveCoupon = await this.checkCouponLimit(userId)
+        if (!canReceiveCoupon) {
+          this.couponLimitReached = true
+          console.log('用户一周内已领取过优惠券，设置限制标记')
+          return
+        }
 
-        // 直接允许领取优惠券，不再检查每周限制
-        console.log('允许用户领取优惠券（已移除每周限制）')
+        // 用户可以领取优惠券
+        console.log('用户可以领取优惠券（未达到每周限制）')
 
         // 生成优惠券数据
         const couponCode = this.generateCouponCode()

@@ -32,6 +32,11 @@
         </div>
         
         <div v-else class="member-info-card">
+          <!-- 右上角小会员码图标 -->
+          <div class="member-code-mini" @click="showMemberCodeModal = true">
+            <div class="code-icon">📱</div>
+          </div>
+          
           <div class="card-header">
             <span class="member-type-icon">
               {{ userInfo.memberType === 'vip' ? '👑' : userInfo.memberType === 'premium' ? '💎' : '⭐' }}
@@ -88,6 +93,33 @@
         </div>
       </div>
     </div>
+    
+    <!-- 会员码模态框 -->
+    <div v-if="showMemberCodeModal" class="member-code-modal" @click="closeMemberCodeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>我的会员码</h3>
+          <button class="close-btn" @click="closeMemberCodeModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="member-code-display">
+            <div class="qr-code">
+              <div class="qr-placeholder">
+                <div class="qr-pattern"></div>
+              </div>
+            </div>
+            <div class="code-number">{{ memberCode }}</div>
+            <div class="code-hint">请向工作人员出示此码</div>
+          </div>
+          <div class="modal-actions">
+            <button class="refresh-btn" @click="generateMemberCode">
+              <span class="refresh-icon">🔄</span>
+              刷新会员码
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -127,6 +159,10 @@ const tabs = [
 
 const activeTab = ref('coupon')
 const showMemberCenter = ref(false)
+
+// 会员码相关状态
+const showMemberCodeModal = ref(false)
+const memberCode = ref('')
 
 const currentComponent = computed(() => {
   switch (activeTab.value) {
@@ -370,7 +406,29 @@ const getAvatarUrl = (avatarPath) => {
 onMounted(() => {
   console.log('个人中心页面加载，开始获取用户信息...')
   fetchUserInfo()
+  generateMemberCode() // 生成会员码
 })
+
+// 生成会员码
+const generateMemberCode = () => {
+  // 基于用户ID和当前时间生成唯一会员码
+  const currentUserStr = localStorage.getItem('currentUser')
+  if (currentUserStr) {
+    const currentUser = JSON.parse(currentUserStr)
+    const userId = currentUser.userId
+    const timestamp = Date.now()
+    // 生成10位数字会员码
+    memberCode.value = String(userId).padStart(4, '0') + String(timestamp).slice(-6)
+  } else {
+    // 如果没有用户信息，生成随机码
+    memberCode.value = Math.random().toString().slice(2, 12)
+  }
+}
+
+// 关闭会员码模态框
+const closeMemberCodeModal = () => {
+  showMemberCodeModal.value = false
+}
 
 // 提供用户信息给子组件
 provide('userInfo', userInfo)
@@ -499,6 +557,35 @@ provide('userInfo', userInfo)
   width: 280px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+/* 右上角小会员码图标 */
+.member-code-mini {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-code-mini:hover {
+  background: rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.member-code-mini .code-icon {
+  font-size: 12px;
 }
 
 .card-header {
@@ -764,5 +851,136 @@ provide('userInfo', userInfo)
     width: 95%;
     margin: 20px;
   }
+}
+
+/* 会员码模态框样式 */
+.member-code-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.member-code-modal .modal-content {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.member-code-modal .modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* 会员码显示 */
+.member-code-display {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.qr-code {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e2e8f0;
+}
+
+.qr-placeholder {
+  width: 160px;
+  height: 160px;
+  background: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.qr-pattern {
+  width: 120px;
+  height: 120px;
+  background-image: 
+    linear-gradient(90deg, #1f2937 50%, transparent 50%),
+    linear-gradient(#1f2937 50%, transparent 50%);
+  background-size: 8px 8px;
+  opacity: 0.8;
+}
+
+.code-number {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+}
+
+.code-hint {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.refresh-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refresh-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.refresh-icon {
+  animation: none;
+  transition: transform 0.3s ease;
+}
+
+.refresh-btn:active .refresh-icon {
+  animation: spin 0.5s ease;
 }
 </style>

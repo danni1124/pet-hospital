@@ -9,6 +9,7 @@
         <router-link to="/" class="nav-btn" active-class="active" exact>
           <i class="fas fa-home"></i> 首页
         </router-link>
+        <NearbyStores />
         <button @click="handleQuestionnaireClick" class="nav-btn" :class="{ active: $route.path === '/questionnaire' }">
           <i class="fas fa-question"></i> 问卷
         </button>
@@ -361,6 +362,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
+import NearbyStores from '@/components/NearbyStores.vue'
 
 // Vue Router
 const route = useRoute()
