@@ -27,6 +27,7 @@
       <div class="notice-content">
         <h2>答题结果</h2>
         <div v-if="score === 100">
+          <!-- 注释掉每周限制逻辑
           <div v-if="couponLimitReached">
             <p style="font-size:1.2em;color:#2a5298;font-weight:bold;">恭喜你全部答对！</p>
             <div style="margin:20px 0; padding:16px; background:#fff3e0; border-radius:8px; border-left:4px solid #ff9800;">
@@ -35,11 +36,15 @@
             </div>
           </div>
           <div v-else>
+          -->
+          <div>
             <p style="font-size:1.2em;color:#2a5298;font-weight:bold;">恭喜你全部答对，送给你一张优惠券！</p>
             <div style="margin:20px 0;">
               <span style="display:inline-block;padding:12px 32px;background:linear-gradient(90deg,#4facfe,#00f2fe);color:#fff;border-radius:16px;font-size:1.2em;font-weight:bold;">🐾 宠物体检优惠券 🐾</span>
             </div>
+            <!-- 注释掉每周限制提示
             <p style="font-size:0.9em;color:#666;margin-top:10px;">* 每用户每周仅可获得一张问卷优惠券</p>
+            -->
           </div>
         </div>
         <div v-else>
@@ -48,7 +53,9 @@
           <p style="margin-top:10px;color:#2a5298;">请继续努力！</p>
         </div>
         <button class="start-btn" style="position:static;margin:20px auto 0 auto;display:block;" @click="closeAndNavigate">
-          {{ score === 100 ? (couponLimitReached ? '确定' : '领取') : '关闭' }}
+          <!-- 注释掉每周限制的按钮文本逻辑 -->
+          {{ score === 100 ? '领取' : '关闭' }}
+          <!-- {{ score === 100 ? (couponLimitReached ? '确定' : '领取') : '关闭' }} -->
         </button>
       </div>
     </div>
@@ -95,7 +102,7 @@ export default {
       showResult: false,
       score: 0,
       wrongQuestions: [],
-      couponLimitReached: false, // 新增：标记用户是否因为一周限制无法领取优惠券
+      // couponLimitReached: false, // 注释掉：标记用户是否因为一周限制无法领取优惠券
       noticeList: [
         "1. 本问卷旨在收集您和您宠物的真实信息，以便我们为您提供更优质的医疗服务，请您认真填写每一项内容。",
         "2. 请确保填写的宠物信息（如品种、年龄、健康状况等）准确无误，便于医生做出科学判断。",
@@ -106,7 +113,8 @@ export default {
         "7. 若您的宠物有特殊病史、过敏史或正在服药，请在相关问题中详细说明。",
         "8. 本问卷仅限宠物主人本人填写，请勿代他人作答，以保证数据的真实性。",
         "9. 问卷填写时间约为5-10分钟，请合理安排时间，确保填写完整。",
-        "10. 答题满分可获得优惠券奖励，每用户每周仅可获得一张问卷优惠券。",
+        // "10. 答题满分可获得优惠券奖励，每用户每周仅可获得一张问卷优惠券。", // 注释掉每周限制说明
+        "10. 答题满分可获得优惠券奖励。",
         "11. 感谢您的配合与支持，您的宝贵意见将帮助我们不断提升服务质量！"
       ],
       questions: [
@@ -276,13 +284,17 @@ export default {
     },
     closeAndNavigate() {
       if (this.score === 100) {
-        if (this.couponLimitReached) {
-          // 一周限制情况
-          alert('😊 您一周内已经获得过问卷优惠券了！\n请等待一周后再来答题领取新的优惠券。')
-        } else {
-          // 正常领取优惠券
-          alert('🎉 优惠券领取成功！请在个人中心查看您的优惠券。')
-        }
+        // 注释掉每周限制逻辑
+        // if (this.couponLimitReached) {
+        //   // 一周限制情况
+        //   alert('😊 您一周内已经获得过问卷优惠券了！\n请等待一周后再来答题领取新的优惠券。')
+        // } else {
+        //   // 正常领取优惠券
+        //   alert('🎉 优惠券领取成功！请在个人中心查看您的优惠券。')
+        // }
+        
+        // 直接领取优惠券
+        alert('🎉 优惠券领取成功！请在个人中心查看您的优惠券。')
         
         // 延迟1秒后跳转到个人中心
         setTimeout(() => {
@@ -313,15 +325,20 @@ export default {
       return isLoggedIn
     },
     
-    // 生成唯一优惠券码
+    // 生成唯一优惠券码（限制在20位以内）
     generateCouponCode() {
-      const timestamp = Date.now()
-      const random = Math.random().toString(36).substring(2, 8).toUpperCase()
-      return `QUIZ${timestamp}${random}`
+      // 使用更短的时间戳（取后8位）和随机字符，确保总长度不超过20位
+      const timestamp = Date.now().toString().slice(-8) // 取时间戳的后8位
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase() // 6位随机字符
+      return `QUIZ${timestamp}${random}` // QUIZ(4) + timestamp(8) + random(6) = 18位
     },
     
-    // 检查用户是否在一周内已经获得过优惠券
+    // 检查用户是否在一周内已经获得过优惠券 - 已注释掉
     async checkCouponLimit(userId) {
+      // 注释掉每周限制检查逻辑，现在直接返回true（允许领取）
+      return true
+      
+      /* 原有的每周限制逻辑：
       try {
         console.log('=== 检查优惠券领取限制 ===')
         
@@ -378,6 +395,7 @@ export default {
         // 发生错误时，为了安全起见，不允许领取
         return false
       }
+      */
     },
 
     // 发放优惠券
@@ -400,13 +418,17 @@ export default {
           return
         }
         
+        // 注释掉每周限制检查逻辑
         // 检查一周内是否已经领取过优惠券
-        const canReceiveCoupon = await this.checkCouponLimit(userId)
-        if (!canReceiveCoupon) {
-          this.couponLimitReached = true
-          console.log('用户一周内已领取过优惠券，设置限制标记')
-          return
-        }
+        // const canReceiveCoupon = await this.checkCouponLimit(userId)
+        // if (!canReceiveCoupon) {
+        //   this.couponLimitReached = true
+        //   console.log('用户一周内已领取过优惠券，设置限制标记')
+        //   return
+        // }
+
+        // 直接允许领取优惠券，不再检查每周限制
+        console.log('允许用户领取优惠券（已移除每周限制）')
 
         // 生成优惠券数据
         const couponCode = this.generateCouponCode()
@@ -430,58 +452,70 @@ export default {
           console.log('创建优惠券响应:', createCouponResponse.data)
           
           if (createCouponResponse.data && createCouponResponse.data.code === 200) {
-            // 优惠券创建成功
-            console.log('优惠券发放成功！')
-            this.saveCouponToLocalStorage(couponCode, couponData, userId)
+            // 优惠券创建成功，获取返回的couponId
+            const couponId = createCouponResponse.data.data // 后端返回的couponId
+            console.log('优惠券创建成功，couponId:', couponId)
+            
+            // 创建用户优惠券关联数据
+            const userCouponData = {
+              userId: userId,
+              couponId: couponId,
+              used: "否"  // 初始状态为"否"
+            }
+            
+            console.log('准备创建用户优惠券关联:', userCouponData)
+            
+            try {
+              // 调用后端API创建用户优惠券关联
+              const addUserCouponResponse = await axios.post(`${API_BASE_URL}/addUserCoupon`, userCouponData)
+              
+              console.log('用户优惠券关联响应:', addUserCouponResponse.data)
+              
+              if (addUserCouponResponse.data && addUserCouponResponse.data.code === 200) {
+                console.log('用户优惠券关联创建成功！')
+                // 只在完全成功时保存到本地存储
+                this.saveCouponToLocalStorage(couponCode, couponData, userId, couponId)
+              } else {
+                console.error('用户优惠券关联创建失败:', addUserCouponResponse.data?.msg)
+                throw new Error('用户优惠券关联创建失败: ' + (addUserCouponResponse.data?.msg || '未知错误'))
+              }
+              
+            } catch (userCouponError) {
+              console.error('创建用户优惠券关联时发生错误:', userCouponError)
+              throw userCouponError
+            }
+            
           } else {
             throw new Error('创建优惠券失败: ' + (createCouponResponse.data?.msg || '未知错误'))
           }
           
         } catch (apiError) {
-          console.log('后端API不可用，使用本地降级存储:', apiError.message)
-          
-          // API降级：本地存储优惠券信息
-          this.saveCouponToLocalStorage(couponCode, couponData, userId)
+          console.error('创建优惠券失败:', apiError.message)
+          throw apiError
         }
         
       } catch (error) {
         console.error('发放优惠券时发生错误:', error)
-        
-        // 即使发放失败，也要保存到本地作为备用
-        const couponCode = this.generateCouponCode()
-        const couponData = {
-          code: couponCode,
-          discountType: 'percent',
-          discountValue: 20.00,
-          minAmount: 100.00,
-          validFrom: new Date().toISOString().split('T')[0],
-          validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        }
-        
-        const currentUserStr = localStorage.getItem('currentUser')
-        if (currentUserStr) {
-          const currentUser = JSON.parse(currentUserStr)
-          this.saveCouponToLocalStorage(couponCode, couponData, currentUser.userId || 'unknown')
-        }
+        alert('优惠券发放失败，请稍后重试')
       }
     },
     
-    // 将优惠券保存到本地存储（降级方案）
-    saveCouponToLocalStorage(couponCode, couponData, userId) {
+    // 将优惠券保存到本地存储（缓存方案）
+    saveCouponToLocalStorage(couponCode, couponData, userId, couponId) {
       try {
-        console.log('保存优惠券到本地存储')
+        console.log('保存优惠券到本地缓存')
         
         // 获取现有的用户优惠券列表
         const userCouponsKey = `userCoupons_${userId}`
         const existingCoupons = JSON.parse(localStorage.getItem(userCouponsKey) || '[]')
         
-        // 创建新的用户优惠券记录
+        // 创建新的用户优惠券记录（使用后端返回的数据）
         const newUserCoupon = {
           id: Date.now(), // 本地生成的ID
-          couponId: Date.now() + 1, // 本地生成的优惠券ID
+          couponId: couponId, // 后端返回的couponId
           userId: userId,
           coupon: {
-            couponId: Date.now() + 1,
+            couponId: couponId,
             code: couponCode,
             discountType: couponData.discountType,
             discountValue: couponData.discountValue,
@@ -490,9 +524,9 @@ export default {
             validTo: couponData.validTo
           },
           acquiredAt: new Date().toISOString(),
-          used: false,
+          used: "否", // 使用数据库的ENUM值 "否"
           source: 'questionnaire', // 标记来源
-          localOnly: true // 标记为本地数据
+          localOnly: false // 已同步到后端
         }
         
         // 添加到列表
@@ -501,10 +535,10 @@ export default {
         // 保存回localStorage
         localStorage.setItem(userCouponsKey, JSON.stringify(existingCoupons))
         
-        console.log('优惠券已保存到本地存储:', newUserCoupon)
+        console.log('优惠券已保存到本地缓存:', newUserCoupon)
         
       } catch (error) {
-        console.error('保存优惠券到本地存储失败:', error)
+        console.error('保存优惠券到本地缓存失败:', error)
       }
     }
   },

@@ -1164,7 +1164,8 @@ submitPayment() {
 
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+/* 注释掉可能有问题的Google Fonts导入 */
+/* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap'); */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
 
 * {
@@ -1194,7 +1195,7 @@ submitPayment() {
 }
 
 body {
-  font-family: 'Noto Sans SC', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-color: #f5f9f7;
   color: var(--dark);
   line-height: 1.6;
