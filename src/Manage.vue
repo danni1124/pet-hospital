@@ -30,6 +30,7 @@
                 >
                 <!-- @contextmenu是 Vue 的事件监听语法糖，等价于 v-on:contextmenu，用于监听元素的右键菜单事件（即用户右键点击时触发的默认浏览器菜单）。 -->
                  <!-- .prevent是事件修饰符，等价于调用 event.preventDefault()，用于阻止浏览器默认的右键菜单弹出。 -->
+
                   <div class="application-pet-info6">
                     <img :src="getPetImage(application.pet)" class="pet-thumbnail">
                   <div class="pet-info6">
@@ -289,6 +290,7 @@
                       <!-- 查看状态下的显示 -->
                       <div v-else>
                           <div v-if="pet.adoptionStatus === '有主人'" >
+
                               <div class="detail-row6">
                                   <span class="detail-label">主人信息 :</span>
                                   <span class="detail-value">{{ pet.owner?.ownerName || '无' }}</span>
@@ -309,6 +311,7 @@
                           
                           <div v-else>
                               <div v-if="pet.adoptionStatus === '已领养'">
+
                                   <div class="detail-row6">
                                       <span class="detail-label">领养人信息 :</span>
                                       <span class="detail-value">{{ pet.owner?.ownerName || '无' }}</span>
@@ -427,7 +430,6 @@
                           </div>
                           
                       </div>
-               
                       <div class="form-row6">
                           <div class="form-group6 full-width">
                               <label>宠物图片：</label>
@@ -480,6 +482,7 @@
                       </div>
                       <!-- 待领养状态显示描述输入框 -->
                       <div v-if="newPet.adoptionStatus === '待领养'" class="form-row6">
+
                           <div class="form-group6 full-width">
                               <label>领养描述：</label>
                               <textarea v-model="newPet.description" placeholder="输入宠物描述，吸引潜在领养者" class="edit-textarea"></textarea>
@@ -2672,6 +2675,7 @@ setup() {
   flex: 1;
   height: 100px;
 }
+
 .pet-info7 {
   flex: 1;
   height: 100px;
@@ -2679,12 +2683,14 @@ setup() {
 .pet-info8 {
   height: 100px;
 }
+
 .pet-name6 {
   font-size: 1.3rem;
   font-weight: bold;
   margin-bottom: 2px;
   color: #2c3e50;
 }
+
 .pet-name7 {
   font-size: 1rem;
   font-weight: bold;
@@ -2692,6 +2698,7 @@ setup() {
   color: #2c3e50;
   margin-top: 10px;
 }
+
 .pet-status6 {
   margin-bottom: 2px;
   display: flex;
@@ -2730,7 +2737,6 @@ setup() {
   background: #f39c12;
   color: white;
 }
-/* 新增：宠物类型标签样式 */
 
 .type-tag11 {
   display: inline-block;
