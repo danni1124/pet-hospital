@@ -509,13 +509,34 @@ export default {
       }
       
       try {
+        // 获取当前登录用户信息
+        const currentUserStr = localStorage.getItem('currentUser');
+        if (!currentUserStr) {
+          console.error('未找到登录用户信息');
+          alert('请先登录再进行预约');
+          return;
+        }
+        
+        const currentUser = JSON.parse(currentUserStr);
+        const userId = currentUser.userId;
+        
+        if (!userId) {
+          console.error('用户ID不存在');
+          alert('用户信息异常，请重新登录');
+          return;
+        }
+        
+        console.log('当前登录用户ID:', userId);
+        
         const appointmentData = {
-          userId: 1,
+          userId: userId,
           doctorId: this.selectedDoctor.id,
           scheduleId: this.selectedSlot.id,
           date: this.formatDate(this.selectedDateItem.date),
           time: this.selectedSlot.time
         };
+        
+        console.log('发送预约数据:', appointmentData);
         
         const response = await axios.post(`${API_BASE_URL}/addAppointment`, appointmentData);
         

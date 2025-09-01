@@ -22,8 +22,12 @@
           <span class="booking-value">{{ item.time }}</span>
         </div>
         <div class="booking-row">
-          <span class="booking-label">预约号码</span>
-          <span class="booking-value">{{ item.appointmentNum }}</span>
+          <span class="booking-label">医生名字</span>
+          <span class="booking-value">{{ item.doctorName || '加载中...' }}</span>
+        </div>
+        <div class="booking-row">
+          <span class="booking-label">医生位置</span>
+          <span class="booking-value">{{ item.doctorLocation || '加载中...' }}</span>
         </div>
         <div class="booking-row">
           <span class="booking-label">状态</span>
@@ -37,10 +41,6 @@
           >
             {{ getStatusText(item.status) }}
           </span>
-        </div>
-        <div class="booking-row">
-          <span class="booking-label">创建时间</span>
-          <span class="booking-value">{{ formatDate(item.createdAt) }}</span>
         </div>
       </div>
     </div>
@@ -98,6 +98,9 @@ const fetchUserAppointments = async () => {
       if (response.data && response.data.code === 200) {
         appointments.value = response.data.data || []
         console.log('从后端加载预约记录成功:', appointments.value.length, '条')
+        
+        // 获取每个预约的医生信息
+        await fetchDoctorInfo()
       } else {
         throw new Error('获取预约记录失败: ' + (response.data?.msg || '未知错误'))
       }
@@ -119,6 +122,51 @@ const fetchUserAppointments = async () => {
     appointments.value = []
   } finally {
     loading.value = false
+  }
+}
+
+// 获取医生信息
+const fetchDoctorInfo = async () => {
+  try {
+    console.log('=== 开始获取医生信息 ===')
+    
+    // 为每个预约获取医生信息
+    for (let appointment of appointments.value) {
+      if (appointment.doctorId) {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/getDoctorById`, {
+            params: { 
+              doctorId: appointment.doctorId 
+            }
+          })
+          
+          console.log(`医生ID ${appointment.doctorId} 信息响应:`, response.data)
+          
+          if (response.data && response.data.code === 200 && response.data.data) {
+            const doctorData = response.data.data
+            // 添加医生信息到预约记录中
+            appointment.doctorName = doctorData.name || '未知医生'
+            appointment.doctorLocation = doctorData.location || '未知位置'
+            console.log(`医生信息获取成功: ${doctorData.name}, ${doctorData.location}`)
+          } else {
+            console.warn(`获取医生ID ${appointment.doctorId} 信息失败`)
+            appointment.doctorName = '获取失败'
+            appointment.doctorLocation = '获取失败'
+          }
+        } catch (doctorError) {
+          console.error(`获取医生ID ${appointment.doctorId} 信息时出错:`, doctorError)
+          appointment.doctorName = '获取失败'
+          appointment.doctorLocation = '获取失败'
+        }
+      } else {
+        appointment.doctorName = '无医生信息'
+        appointment.doctorLocation = '无位置信息'
+      }
+    }
+    
+    console.log('医生信息获取完成')
+  } catch (error) {
+    console.error('获取医生信息时发生错误:', error)
   }
 }
 
@@ -175,23 +223,6 @@ const getStatusText = (status) => {
     'rejected': '已拒绝'
   }
   return statusMap[status] || status
-}
-
-// 格式化日期时间
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  try {
-    const date = new Date(dateStr)
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch (error) {
-    return dateStr
-  }
 }
 
 // 组件挂载时获取数据
