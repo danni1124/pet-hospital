@@ -11,7 +11,7 @@
         <div class="stores-header">
           <h2>
             <i class="fas fa-store"></i>
-            附近门店 & 导航
+            附近门店
           </h2>
           <button class="close-btn" @click="closeModal">&times;</button>
         </div>
@@ -247,6 +247,14 @@
                 >
                   <i class="fas fa-route"></i>
                   到这去
+                </button>
+                <button 
+                  @click="deleteStore(store.storeId)" 
+                  class="delete-button"
+                  title="删除门店"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                  删除
                 </button>
               </div>
             </div>
@@ -651,6 +659,47 @@ const submitAddStore = async () => {
     }
   } finally {
     isAdding.value = false
+  }
+}
+
+// 删除门店
+const deleteStore = async (storeId) => {
+  if (!confirm('确定要删除这个门店吗？此操作不可撤销。')) {
+    return
+  }
+  
+  try {
+    console.log('正在删除门店，ID:', storeId)
+    
+    const response = await axios.delete(`${API_BASE_URL}/deleteStore`, {
+      params: { storeId: storeId }
+    })
+    
+    console.log('删除门店响应:', response.data)
+    
+    if (response.data && response.data.code === 200) {
+      alert('门店删除成功！')
+      
+      // 重新获取门店列表
+      await fetchStoresFromAPI()
+      
+    } else {
+      throw new Error(response.data?.msg || '删除门店失败')
+    }
+    
+  } catch (error) {
+    console.error('删除门店失败:', error)
+    
+    if (error.response) {
+      // 服务器返回错误
+      alert(`删除失败: ${error.response.data?.msg || error.message}`)
+    } else if (error.request) {
+      // 网络错误
+      alert('网络连接失败，请检查网络后重试')
+    } else {
+      // 其他错误
+      alert(`删除失败: ${error.message}`)
+    }
   }
 }
 
@@ -1257,6 +1306,9 @@ onMounted(() => {
 /* 门店操作 */
 .store-actions {
   margin-left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .nav-button {
@@ -1297,6 +1349,39 @@ onMounted(() => {
 
 .nav-button.red:hover {
   box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4);
+}
+
+/* 删除按钮样式 */
+.delete-button {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  min-width: 70px;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background: linear-gradient(135deg, #c53030 0%, #9c2626 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4);
+}
+
+.delete-button:active {
+  transform: translateY(0);
+}
+
+.delete-button i {
+  font-size: 12px;
 }
 
 /* 导航提示 */
@@ -1363,6 +1448,8 @@ onMounted(() => {
   
   .store-actions {
     margin-left: 0;
+    justify-content: center;
+    flex-wrap: wrap;
   }
   
   .store-details {
