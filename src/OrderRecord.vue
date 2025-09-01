@@ -129,12 +129,7 @@ const fetchUserOrders = async () => {
       }
       
     } catch (apiError) {
-      console.log('后端API不可用:', apiError.message)
-      
-      // API降级方案已注释，只保留真实API调用
-      // loadLocalOrders(userId)
-      
-      // 显示空数据
+      console.error('获取订单记录API调用失败:', apiError.message)
       orders.value = []
     }
     
@@ -147,50 +142,6 @@ const fetchUserOrders = async () => {
     loading.value = false
   }
 }
-
-// 本地降级数据函数（已注释，不再使用）
-/*
-const loadLocalOrders = (userId) => {
-  // 模拟订单数据（根据后端接口返回的数据结构）
-  const mockOrders = [
-    {
-      orderId: 1,
-      userId: userId,
-      productName: '宠物营养膏（猫用）',
-      quantity: 2,
-      price: 89.00,
-      createTime: '2025-07-20 10:30:00'
-    },
-    {
-      orderId: 2,
-      userId: userId,
-      productName: '膨润土猫砂 10kg',
-      quantity: 1,
-      price: 56.00,
-      createTime: '2025-07-25 15:20:00'
-    },
-    {
-      orderId: 3,
-      userId: userId,
-      productName: '皇家狗粮 5kg装',
-      quantity: 1,
-      price: 128.00,
-      createTime: '2025-07-28 09:45:00'
-    },
-    {
-      orderId: 4,
-      userId: userId,
-      productName: '宠物玩具套装（3件套）',
-      quantity: 1,
-      price: 45.00,
-      createTime: '2025-07-30 16:10:00'
-    }
-  ]
-  
-  orders.value = mockOrders
-  console.log('使用本地降级订单数据:', orders.value.length, '条')
-}
-*/
 
 // 格式化日期时间
 const formatDate = (dateStr) => {

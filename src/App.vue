@@ -430,7 +430,7 @@ const isLoggedIn = ref(false)
 const isManager = ref(false) // 管理员状态标识
 const currentUser = ref({
   name: '',
-  avatar_url: ''  // 修改为avatar_url匹配数据库结构
+  avatar_url: ''
 })
 
 // 登录弹窗状态
@@ -704,7 +704,7 @@ const handleLogin = async () => {
       localStorage.setItem('currentUser', JSON.stringify({
         username: username,
         userId: userId,
-        avatar_url: userData.avatar_url || null,  // 使用数据库的avatar_url字段
+        avatar_url: userData.avatar_url || null,
         loginTime: new Date().toISOString(),
         isManager: loginForm.value.isManager, // 保存管理员状态
         userData: userData  // 保存完整的用户数据
@@ -721,18 +721,6 @@ const handleLogin = async () => {
       }
       
       alert('✅ ' + (response.data.msg || '登录成功！'))
-      
-      // 注释掉重复的localStorage设置
-      // 保存登录用户信息到 localStorage，使用安全的数据访问
-      // const userInfo = response.data.user || response.data.data || {}
-      // const safeUserId = userInfo.userId || userInfo.user_id || userInfo.id || userId
-      // const safeUsername = userInfo.username || username
-      
-      // localStorage.setItem('currentUser', JSON.stringify({
-      //   userId: safeUserId,   // 后端返回的用户ID，带有安全检查
-      //   username: safeUsername, // 后端返回的用户名，带有安全检查
-      //   avatar_url: userData.avatar_url || null,  // 使用数据库的avatar_url字段
-      // }))
 
       closeLoginModal()
     } else {
@@ -882,7 +870,7 @@ const handleRegister = async () => {
 const handleLogout = () => {
   isLoggedIn.value = false
   isManager.value = false // 重置管理员状态
-  currentUser.value = { name: '', avatar_url: '' }  // 修改为avatar_url
+  currentUser.value = { name: '', avatar_url: '' }
   
   // 清除登录状态（但保留记住的密码，如果用户之前选择了记住密码）
   localStorage.removeItem('currentUser')
@@ -908,7 +896,7 @@ onMounted(() => {
     isManager.value = user.isManager || false // 恢复管理员状态
     currentUser.value = {
       name: user.username,
-      avatar_url: user.avatar_url || null  // 使用数据库的avatar_url字段
+      avatar_url: user.avatar_url || null
     }
     
     console.log('已恢复当前登录状态:', isLoggedIn.value)
