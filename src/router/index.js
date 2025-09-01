@@ -62,7 +62,7 @@ const routes = [
     component: Shopmallment,
     props: true
   },
-
+  {
     path: '/adaptpet',
     name: 'AdaptPet',
     component: AdaptPet,
