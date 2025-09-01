@@ -492,7 +492,7 @@
               <li><a href="/forum">宠物论坛</a></li>
               <li><a href="/adaptpet">领养宠物</a></li>
               <li><a href="/questionnaire">问卷调查</a></li>
-              <li><a href="/shopmen">购物</a></li>
+              <li><a href="/shopment">购物</a></li>
             </ul>
           </div>
           
@@ -526,8 +526,8 @@ export default {
   name: 'PetHospitalOverview',
   name: 'DoctorCards',
   props: {
-    filteredDoctors: Array,
-    defaultAvatar: String
+    //filteredDoctors: Array,
+    //defaultAvatar: String
   },
   data() {
     return {

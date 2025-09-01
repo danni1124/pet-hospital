@@ -137,7 +137,7 @@
               </div>
               <div class="post-content">
                 <div class="post-header">
-                    <span class="post-title">{{ post.title || post.content.substring(0, 50) + (post.content.length > 50 ? '...' : '') }}</span>
+                    <span class="post-title">{{ post.title || post.content.substring(0, 20) + (post.content.length > 50 ? '...' : '') }}</span>
                   <div class="post-tags right-aligned" v-if="post.tags && post.tags.length > 0">
                     <span
                       v-for="tag in post.tags.split(',')"
@@ -335,7 +335,7 @@
             </svg>
             <span>收藏 ({{ currentPost.collections }})</span>
           </button>
-          <button v-if="isCurrentUserPost" @click="confirmDeletePost" class="delete-btn">
+          <button v-if="isCurrentUserPost" @click="confirmDeletePost" class="deletes-btns">
             <svg viewBox="0 0 24 24" class="action-icon">
               <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
             </svg>
@@ -462,7 +462,7 @@
                   <button 
                     v-if="isCurrentUserComment(comment)" 
                     @click.stop="confirmDeleteComment(comment)" 
-                    class="delete-btn"
+                    class="deletes-btns"
                   >
                     <svg viewBox="0 0 24 24" class="action-icon">
                       <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
@@ -640,7 +640,7 @@
               <svg viewBox="0 0 24 24" class="upload-icon">
                 <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M8,15V13H16V15H8M8,11V9H16V11H8Z" />
               </svg>
-              <span>选择图片 (最多5张)</span>
+              <span>选择图片 (最多8张)</span>
             </button>
             <div class="preview-images" v-if="newPostImages.length > 0">
               <div class="image-preview" v-for="(image, index) in newPostImages" :key="index">
@@ -2135,7 +2135,8 @@ export default {
         if (res.data?.code === 200) {
           //alert('评论删除成功');
           await this.refreshComments(); // 刷新评论
-          await updatePostStats('comment', '取消', this.currentPost.postId,this.currentPost.comments);
+          const userId = this.currentUserId;
+          await updatePostStats('comment', '取消', this.currentPost.postId,userId,this.currentPost.comments);
         } else {
           alert('删除失败：' + (res.data?.msg || '未知错误'));
         }
@@ -2205,7 +2206,7 @@ export default {
 
         await addComment(payload);
         const userId = this.currentUserId;
-        await updatePostStats('comment', this.currentPost.postId, userId,this.currentPost.comments + 1);
+        await updatePostStats('comment','增加' ,this.currentPost.postId, userId,this.currentPost.comments + 1);
         
         this.replyContent = '';
         this.replyImages = [];
@@ -2247,6 +2248,7 @@ export default {
 
       
       try {
+        
         const res = await updatePostStats('view', '增加',postId, userId, newViews);
         if (res.data?.code === 200) {
           // 只有后端返回成功，才更新前端
@@ -2309,12 +2311,7 @@ export default {
       // 防止内容溢出导致水平滚动
       document.body.style.overflowX = 'hidden';
       
-      // 检查并修复可能引起水平滚动的元素
-      const containers = document.querySelectorAll('.forum-container, .main-content, .content-wrapper');
-      containers.forEach(container => {
-        container.style.maxWidth = '100%';
-        container.style.overflowX = 'hidden';
-      });
+      
     }
   },
   watch: {
@@ -2437,9 +2434,12 @@ export default {
   color: #333;
   min-height: 100vh;
   line-height: 1.6;
-  padding-top: 59px;
+  padding-top: 10px;
   max-width: 100vw !important;
   overflow-x: hidden !important;
+  overflow-y: auto; 
+  height: 100vh;
+  position: relative;
 }
 
 /* 导航栏 */
@@ -3524,7 +3524,7 @@ export default {
 .reply-actions button:focus,
 .like-btn:focus,
 .reply-btn:focus,
-.delete-btn:focus {
+.deletes-btns:focus {
   outline: none !important;
   box-shadow: none !important;
 }
@@ -4606,7 +4606,7 @@ textarea {
   border-color: #4F46E5;
 }
 /* 新增删除按钮样式 */
-.delete-btn {
+.deletes-btns {
   padding: 8px 16px;
   background-color: rgba(239, 68, 68, 0.1);
   color: #EF4444;
@@ -4621,11 +4621,11 @@ textarea {
   font-size: 14px;
 }
 
-.delete-btn:hover {
+.deletes-btns:hover {
   background-color: rgba(239, 68, 68, 0.2);
 }
 
-.delete-btn svg {
+.deletes-btns svg {
   width: 16px;
   height: 16px;
 }
@@ -4848,19 +4848,22 @@ textarea {
 
 .decorative-banner {
   position: absolute;
-  top: 100px;
+  top: 0px;
+
   left: 0;
   right: 0;
   height: 10px;
   display: flex;
   justify-content: center;
-  z-index: 1;
+
+
 }
 
 .pet-paws {
   display: flex;
   gap: 30px;
   animation: bounce 2s infinite ease-in-out;
+  
 }
 
 .pet-paws span {
@@ -4878,6 +4881,7 @@ textarea {
   justify-content: space-between;
   align-items: center;
   flex-wrap: nowrap;
+  
 }
 
 .header-pets {
@@ -5177,6 +5181,15 @@ textarea {
   .page-jump {
     flex-wrap: wrap;
     justify-content: center;
+  }
+}
+.decorative-banner {
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .decorative-banner {
+    opacity: 0.6;
   }
 }
 </style>
