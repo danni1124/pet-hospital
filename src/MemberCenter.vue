@@ -79,6 +79,11 @@
       <!-- 会员信息 -->
       <div v-else>
         <div class="member-status">
+          <!-- 右上角小会员码图标 -->
+          <div class="member-code-mini" @click="showMemberCodeModal = true">
+            <div class="code-icon">📱</div>
+          </div>
+          
           <div class="status-header">
             <h2>{{ getMemberTypeName(userInfo.memberType) }}</h2>
             <div class="expiry-date">有效期至: {{ formatDate(userInfo.membershipExpiry) }}</div>
@@ -106,8 +111,8 @@
           
           <div class="member-actions">
             <button class="action-btn" @click="renewMembership">续费会员</button>
-            <button class="action-btn secondary" @click="upgradeMembership">升级会员</button>
             <button class="action-btn secondary" @click="fetchMemberInfo">刷新信息</button>
+            <button class="action-btn detail" @click="shareCard">分享会员卡</button>
           </div>
         </div>
         
@@ -123,6 +128,33 @@
         </div>
       </div>
     </div>
+    
+    <!-- 会员码模态框 -->
+    <div v-if="showMemberCodeModal" class="member-code-modal" @click="closeMemberCodeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>我的会员码</h3>
+          <button class="close-btn" @click="closeMemberCodeModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="member-code-display">
+            <div class="qr-code">
+              <div class="qr-placeholder">
+                <div class="qr-pattern"></div>
+              </div>
+            </div>
+            <div class="code-number">{{ memberCode }}</div>
+            <div class="code-hint">请向工作人员出示此码</div>
+          </div>
+          <div class="modal-actions">
+            <button class="refresh-btn" @click="generateMemberCode">
+              <span class="refresh-icon">🔄</span>
+              刷新会员码
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -130,6 +162,7 @@
 import { ref, inject, onMounted } from 'vue'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
+import jsPDF from 'jspdf'
 
 // 从父组件获取用户信息
 const userInfo = inject('userInfo')
@@ -137,6 +170,10 @@ const userInfo = inject('userInfo')
 // 加载状态
 const isRegistering = ref(false)
 const isLoadingMemberInfo = ref(false)
+
+// 会员码相关状态
+const showMemberCodeModal = ref(false)
+const memberCode = ref('')
 
 // 示例使用记录
 const usageHistory = ref([
@@ -372,14 +409,184 @@ const renewMembership = () => {
   console.log('续费会员')
 }
 
-// 升级会员
-const upgradeMembership = () => {
-  console.log('升级会员')
+// 生成会员码
+const generateMemberCode = () => {
+  // 基于用户ID和当前时间生成唯一会员码
+  const currentUserStr = localStorage.getItem('currentUser')
+  if (currentUserStr) {
+    const currentUser = JSON.parse(currentUserStr)
+    const userId = currentUser.userId
+    const timestamp = Date.now()
+    // 生成10位数字会员码
+    memberCode.value = String(userId).padStart(4, '0') + String(timestamp).slice(-6)
+  } else {
+    // 如果没有用户信息，生成随机码
+    memberCode.value = Math.random().toString().slice(2, 12)
+  }
+}
+
+// 获取当前用户ID
+const getCurrentUserId = () => {
+  const currentUserStr = localStorage.getItem('currentUser')
+  if (currentUserStr) {
+    const currentUser = JSON.parse(currentUserStr)
+    return currentUser.userId || 'N/A'
+  }
+  return 'N/A'
+}
+
+// 关闭会员码模态框
+const closeMemberCodeModal = () => {
+  showMemberCodeModal.value = false
+}
+
+// 分享会员卡 - 下载PDF
+const shareCard = () => {
+  try {
+    // 创建新的PDF文档
+    const doc = new jsPDF()
+    
+    // 获取当前用户信息
+    const userId = String(getCurrentUserId())
+    const memberTypeName = String(getMemberTypeName(userInfo.value.memberType))
+    const benefits = getTotalBenefits(userInfo.value.memberType)
+    
+    // 设置PDF页面属性
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    
+    // 设置背景色
+    doc.setFillColor(240, 248, 255)
+    doc.rect(0, 0, pageWidth, pageHeight, 'F')
+    
+    // 添加标题
+    doc.setFontSize(24)
+    doc.setTextColor(51, 51, 51)
+    doc.text('Pet Hospital Membership Card', pageWidth / 2, 30, { align: 'center' })
+    
+    // 添加分割线
+    doc.setDrawColor(59, 130, 246)
+    doc.setLineWidth(1)
+    doc.line(20, 40, pageWidth - 20, 40)
+    
+    // 会员类型 - 英文显示
+    doc.setFontSize(18)
+    doc.setTextColor(102, 126, 234)
+    const memberTypeEng = userInfo.value.memberType === 'vip' ? 'VIP Member' : 
+                         userInfo.value.memberType === 'premium' ? 'Premium Member' : 'Basic Member'
+    doc.text(memberTypeEng, pageWidth / 2, 60, { align: 'center' })
+    
+    // 会员码部分
+    doc.setFontSize(16)
+    doc.setTextColor(51, 51, 51)
+    doc.text('Member Code', 20, 85)
+    
+    // 会员码框
+    doc.setDrawColor(200, 200, 200)
+    doc.setLineWidth(0.5)
+    doc.rect(20, 90, pageWidth - 40, 30)
+    doc.setFillColor(248, 250, 252)
+    doc.rect(20, 90, pageWidth - 40, 30, 'F')
+    
+    // 显示会员码
+    doc.setFontSize(20)
+    doc.setTextColor(31, 41, 55)
+    doc.text(String(memberCode.value), pageWidth / 2, 110, { align: 'center' })
+    
+    // 会员信息标题
+    doc.setFontSize(16)
+    doc.setTextColor(51, 51, 51)
+    doc.text('Member Information', 20, 145)
+    
+    // 用户ID
+    doc.setFontSize(12)
+    doc.setTextColor(75, 85, 99)
+    doc.text('User ID:', 25, 165)
+    doc.setTextColor(31, 41, 55)
+    doc.text(userId, 70, 165)
+    
+    // 有效期
+    doc.setTextColor(75, 85, 99)
+    doc.text('Valid Until:', 25, 180)
+    doc.setTextColor(31, 41, 55)
+    doc.text(String(formatDate(userInfo.value.membershipExpiry) || 'Permanent'), 85, 180)
+    
+    // 会员福利标题
+    doc.setFontSize(16)
+    doc.setTextColor(51, 51, 51)
+    doc.text('Member Benefits', 20, 205)
+    
+    let yPosition = 220
+    
+    // 免费洗澡
+    doc.setFontSize(12)
+    doc.setTextColor(75, 85, 99)
+    doc.text('Free Bath:', 25, yPosition)
+    doc.setTextColor(16, 185, 129)
+    doc.text(`${userInfo.value.freeBathCount || 0} / ${benefits.bath} times`, 80, yPosition)
+    yPosition += 15
+    
+    // 免费美容（如果有）
+    if (userInfo.value.memberType !== 'basic') {
+      doc.setTextColor(75, 85, 99)
+      doc.text('Free Grooming:', 25, yPosition)
+      doc.setTextColor(16, 185, 129)
+      doc.text(`${userInfo.value.freeGroomingCount || 0} / ${benefits.grooming} times`, 95, yPosition)
+      yPosition += 15
+    }
+    
+    // 免费体检（如果有）
+    if (userInfo.value.memberType === 'premium' || userInfo.value.memberType === 'vip') {
+      doc.setTextColor(75, 85, 99)
+      doc.text('Free Checkup:', 25, yPosition)
+      doc.setTextColor(16, 185, 129)
+      doc.text(`${userInfo.value.freeCheckupCount || 0} / ${benefits.checkup} times`, 90, yPosition)
+      yPosition += 15
+    }
+    
+    // VIP专属服务
+    if (userInfo.value.memberType === 'vip') {
+      doc.setTextColor(75, 85, 99)
+      doc.text('Home Service:', 25, yPosition)
+      doc.setTextColor(16, 185, 129)
+      doc.text('6 times/year', 90, yPosition)
+      yPosition += 15
+    }
+    
+    // 商城优惠
+    doc.setTextColor(75, 85, 99)
+    doc.text('Store Discount:', 25, yPosition)
+    doc.setTextColor(16, 185, 129)
+    const discount = userInfo.value.memberType === 'vip' ? '15% OFF' : 
+                    userInfo.value.memberType === 'premium' ? '10% OFF' : '5% OFF'
+    doc.text(discount, 100, yPosition)
+    
+    // 添加底部信息
+    doc.setFontSize(10)
+    doc.setTextColor(156, 163, 175)
+    doc.text('Thank you for choosing our Pet Hospital!', pageWidth / 2, pageHeight - 30, { align: 'center' })
+    doc.text('For any questions, please contact customer service', pageWidth / 2, pageHeight - 20, { align: 'center' })
+    doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth / 2, pageHeight - 10, { align: 'center' })
+    
+    // 下载PDF文件
+    const memberTypeForFile = userInfo.value.memberType === 'vip' ? 'VIP' : 
+                             userInfo.value.memberType === 'premium' ? 'Premium' : 'Basic'
+    const fileName = `MemberCard_${memberTypeForFile}_${userId}_${new Date().getTime()}.pdf`
+    doc.save(fileName)
+    
+    // 显示成功提示
+    alert('会员卡PDF已下载成功！')
+    
+  } catch (error) {
+    console.error('生成PDF失败:', error)
+    alert('PDF生成失败，请稍后重试')
+  }
 }
 
 // 组件挂载时获取会员信息
 onMounted(() => {
   fetchMemberInfo()
+  generateMemberCode() // 生成会员码
 })
 </script>
 
@@ -649,6 +856,35 @@ onMounted(() => {
   padding: 40px;
   border-radius: 24px;
   box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+  position: relative;
+}
+
+/* 右上角小会员码图标 */
+.member-code-mini {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-code-mini:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
+
+.code-icon {
+  font-size: 14px;
 }
 
 .status-header {
@@ -738,6 +974,19 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+.action-btn.detail {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #1f2937;
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.action-btn.detail:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.4);
+}
+
 /* 使用记录 */
 .usage-history {
   background: white;
@@ -796,6 +1045,171 @@ onMounted(() => {
   text-align: center;
 }
 
+/* 会员码模态框 */
+.member-code-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 0;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 24px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.modal-body {
+  padding: 0 24px 24px;
+}
+
+/* 会员码显示 */
+.member-code-display {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.qr-code {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e2e8f0;
+}
+
+.qr-placeholder {
+  width: 160px;
+  height: 160px;
+  background: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.qr-pattern {
+  width: 120px;
+  height: 120px;
+  background-image: 
+    linear-gradient(90deg, #1f2937 50%, transparent 50%),
+    linear-gradient(#1f2937 50%, transparent 50%);
+  background-size: 8px 8px;
+  opacity: 0.8;
+}
+
+.code-number {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+}
+
+.code-hint {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.refresh-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refresh-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.refresh-icon {
+  animation: none;
+  transition: transform 0.3s ease;
+}
+
+.refresh-btn:active .refresh-icon {
+  animation: spin 0.5s ease;
+}
+
 @media (max-width: 768px) {
   .member-center {
     padding: 16px;
@@ -834,6 +1248,38 @@ onMounted(() => {
   
   .benefits-usage {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  
+  .member-code-mini {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .code-icon {
+    font-size: 12px;
+  }
+  
+  .modal-content {
+    max-width: 95%;
+    margin: 20px;
+  }
+  
+  .qr-code {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .qr-placeholder {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .qr-pattern {
+    width: 80px;
+    height: 80px;
+    background-size: 6px 6px;
   }
 }
 </style>

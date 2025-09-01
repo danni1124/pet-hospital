@@ -701,7 +701,8 @@ export default {
       addingProduct: false,
       productMessage: '',
       productMessageType: '',
-      productMessageIcon: ''
+      productMessageIcon: '',
+      currentUser: null // 添加当前用户信息
     }
   },
   computed: {
@@ -755,10 +756,28 @@ export default {
     }
   },
   created() {
+    this.getCurrentUser();
     this.fetchProducts();
     this.fetchCart();
   },
   methods: {
+    // 获取当前登录用户
+    getCurrentUser() {
+      try {
+        const currentUserStr = localStorage.getItem('currentUser');
+        if (currentUserStr) {
+          this.currentUser = JSON.parse(currentUserStr);
+          console.log('当前登录用户:', this.currentUser);
+        } else {
+          console.warn('未找到登录用户信息');
+          this.currentUser = null;
+        }
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        this.currentUser = null;
+      }
+    },
+    
     // API请求方法
     fetchProducts() {
       this.loading = true;
@@ -796,8 +815,14 @@ export default {
   async loadAvailableCoupons() {
     this.loadingCoupons = true;
     try {
-      // 假设用户ID为1，实际应用中应从登录状态获取
-      const userId = 2;
+      // 使用当前登录用户的userId
+      if (!this.currentUser || !this.currentUser.userId) {
+        console.warn('未找到登录用户信息，无法加载优惠券');
+        this.availableCoupons = [];
+        return;
+      }
+      
+      const userId = this.currentUser.userId;
       const response = await axios.get(`${API_BASE_URL}/getCouponByUserId`, {
         params: { userId }
       });
@@ -831,7 +856,14 @@ export default {
     //     });
     // },
     fetchCart() {
-      const userId = 1;
+      // 检查是否有登录用户
+      if (!this.currentUser || !this.currentUser.userId) {
+        console.warn('未找到登录用户信息，无法获取购物车');
+        this.cart = [];
+        return;
+      }
+      
+      const userId = this.currentUser.userId;
       axios.get(`${API_BASE_URL}/getCartsByUserId`, {
         params: { userId }
       })
@@ -868,7 +900,13 @@ export default {
       });
     },
     addToCart(product) {
-      const userId = 1;
+      // 检查是否有登录用户
+      if (!this.currentUser || !this.currentUser.userId) {
+        alert('请先登录再添加商品到购物车');
+        return;
+      }
+      
+      const userId = this.currentUser.userId;
       // 检查商品是否已在购物车中
       const existingItem = this.cart.find(item => item.productId === product.productId);
       let request;
@@ -1136,13 +1174,19 @@ export default {
 //     });
 // },
     submitPayment() {
+      // 检查是否有登录用户
+      if (!this.currentUser || !this.currentUser.userId) {
+        alert('请先登录再进行购买');
+        return;
+      }
+      
       // 生成订单号（可以使用时间戳+随机数）
       const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
       
       // 构建订单对象 - 确保字段名与Java类完全匹配
       const order = {
         orderNo: orderNo,
-        userId: 1, // 假设用户ID为1
+        userId: this.currentUser.userId, // 使用当前登录用户的userId
         totalAmount:this.finalTotal, // 使用 totalAmount 而不是 total
         status: 1, // 假设1表示待支付状态
         paymentMethod: this.selectedPayment, // 确保字段名正确
@@ -1499,7 +1543,8 @@ export default {
 
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+/* 注释掉可能有问题的Google Fonts导入 */
+/* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap'); */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
 
 * {
@@ -1529,7 +1574,7 @@ export default {
 }
 
 body {
-  font-family: 'Noto Sans SC', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-color: #f5f9f7;
   color: var(--dark);
   line-height: 1.6;

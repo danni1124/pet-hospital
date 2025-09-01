@@ -12,7 +12,7 @@
       <div 
         v-for="userCoupon in coupons" 
         :key="userCoupon.id || userCoupon.couponId"
-        :class="['coupon-item', { 'used': userCoupon.used, 'expired': isExpired(userCoupon.coupon) }]"
+        :class="['coupon-item', { 'used': userCoupon.used === '是', 'expired': isExpired(userCoupon.coupon) }]"
       >
         <div class="coupon-header">
           <div class="discount-info">
@@ -28,7 +28,7 @@
           </div>
           
           <div class="coupon-status">
-            <span v-if="userCoupon.used" class="status-used">已使用</span>
+            <span v-if="userCoupon.used === '是'" class="status-used">已使用</span>
             <span v-else-if="isExpired(userCoupon.coupon)" class="status-expired">已过期</span>
             <span v-else class="status-available">可使用</span>
           </div>
@@ -49,14 +49,14 @@
         
         <div class="coupon-actions">
           <button 
-            v-if="!userCoupon.used && !isExpired(userCoupon.coupon)"
+            v-if="userCoupon.used !== '是' && !isExpired(userCoupon.coupon)"
             @click="useCoupon(userCoupon)"
             class="use-btn"
           >
             立即使用
           </button>
           <button 
-            v-else-if="userCoupon.used"
+            v-else-if="userCoupon.used === '是'"
             class="used-btn" 
             disabled
           >
@@ -120,7 +120,7 @@ export default {
         }
         
         try {
-          // 调用后端API获取优惠券（根据接口文档）
+          // 调用后端API获取用户优惠券关联数据
           const response = await axios.get(`${API_BASE_URL}/getCouponByUserId`, {
             params: { userId: userId }
           })
@@ -128,22 +128,23 @@ export default {
           console.log('后端优惠券数据:', response.data)
           
           if (response.data && response.data.code === 200) {
-            // 根据接口返回格式，优惠券数据直接在data数组中
-            const couponsData = response.data.data || []
+            // 后端返回的是用户优惠券关联数据，包含used状态
+            const userCouponsData = response.data.data || []
             
             // 转换数据格式以适配前端组件
-            this.coupons = couponsData.map(coupon => ({
-              couponId: coupon.couponId,
-              used: false, // 根据实际情况调整
-              acquiredAt: new Date().toISOString(), // 获得时间，可根据实际数据调整
-              source: 'system', // 来源，可根据实际数据调整
-              coupon: {
-                code: coupon.code,
-                discountType: coupon.discountType,
-                discountValue: coupon.discountValue,
-                minAmount: coupon.minAmount,
-                validFrom: coupon.validFrom,
-                validTo: coupon.validTo
+            this.coupons = userCouponsData.map(userCoupon => ({
+              id: userCoupon.id,
+              couponId: userCoupon.couponId,
+              used: userCoupon.used, // 使用后端返回的真实状态
+              acquiredAt: userCoupon.acquiredAt || new Date().toISOString(),
+              source: 'backend', // 来源标记为后端
+              coupon: userCoupon.coupon || {
+                code: userCoupon.code,
+                discountType: userCoupon.discountType,
+                discountValue: userCoupon.discountValue,
+                minAmount: userCoupon.minAmount,
+                validFrom: userCoupon.validFrom,
+                validTo: userCoupon.validTo
               }
             }))
             
@@ -153,38 +154,15 @@ export default {
           }
           
         } catch (apiError) {
-          console.log('后端API不可用，使用本地数据:', apiError.message)
-          
-          // API降级：从localStorage加载
-          this.loadFromLocalStorage(userId)
+          console.error('获取优惠券失败:', apiError.message)
+          this.coupons = []
         }
         
       } catch (error) {
         console.error('加载优惠券时发生错误:', error)
-        
-        // 尝试从localStorage加载
-        const currentUserStr = localStorage.getItem('currentUser')
-        if (currentUserStr) {
-          const currentUser = JSON.parse(currentUserStr)
-          this.loadFromLocalStorage(currentUser.userId || 'unknown')
-        }
+        this.coupons = []
       } finally {
         this.loading = false
-      }
-    },
-    
-    // 从本地存储加载优惠券
-    loadFromLocalStorage(userId) {
-      try {
-        const userCouponsKey = `userCoupons_${userId}`
-        const localCoupons = JSON.parse(localStorage.getItem(userCouponsKey) || '[]')
-        
-        this.coupons = localCoupons
-        console.log('从本地存储加载优惠券:', this.coupons.length, '张')
-        
-      } catch (error) {
-        console.error('从本地存储加载优惠券失败:', error)
-        this.coupons = []
       }
     },
     
@@ -203,30 +181,72 @@ export default {
         const currentUser = JSON.parse(currentUserStr)
         const userId = currentUser.userId
         
+        // 验证必要的参数
+        if (!userCoupon.couponId || !userId) {
+          alert('❌ 缺少必要的参数信息')
+          return
+        }
+        
+        console.log('使用优惠券参数:', {
+          couponId: parseInt(userCoupon.couponId),
+          userId: parseInt(userId),
+          status: "是"
+        })
+        
         try {
           // 调用后端API标记优惠券为已使用
-          const response = await axios.put(`${API_BASE_URL}/useCoupon`, {
-            userId: userId,
-            couponId: userCoupon.couponId
+          // 根据后端接口定义，使用查询参数方式传递数据
+          const response = await axios.post(`${API_BASE_URL}/updateCouponUsed`, null, {
+            params: {
+              couponId: parseInt(userCoupon.couponId),  // 确保是Integer类型
+              userId: parseInt(userId),                  // 确保是Integer类型
+              status: "是"                              // String类型
+            },
+            headers: {
+              'Content-Type': 'application/json'
+            }
           })
           
           console.log('使用优惠券API响应:', response.data)
           
+          // 检查响应是否成功
           if (response.data && response.data.code === 200) {
             // 后端更新成功，更新本地状态
-            userCoupon.used = true
+            userCoupon.used = "是"  // 更新为数据库的ENUM值
+            this.updateLocalStorage(userId)
             alert('✅ 优惠券使用成功！')
+            console.log('优惠券使用成功，本地状态已更新')
           } else {
-            throw new Error('使用优惠券失败: ' + (response.data?.msg || '未知错误'))
+            // 处理业务逻辑错误
+            const errorMsg = response.data?.msg || response.data?.message || '未知错误'
+            throw new Error('使用优惠券失败: ' + errorMsg)
           }
           
         } catch (apiError) {
-          console.log('后端API不可用，仅更新本地状态:', apiError.message)
+          console.error('调用后端API失败:', apiError)
+          console.error('API错误详情:', {
+            message: apiError.message,
+            response: apiError.response?.data,
+            status: apiError.response?.status,
+            statusText: apiError.response?.statusText,
+            url: `${API_BASE_URL}/updateCouponUsed`,
+            params: {
+              couponId: parseInt(userCoupon.couponId),
+              userId: parseInt(userId),
+              status: "是"
+            }
+          })
           
-          // API降级：仅更新本地状态
-          userCoupon.used = true
-          this.updateLocalStorage(userId)
-          alert('✅ 优惠券使用成功！（本地记录）')
+          let errorMessage = '使用优惠券失败'
+          if (apiError.response?.data?.msg) {
+            errorMessage += ': ' + apiError.response.data.msg
+          } else if (apiError.response?.status) {
+            errorMessage += ': HTTP ' + apiError.response.status + ' - ' + (apiError.response.statusText || '未知错误')
+          } else if (apiError.message) {
+            errorMessage += ': ' + apiError.message
+          }
+          
+          throw new Error(errorMessage)
         }
         
       } catch (error) {
@@ -235,14 +255,14 @@ export default {
       }
     },
     
-    // 更新本地存储
+    // 更新本地缓存
     updateLocalStorage(userId) {
       try {
         const userCouponsKey = `userCoupons_${userId}`
         localStorage.setItem(userCouponsKey, JSON.stringify(this.coupons))
-        console.log('本地优惠券状态已更新')
+        console.log('本地优惠券缓存已更新')
       } catch (error) {
-        console.error('更新本地优惠券状态失败:', error)
+        console.error('更新本地优惠券缓存失败:', error)
       }
     },
     
