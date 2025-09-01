@@ -1392,7 +1392,7 @@ setup() {
       const formData = new FormData();
       formData.append('file', file);
       // 根据接口，可以添加isAvatar参数，默认为false
-      // formData.append('isAvatar', false);
+      formData.append('isAvatar', true);
       
       try {
           const response = await axios.post(`${apiBaseUrl.value}/uploadImage`, formData, {
