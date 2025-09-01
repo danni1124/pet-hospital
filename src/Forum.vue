@@ -335,7 +335,7 @@
             </svg>
             <span>收藏 ({{ currentPost.collections }})</span>
           </button>
-          <button v-if="isCurrentUserPost" @click="confirmDeletePost" class="deletes-btns">
+          <button v-if="canDeletePost" @click="confirmDeletePost" class="deletes-btns">
             <svg viewBox="0 0 24 24" class="action-icon">
               <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
             </svg>
@@ -460,7 +460,7 @@
 
                 <!-- 删除评论 -->
                   <button 
-                    v-if="isCurrentUserComment(comment)" 
+                    v-if="canDeleteComment(comment)" 
                     @click.stop="confirmDeleteComment(comment)" 
                     class="deletes-btns"
                   >
@@ -690,19 +690,22 @@ export default {
   setup() {
     const currentUserId = ref(null);
     const currentUsername = ref('');
+    const isManager = ref(false);
 
-    onMounted(() => { 
+    onMounted(() => {
       const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
       currentUserId.value = user.userId || 1;
       currentUsername.value = user.username || '游客';
-      
+      isManager.value = user.isManager || false;
     });
 
     return {
       currentUserId,
-      currentUsername
+      currentUsername,
+      isManager
     };
   },
+
   directives: {
     autoResize: {
       inserted(el) {
@@ -718,7 +721,8 @@ export default {
   data() {
     return {
 
- 
+      isManager: false,
+
       gotoPage: null,
       searchQuery: '',
       imageList: [] ,
@@ -966,9 +970,9 @@ export default {
       return flatten(this.comments);
     },
      
-    isCurrentUserPost() {
+    canDeletePost() {
       if (!this.currentPost || !this.currentUser) return false;
-      return this.currentPost.userId === this.currentUser.id;
+      return this.isManager || this.currentPost.userId === this.currentUser.id;
     },
 
      displayedPages() {
@@ -1119,7 +1123,7 @@ export default {
 
       try {
         // 打印上传前的本地图片信息
-        console.log('📤 准备上传的图片（本地）:', this.newPostImages.map(img => ({
+        console.log('准备上传的图片（本地）:', this.newPostImages.map(img => ({
           name: img.file.name,
           size: img.file.size,
           preview: img.preview
@@ -1138,6 +1142,7 @@ export default {
         const postData = {
           userId: this.currentUserId,
           username: this.currentUsername,
+          title:this.newPostTitle,
           content: this.newPostContent.trim(),
           tags: this.newPostSelectedTag.map(id => this.tags.find(t => t.id === id)?.name).filter(Boolean).join(','),
           imagesUrl: uploadedPaths.join(','),
@@ -2085,8 +2090,8 @@ export default {
       return result;
     },
     // 检查是否是当前用户的评论
-    isCurrentUserComment(comment) {
-      return comment.userId === this.currentUser.id;
+    canDeleteComment(comment) {
+      return this.isManager || comment.userId === this.currentUser.id;
     },
     
     // 确认删除帖子
@@ -2338,28 +2343,28 @@ export default {
 
       
   },
+  
   mounted() {
-    const paginationEl = document.querySelector('.pagination');
-    if (paginationEl) {
-      paginationEl.addEventListener('click', (e) => {
-        console.log('分页区域点击事件:', e.target);
-        console.log('事件冒泡路径:', e.composedPath());
-      }, true); // 使用捕获阶段
-    }
-      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      this.currentUserId = user.userId || 1;
-      this.currentUsername = user.username || '游客';
-      this.currentUser = {
-        id: this.currentUserId,
-        name: this.currentUsername,
-        avatar: ''
-      };
-      this.fixHorizontalScroll();
-        window.addEventListener('resize', this.fixHorizontalScroll);
-      },
-      beforeUnmount() {
-        window.removeEventListener('resize', this.fixHorizontalScroll);
-      },
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    this.currentUserId = user.userId || 1;
+    this.currentUsername = user.username || '游客';
+    this.currentUser = {
+      id: this.currentUserId,
+      name: this.currentUsername,
+      avatar: ''
+    };
+
+    //读取管理员状态
+    this.isManager = user.isManager || false;
+
+    this.fixHorizontalScroll();
+    window.addEventListener('resize', this.fixHorizontalScroll);
+  },
+      
+  beforeUnmount() {
+    window.removeEventListener('resize', this.fixHorizontalScroll);
+  },
+
  
 }
 </script>
