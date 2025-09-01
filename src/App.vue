@@ -9,6 +9,7 @@
         <router-link to="/" class="nav-btn" active-class="active" exact>
           <i class="fas fa-home"></i> 首页
         </router-link>
+        <NearbyStores />
         <button @click="handleQuestionnaireClick" class="nav-btn" :class="{ active: $route.path === '/questionnaire' }">
           <i class="fas fa-question"></i> 问卷
         </button>
@@ -45,7 +46,7 @@
         <div v-else class="user-dropdown">
           <div class="user-box">
             <div class="user-avatar-placeholder">
-              <span>{{ currentUser.avatar }}</span>
+              <span>{{ currentUser.avatar_url || currentUser.name.substring(0, 2).toUpperCase() }}</span>
             </div>
             <span class="user-name">{{ currentUser.name }}</span>
             <i class="arrow-down">▼</i>
@@ -361,6 +362,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
+import NearbyStores from '@/components/NearbyStores.vue'
 
 // Vue Router
 const route = useRoute()
@@ -370,7 +372,7 @@ const router = useRouter()
 const isLoggedIn = ref(false)
 const currentUser = ref({
   name: '',
-  avatar: ''
+  avatar_url: ''  // 修改为avatar_url匹配数据库结构
 })
 
 // 登录弹窗状态
@@ -574,7 +576,7 @@ const handleLogin = async () => {
       
       currentUser.value = {
         name: username,
-        avatar: username.substring(0, 2).toUpperCase(),
+        avatar_url: userData.avatar_url || null,  // 使用数据库的avatar_url字段
         userId: userId
       }
       
@@ -582,7 +584,7 @@ const handleLogin = async () => {
       localStorage.setItem('currentUser', JSON.stringify({
         username: username,
         userId: userId,
-        avatar: username.substring(0, 2).toUpperCase(),
+        avatar_url: userData.avatar_url || null,  // 使用数据库的avatar_url字段
         loginTime: new Date().toISOString(),
         userData: userData  // 保存完整的用户数据
       }))
@@ -599,16 +601,17 @@ const handleLogin = async () => {
       
       alert('✅ ' + (response.data.msg || '登录成功！'))
       
+      // 注释掉重复的localStorage设置
       // 保存登录用户信息到 localStorage，使用安全的数据访问
-      const userInfo = response.data.user || response.data.data || {}
-      const safeUserId = userInfo.userId || userInfo.user_id || userInfo.id || userId
-      const safeUsername = userInfo.username || username
+      // const userInfo = response.data.user || response.data.data || {}
+      // const safeUserId = userInfo.userId || userInfo.user_id || userInfo.id || userId
+      // const safeUsername = userInfo.username || username
       
-      localStorage.setItem('currentUser', JSON.stringify({
-        userId: safeUserId,   // 后端返回的用户ID，带有安全检查
-        username: safeUsername, // 后端返回的用户名，带有安全检查
-        avatar: username.substring(0, 2).toUpperCase(),
-      }))
+      // localStorage.setItem('currentUser', JSON.stringify({
+      //   userId: safeUserId,   // 后端返回的用户ID，带有安全检查
+      //   username: safeUsername, // 后端返回的用户名，带有安全检查
+      //   avatar_url: userData.avatar_url || null,  // 使用数据库的avatar_url字段
+      // }))
 
       closeLoginModal()
     } else {
@@ -664,15 +667,19 @@ const handleRegister = async () => {
   if (hasErrors) {
     return
   }
-  
+
+  // 在函数开始时获取按钮元素和原始文本
+  const submitBtn = document.querySelector('button[type="submit"]')
+  const originalText = submitBtn ? submitBtn.textContent : '注册'
+
   try {
     console.log('发送注册请求:', registerForm.value)
     
     // 显示加载状态
-    const submitBtn = document.querySelector('button[type="submit"]')
-    const originalText = submitBtn.textContent
-    submitBtn.textContent = '注册中...'
-    submitBtn.disabled = true
+    if (submitBtn) {
+      submitBtn.textContent = '注册中...'
+      submitBtn.disabled = true
+    }
     
     let response
     
@@ -730,7 +737,6 @@ const handleRegister = async () => {
     alert('❌ 网络连接失败，请稍后重试')
   } finally {
     // 恢复按钮状态
-    const submitBtn = document.querySelector('button[type="submit"]')
     if (submitBtn) {
       submitBtn.textContent = originalText
       submitBtn.disabled = false
@@ -743,7 +749,7 @@ const handleRegister = async () => {
 // 处理登出
 const handleLogout = () => {
   isLoggedIn.value = false
-  currentUser.value = { name: '', avatar: '' }
+  currentUser.value = { name: '', avatar_url: '' }  // 修改为avatar_url
   
   // 清除登录状态（但保留记住的密码，如果用户之前选择了记住密码）
   localStorage.removeItem('currentUser')
@@ -768,7 +774,7 @@ onMounted(() => {
     isLoggedIn.value = true
     currentUser.value = {
       name: user.username,
-      avatar: user.avatar || user.username.substring(0, 2).toUpperCase()
+      avatar_url: user.avatar_url || null  // 使用数据库的avatar_url字段
     }
     
     console.log('已恢复当前登录状态:', isLoggedIn.value)
@@ -785,7 +791,7 @@ onMounted(() => {
       isLoggedIn.value = true
       currentUser.value = {
         name: user.username,
-        avatar: user.username.substring(0, 2).toUpperCase()
+        avatar_url: null  // 记住的用户没有avatar_url信息，设为null
       }
     }
     

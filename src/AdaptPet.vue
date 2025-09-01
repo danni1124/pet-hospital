@@ -104,6 +104,10 @@
             <input type="text" v-model="adoptionForm.username" required>
           </div>
           <div class="form-group">
+            <label>您的性别</label>
+            <input type="gender" v-model="adoptionForm.gender" required>
+          </div>
+          <div class="form-group">
             <label>联系电话</label>
             <input type="tel" v-model="adoptionForm.phone" required>
           </div>
@@ -179,6 +183,7 @@ export default {
       adoptionForm: {
         username: '',
         phone: '',
+        gender:'',
         email: '',
         environment: ''
       },
@@ -198,7 +203,7 @@ export default {
     filteredPets() {
       return this.pets.filter(pet => {
         // 只显示待领养的宠物
-        if (pet.adoptionStatus !== 'forAdoption') {
+        if (pet.adoptionStatus !== '待领养') {
           return false;
         }
         
@@ -278,7 +283,7 @@ export default {
           type: 'dog',
           breed: '拉布拉多',
           disease: '感冒已康复',
-          adoptionStatus: 'forAdoption',
+          adoptionStatus: '待领养',
           description: '温顺友好的拉布拉多，已绝育，喜欢和人玩耍，特别适合有孩子的家庭。',
           image: 'https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&w=800&q=80'
         },
@@ -291,7 +296,7 @@ export default {
           type: 'cat',
           breed: '英国短毛猫',
           disease: '',
-          adoptionStatus: 'forAdoption',
+          adoptionStatus: '待领养',
           description: '活泼可爱的英国短毛猫，已接种疫苗，会用猫砂盆，喜欢被抚摸。',
           image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80'
         },
@@ -304,7 +309,7 @@ export default {
           type: 'dog',
           breed: '边境牧羊犬',
           disease: '骨折恢复期',
-          adoptionStatus: 'forAdoption',
+          adoptionStatus: '待领养',
           description: '聪明忠诚的边境牧羊犬，已绝育，擅长接飞盘，需要充足的运动空间。',
           image: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&w=800&q=80'
         },
@@ -317,7 +322,7 @@ export default {
           type: 'cat',
           breed: '橘猫',
           disease: '',
-          adoptionStatus: 'forAdoption',
+          adoptionStatus: '待领养',
           description: '温顺的橘猫，已绝育，喜欢在阳光下打盹，能与其它宠物和睦相处。',
           image: 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&w=800&q=80'
         }
@@ -327,8 +332,35 @@ export default {
     async loadCurrentUser() {
       try {
         // 从本地存储获取用户ID或从登录状态获取
-        const userId = localStorage.getItem('userId') || 1; // 默认用户ID为1
-        const response = await axios.get(`${this.apiBaseUrl}/getUser?userId=${userId}`);
+        const currentUserStr = localStorage.getItem('currentUser')
+        if (!currentUserStr) {
+          console.error('未找到登录用户信息')
+          return
+        }
+        
+        const currentUser = JSON.parse(currentUserStr)
+        const userId = currentUser.userId
+        
+        if (!userId) {
+          console.error('用户ID不存在，无法获取详细信息')
+          // 使用localStorage中的基本信息作为降级方案
+          userInfo.value = {
+            userId: 'unknown',
+            gender:'',
+            username: currentUser.username || 'unknown',
+            level: 1,
+            phone: '',
+            email: '',
+            avatar_url: '',
+            address: ''
+          }
+          return
+        }
+        
+        console.log('获取用户详细信息，userId:', userId)
+        const response = await axios.get(`${this.apiBaseUrl}/getUser`, {
+        params: { userId: userId }
+      })
         console.log('User response:', response);
         
         if (response.data && response.data.data) {
@@ -338,10 +370,12 @@ export default {
           this.adoptionForm.username = this.currentUser.username || '';
           this.adoptionForm.phone = this.currentUser.phone || '';
           this.adoptionForm.email = this.currentUser.email || '';
+          this.adoptionForm.gender = this.currentUser.gender || '';
         } else {
           // 模拟用户数据
           this.currentUser = {
             userId: 1,
+            gender:'男',
             username: 'chen',
             phone: '13900139000',
             email: 'chen@example.com'
@@ -350,6 +384,7 @@ export default {
           this.adoptionForm.username = this.currentUser.username;
           this.adoptionForm.phone = this.currentUser.phone;
           this.adoptionForm.email = this.currentUser.email;
+          this.adoptionForm.gender = this.currentUser.gender ;
         }
       } catch (error) {
         console.error('加载用户信息失败:', error);
@@ -424,8 +459,9 @@ export default {
           username: this.adoptionForm.username,
           phone: this.adoptionForm.phone,
           email: this.adoptionForm.email,
+          gender: this.adoptionForm.gender,
           environment: this.adoptionForm.environment,
-          time:now
+
         };
         console.log(applicationData)
         const response=await axios.post(`${this.apiBaseUrl}/addApplication`, applicationData);
@@ -946,4 +982,5 @@ export default {
     gap: 12px;
   }
 }
+
 </style>
