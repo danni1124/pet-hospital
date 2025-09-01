@@ -31,6 +31,7 @@
             <button 
               @click="showAddStoreForm = true" 
               class="add-store-btn"
+              v-if="props.isManager"
             >
               <i class="fas fa-plus"></i>
               添加门店
@@ -252,6 +253,7 @@
                   @click="deleteStore(store.storeId)" 
                   class="delete-button"
                   title="删除门店"
+                  v-if="props.isManager"
                 >
                   <i class="fas fa-trash-alt"></i>
                   删除
@@ -283,6 +285,14 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
+
+// 定义props
+const props = defineProps({
+  isManager: {
+    type: Boolean,
+    default: false
+  }
+})
 
 const showStoresModal = ref(false)
 const isLoading = ref(false)
@@ -732,6 +742,10 @@ const formatDistance = (distance) => {
 // 关闭弹窗
 const closeModal = () => {
   showStoresModal.value = false
+  // 关闭附近门店弹窗时自动关闭添加门店表单
+  if (showAddStoreForm.value) {
+    cancelAddStore()
+  }
 }
 
 // 获取繁忙状态的CSS类

@@ -9,7 +9,7 @@
         <router-link to="/" class="nav-btn" active-class="active" exact>
           <i class="fas fa-home"></i> 首页
         </router-link>
-        <NearbyStores />
+        <NearbyStores :isManager="isManager" />
         <button @click="handleQuestionnaireClick" class="nav-btn" :class="{ active: $route.path === '/questionnaire' }">
           <i class="fas fa-question"></i> 问卷
         </button>
@@ -49,18 +49,19 @@
               <span>{{ currentUser.avatar_url || currentUser.name.substring(0, 2).toUpperCase() }}</span>
             </div>
             <span class="user-name">{{ currentUser.name }}</span>
+            <i v-if="isManager" class="admin-icon fas fa-crown" title="管理员"></i>
             <i class="arrow-down">▼</i>
           </div>
 
           <!-- 下拉菜单内容 -->
           <div class="dropdown-menu">
-            <div class="dropdown-item">
+            <div class="dropdown-item" v-if="!isManager">
               <i class="icon">👤</i>
               <router-link to="/user-info" class="user-name-link">
                 <span class="user-name">个人信息</span>
               </router-link>
             </div>
-            <div class="dropdown-divider"></div>
+            <div class="dropdown-divider" v-if="!isManager"></div>
             <div class="dropdown-item" @click="handleLogout">
               <i class="icon">🚪</i>
               <span>退出登录</span>
@@ -104,6 +105,13 @@
                 @input="loginErrorMsg = ''"
                 placeholder="请输入密码"
               />
+            </div>
+            <div class="form-group remember-group">
+              <label class="remember-label">
+                <input type="checkbox" v-model="loginForm.isManager" />
+                <span class="checkmark"></span>
+                管理员登录
+              </label>
             </div>
             <div class="form-group remember-group">
               <label class="remember-label">
@@ -216,6 +224,21 @@
             </div>
             <div class="form-group remember-group">
               <label class="remember-label">
+                <input 
+                  type="checkbox" 
+                  v-model="registerForm.isManager" 
+                  @change="handleManagerCheckChange"
+                />
+                <span class="checkmark"></span>
+                注册为管理员账户
+              </label>
+              <div class="manager-notice">
+                <i class="fas fa-info-circle"></i>
+                管理员账户拥有系统管理权限，需要验证管理员密码
+              </div>
+            </div>
+            <div class="form-group remember-group">
+              <label class="remember-label">
                 <input type="checkbox" v-model="registerForm.agreeTerms" required />
                 <span class="checkmark"></span>
                 我同意<a href="#" class="terms-link" @click.prevent="showUserAgreement">用户协议</a>和<a href="#" class="terms-link" @click.prevent="showPrivacyPolicy">隐私政策</a>
@@ -229,6 +252,40 @@
             <span>已有账号？</span>
             <a href="#" class="register-link" @click.prevent="switchToLogin">立即登录</a>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理员密码验证弹窗 -->
+    <div v-if="showManagerVerifyModal" class="login-modal-overlay">
+      <div class="login-modal-content manager-verify-modal">
+        <div class="login-header">
+          <h2>管理员身份验证</h2>
+          <span class="close-btn" @click="closeManagerVerifyModal">&times;</span>
+        </div>
+        <div class="login-body">
+          <div class="verify-notice">
+            <i class="fas fa-shield-alt"></i>
+            <p>请输入管理员验证密码以确认您的管理员身份</p>
+          </div>
+          <form @submit.prevent="handleManagerVerify">
+            <div class="form-group">
+              <label for="manager-password">管理员密码：</label>
+              <input 
+                type="password" 
+                id="manager-password" 
+                v-model="managerVerifyPassword" 
+                placeholder="请输入管理员验证密码"
+                required
+                autofocus
+              />
+              <div v-if="managerVerifyError" class="error-text">{{ managerVerifyError }}</div>
+            </div>
+            <div class="form-group">
+              <button type="submit" class="login-btn verify-btn">验证</button>
+              <button type="button" class="cancel-btn" @click="cancelManagerVerify">取消</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -370,6 +427,7 @@ const router = useRouter()
 
 // 登录状态
 const isLoggedIn = ref(false)
+const isManager = ref(false) // 管理员状态标识
 const currentUser = ref({
   name: '',
   avatar_url: ''  // 修改为avatar_url匹配数据库结构
@@ -385,7 +443,8 @@ const showPrivacyPolicyModal = ref(false)
 const loginForm = ref({
   username: '',
   password: '',
-  remember: false
+  remember: false,
+  isManager: false
 })
 
 // 登录错误信息
@@ -400,7 +459,8 @@ const registerForm = ref({
   phone: '',
   email: '',
   address: '',
-  agreeTerms: false
+  agreeTerms: false,
+  isManager: false
 })
 
 // 注册表单验证错误
@@ -410,6 +470,12 @@ const registerErrors = ref({
   confirmPassword: ''
 })
 
+// 管理员验证相关状态
+const showManagerVerifyModal = ref(false)
+const managerVerifyPassword = ref('')
+const managerVerifyError = ref('')
+const MANAGER_PASSWORD = '10086' // 管理员验证密码
+
 // 关闭登录弹窗
 const closeLoginModal = () => {
   showLoginModal.value = false
@@ -418,7 +484,8 @@ const closeLoginModal = () => {
   loginForm.value = {
     username: '',
     password: '',
-    remember: false
+    remember: false,
+    isManager: false
   }
 }
 
@@ -434,7 +501,8 @@ const closeRegisterModal = () => {
     phone: '',
     email: '',
     address: '',
-    agreeTerms: false
+    agreeTerms: false,
+    isManager: false
   }
   registerErrors.value = {
     username: '',
@@ -473,6 +541,45 @@ const showPrivacyPolicy = () => {
 // 关闭隐私政策
 const closePrivacyPolicy = () => {
   showPrivacyPolicyModal.value = false
+}
+
+// 管理员复选框变化处理
+const handleManagerCheckChange = () => {
+  if (registerForm.value.isManager) {
+    // 如果勾选了管理员，弹出验证弹窗
+    showManagerVerifyModal.value = true
+    managerVerifyPassword.value = ''
+    managerVerifyError.value = ''
+  }
+}
+
+// 关闭管理员验证弹窗
+const closeManagerVerifyModal = () => {
+  showManagerVerifyModal.value = false
+  managerVerifyPassword.value = ''
+  managerVerifyError.value = ''
+  // 如果取消验证，取消管理员选择
+  registerForm.value.isManager = false
+}
+
+// 处理管理员验证
+const handleManagerVerify = () => {
+  if (managerVerifyPassword.value === MANAGER_PASSWORD) {
+    // 验证成功
+    showManagerVerifyModal.value = false
+    managerVerifyPassword.value = ''
+    managerVerifyError.value = ''
+    alert('✅ 管理员身份验证成功！')
+  } else {
+    // 验证失败
+    managerVerifyError.value = '管理员密码错误，请重新输入'
+    managerVerifyPassword.value = ''
+  }
+}
+
+// 取消管理员验证
+const cancelManagerVerify = () => {
+  closeManagerVerifyModal()
 }
 
 // 注册表单验证
@@ -544,13 +651,24 @@ const handleLogin = async () => {
     let response
     
     try {
-      // 发送真实的登录请求（GET方式，参数通过URL传递）
-      response = await axios.get(`${API_BASE_URL}/login`, {
-        params: {
-          username: loginForm.value.username,
-          password: loginForm.value.password
-        }
-      })
+      // 根据是否是管理员选择不同的API接口
+      if (loginForm.value.isManager) {
+        // 管理员登录接口
+        response = await axios.get(`${API_BASE_URL}/manager/login`, {
+          params: {
+            managerName: loginForm.value.username,
+            password: loginForm.value.password
+          }
+        })
+      } else {
+        // 普通用户登录接口
+        response = await axios.get(`${API_BASE_URL}/login`, {
+          params: {
+            username: loginForm.value.username,
+            password: loginForm.value.password
+          }
+        })
+      }
       
       console.log('后端响应:', response.data)
       
@@ -568,6 +686,8 @@ const handleLogin = async () => {
       
       // 登录成功
       isLoggedIn.value = true
+      // 设置管理员状态
+      isManager.value = loginForm.value.isManager
       
       // 处理后端返回的用户数据
       const userData = response.data.user || response.data.data || {}
@@ -586,6 +706,7 @@ const handleLogin = async () => {
         userId: userId,
         avatar_url: userData.avatar_url || null,  // 使用数据库的avatar_url字段
         loginTime: new Date().toISOString(),
+        isManager: loginForm.value.isManager, // 保存管理员状态
         userData: userData  // 保存完整的用户数据
       }))
       
@@ -684,21 +805,32 @@ const handleRegister = async () => {
     let response
     
     try {
-      // 准备注册数据，确保与数据库表结构匹配
-      const registrationData = {
-        username: registerForm.value.username.trim(),
-        password: registerForm.value.password,
-        gender: registerForm.value.gender || "女",  // 默认女，匹配数据库ENUM('女', '男')
-        phone: registerForm.value.phone.trim() || "",
-        email: registerForm.value.email.trim() || "",
-        address: registerForm.value.address.trim() || "",
-        avatar_url: null  // 头像URL，初始为null
+      // 根据是否是管理员调用不同的接口
+      if (registerForm.value.isManager) {
+        // 管理员注册接口
+        console.log('调用管理员注册接口')
+        const managerData = {
+          managerName: registerForm.value.username.trim(),  // 使用 managerName 匹配Manager类字段
+          password: registerForm.value.password
+        }
+        console.log('发送管理员注册数据:', managerData)
+    
+        response = await axios.post(`${API_BASE_URL}/manager/register`, managerData)
+      } else {
+        // 普通用户注册接口
+        console.log('调用普通用户注册接口')
+        const registrationData = {
+          username: registerForm.value.username.trim(),
+          password: registerForm.value.password,
+          gender: registerForm.value.gender || "女",  // 默认女，匹配数据库ENUM('女', '男')
+          phone: registerForm.value.phone.trim() || "",
+          email: registerForm.value.email.trim() || "",
+          address: registerForm.value.address.trim() || "",
+          avatar_url: null  // 头像URL，初始为null
+        }
+        console.log('发送普通用户注册数据:', registrationData)
+        response = await axios.post(`${API_BASE_URL}/register`, registrationData)
       }
-      
-      console.log('准备发送的注册数据:', registrationData)
-      
-      // 发送真实的注册请求（POST方式）
-      response = await axios.post(`${API_BASE_URL}/register`, registrationData)
       
       console.log('后端响应:', response.data)
       
@@ -749,6 +881,7 @@ const handleRegister = async () => {
 // 处理登出
 const handleLogout = () => {
   isLoggedIn.value = false
+  isManager.value = false // 重置管理员状态
   currentUser.value = { name: '', avatar_url: '' }  // 修改为avatar_url
   
   // 清除登录状态（但保留记住的密码，如果用户之前选择了记住密码）
@@ -772,6 +905,7 @@ onMounted(() => {
     
     // 恢复登录状态
     isLoggedIn.value = true
+    isManager.value = user.isManager || false // 恢复管理员状态
     currentUser.value = {
       name: user.username,
       avatar_url: user.avatar_url || null  // 使用数据库的avatar_url字段
@@ -1002,6 +1136,24 @@ onMounted(() => {
         font-size: 14px;
         font-weight: 500;
         margin-right: 5px;
+      }
+      
+      .admin-icon {
+        color: #ffd700; /* 金色 */
+        font-size: 14px;
+        margin-right: 5px;
+        margin-left: 3px;
+        filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5));
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+      
+      @keyframes glow {
+        from {
+          filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5));
+        }
+        to {
+          filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+        }
       }
       
       .arrow-down {
@@ -1780,6 +1932,81 @@ onMounted(() => {
         .terms-content li {
           font-size: 13px;
         }
+      }
+
+      /* 管理员提示信息样式 */
+      .manager-notice {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #666;
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: rgba(25, 118, 210, 0.05);
+        border-radius: 6px;
+        border-left: 3px solid #1976d2;
+      }
+
+      .manager-notice i {
+        color: #1976d2;
+      }
+
+      /* 管理员验证弹窗样式 */
+      .manager-verify-modal {
+        max-width: 400px;
+      }
+
+      .verify-notice {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+        border-radius: 12px;
+        border: 2px solid #e3f2fd;
+      }
+
+      .verify-notice i {
+        font-size: 32px;
+        color: #1976d2;
+        margin-bottom: 12px;
+        display: block;
+      }
+
+      .verify-notice p {
+        color: #333;
+        font-size: 14px;
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .verify-btn {
+        background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+        margin-right: 10px;
+      }
+
+      .cancel-btn {
+        background: linear-gradient(135deg, #666 0%, #999 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .cancel-btn:hover {
+        background: linear-gradient(135deg, #555 0%, #888 100%);
+        transform: translateY(-1px);
+      }
+
+      .error-text {
+        color: #f44336;
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
       }
 
     </style>
