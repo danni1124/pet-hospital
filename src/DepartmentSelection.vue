@@ -39,7 +39,7 @@
       <h1><i class="fas fa-hospital-alt"></i> 宠物医院科室导航</h1>
       <p>请选择科室，系统将为您导航至相应区域</p>
     </div>
-    <button @click="tiaozhuan">跳转</button>
+    <!-- <button @click="tiaozhuan">跳转</button> -->
     <div class="department-container">
       <div 
         v-for="dept in departments" 
