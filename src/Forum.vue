@@ -640,7 +640,7 @@
               <svg viewBox="0 0 24 24" class="upload-icon">
                 <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M8,15V13H16V15H8M8,11V9H16V11H8Z" />
               </svg>
-              <span>选择图片 (最多8张)</span>
+              <span>选择图片 (最多5张)</span>
             </button>
             <div class="preview-images" v-if="newPostImages.length > 0">
               <div class="image-preview" v-for="(image, index) in newPostImages" :key="index">
