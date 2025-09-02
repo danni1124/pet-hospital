@@ -162,10 +162,8 @@
 import { ref, inject, onMounted } from 'vue'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
-<<<<<<< HEAD
 //import jsPDF from 'jspdf'
-=======
->>>>>>> 9dac913427085c1ff25cff7182e36c5c14ff2fad
+
 
 // 从父组件获取用户信息
 const userInfo = inject('userInfo')
