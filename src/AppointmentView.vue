@@ -7,10 +7,10 @@
       <h1><i class="fas fa-hospital-alt"></i> 医院科室导航系统</h1>
     </div>
     
-    <!-- 新增排班管理按钮 -->
+    <!-- 新增排班管理按钮
     <button @click="goToScheduleManagement" class="floating-schedule-button">
       <i class="fas fa-calendar-plus"></i>
-    </button>
+    </button> -->
     
     <button @click="goBack" class="floating-back-button">
       <i class="fas fa-arrow-left"></i>
@@ -83,7 +83,7 @@
             </div>
           </div>
           <div class="search-container">
-            <div class="search-box">
+            <div class="search-box_qian">
               <i class="fas fa-search"></i>
               <input 
                 type="text" 
@@ -938,13 +938,13 @@ html, body, .app-container {
   margin-left: 20px; /* 添加间距 */
 }
 /* 搜索框样式 */
-.search-box {
+.search-box_qian {
   width: 350px;
   position: relative;
   
 }
 
-.search-box i {
+.search-box_qian i {
   position: absolute;
   left: 12px;
   top: 50%;
@@ -1639,7 +1639,7 @@ html, body, .app-container {
   gap: 15px;
   }
   
-  .search-box {
+  .search-box_qian {
   max-width: 100%;
   width: 100%;
   }
