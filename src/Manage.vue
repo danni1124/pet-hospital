@@ -777,6 +777,7 @@ import { ref, computed, onMounted } from 'vue';//ref, computed, onMounted: 从Vu
 import axios from 'axios';//axios: 导入HTTP客户端库
 import * as XLSX from 'xlsx';//XLSX: 导入Excel处理库
 
+
 export default {
 setup() {
 
@@ -942,7 +943,7 @@ setup() {
             
             applications.value = response.data.data.map(app => ({
               ...app,//...app 保留申请原有字段
-              read: '否',
+              
               pet: petsMap[app.petId] || {//pet: 尝试从 petsMap 中匹配宠物信息，如果找不到则使用默认模拟数据。
                 petId: app.petId,
                 petName: `宠物${app.petId}`,
@@ -1395,7 +1396,7 @@ setup() {
       const formData = new FormData();
       formData.append('file', file);
       // 根据接口，可以添加isAvatar参数，默认为false
-      // formData.append('isAvatar', false);
+      formData.append('isAvatar', true);
       
       try {
           const response = await axios.post(`${apiBaseUrl.value}/uploadImage`, formData, {
@@ -4014,13 +4015,13 @@ setup() {
   margin-top: 17px;
 }
 .application-status1.true {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: rgb(113, 191, 112);
+  color: #ffffff;
 }
 
 .application-status1.false {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: rgba(219, 105, 105, 0.856);
+  color: #ffffff;
 }
 .application-status.pending {
   background-color: #fff3cd;

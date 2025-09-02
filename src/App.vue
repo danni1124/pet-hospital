@@ -7,29 +7,33 @@
       
       <div class="nav-buttons">
         <router-link to="/" class="nav-btn" active-class="active" exact>
-          <i class="fas fa-home"></i> 首页
+          <i class="fas fa-home"></i>  首页
         </router-link>
         <NearbyStores :isManager="isManager" />
         <button @click="handleQuestionnaireClick" class="nav-btn" :class="{ active: $route.path === '/questionnaire' }">
-          <i class="fas fa-question"></i> 问卷
+          <i class="fas fa-question"></i>  问卷
         </button>
-        <router-link to="/manage" class="nav-btn" active-class="active">
-          <i class="fas fa-tasks"></i> 管理
-        </router-link>
         <router-link to="/shopment" class="nav-btn" active-class="active">
-          <i class="fas fa-tasks"></i> 购物
+          <i class="fas fa-tasks"></i>  购物
         </router-link>
          <router-link to="/department" class="nav-btn" active-class="active">
-            <i class="fas fa-chart-bar"></i> 预约
+            <i class="fas fa-chart-bar"></i>  预约
          </router-link>
         <router-link to="/forum" class="nav-btn" active-class="active" exact>
+<<<<<<< HEAD
           <i class="fas fa-bullhorn"></i>论坛
+=======
+          <i class="fas fa-forum"></i>  论坛
+>>>>>>> 9dac913427085c1ff25cff7182e36c5c14ff2fad
         </router-link>
         <router-link to="/introduction" class="nav-btn" active-class="active" exact>
-          <i class="fas fa-info"></i>概况
+          <i class="fas fa-info"></i>  概况
         </router-link>
-        <router-link to="/adaptpet" class="nav-btn" active-class="active" exact>
-          <i class="fas fa-info"></i>领养
+        <router-link to="/adaptpet" class="nav-btn" active-class="active"  exact>
+          <i class="fas fa-cat"></i>  领养
+        </router-link>
+        <router-link   router-link to="/manage" class="nav-btn" active-class="active" v-if="isManager">
+          <i class="fas fa-paw"></i>  管理
         </router-link>
       </div>
       
@@ -430,7 +434,7 @@ const isLoggedIn = ref(false)
 const isManager = ref(false) // 管理员状态标识
 const currentUser = ref({
   name: '',
-  avatar_url: ''  // 修改为avatar_url匹配数据库结构
+  avatar_url: ''
 })
 
 // 登录弹窗状态
@@ -704,7 +708,7 @@ const handleLogin = async () => {
       localStorage.setItem('currentUser', JSON.stringify({
         username: username,
         userId: userId,
-        avatar_url: userData.avatar_url || null,  // 使用数据库的avatar_url字段
+        avatar_url: userData.avatar_url || null,
         loginTime: new Date().toISOString(),
         isManager: loginForm.value.isManager, // 保存管理员状态
         userData: userData  // 保存完整的用户数据
@@ -721,18 +725,6 @@ const handleLogin = async () => {
       }
       
       alert('✅ ' + (response.data.msg || '登录成功！'))
-      
-      // 注释掉重复的localStorage设置
-      // 保存登录用户信息到 localStorage，使用安全的数据访问
-      // const userInfo = response.data.user || response.data.data || {}
-      // const safeUserId = userInfo.userId || userInfo.user_id || userInfo.id || userId
-      // const safeUsername = userInfo.username || username
-      
-      // localStorage.setItem('currentUser', JSON.stringify({
-      //   userId: safeUserId,   // 后端返回的用户ID，带有安全检查
-      //   username: safeUsername, // 后端返回的用户名，带有安全检查
-      //   avatar_url: userData.avatar_url || null,  // 使用数据库的avatar_url字段
-      // }))
 
       closeLoginModal()
     } else {
@@ -882,7 +874,7 @@ const handleRegister = async () => {
 const handleLogout = () => {
   isLoggedIn.value = false
   isManager.value = false // 重置管理员状态
-  currentUser.value = { name: '', avatar_url: '' }  // 修改为avatar_url
+  currentUser.value = { name: '', avatar_url: '' }
   
   // 清除登录状态（但保留记住的密码，如果用户之前选择了记住密码）
   localStorage.removeItem('currentUser')
@@ -908,7 +900,7 @@ onMounted(() => {
     isManager.value = user.isManager || false // 恢复管理员状态
     currentUser.value = {
       name: user.username,
-      avatar_url: user.avatar_url || null  // 使用数据库的avatar_url字段
+      avatar_url: user.avatar_url || null
     }
     
     console.log('已恢复当前登录状态:', isLoggedIn.value)

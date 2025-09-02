@@ -106,12 +106,7 @@ const fetchUserAppointments = async () => {
       }
       
     } catch (apiError) {
-      console.log('后端API不可用:', apiError.message)
-      
-      // API降级方案已注释，只保留真实API调用
-      // loadLocalAppointments(userId)
-      
-      // 显示空数据
+      console.error('获取预约记录API调用失败:', apiError.message)
       appointments.value = []
     }
     
@@ -170,51 +165,6 @@ const fetchDoctorInfo = async () => {
   }
 }
 
-// 本地降级数据函数（已注释，不再使用）
-/*
-const loadLocalAppointments = (userId) => {
-  // 模拟预约数据（根据数据库结构）
-  const mockAppointments = [
-    {
-      appointmentId: 1,
-      userId: userId,
-      doctorId: 1,
-      scheduleId: 1,
-      date: '2025-08-01',
-      time: '09:30',
-      appointmentNum: 'APT20250801001',
-      status: 'pending',
-      createdAt: '2025-07-28 09:12:00'
-    },
-    {
-      appointmentId: 2,
-      userId: userId,
-      doctorId: 2,
-      scheduleId: 2,
-      date: '2025-07-15',
-      time: '14:00',
-      appointmentNum: 'APT20250715002',
-      status: 'approved',
-      createdAt: '2025-07-10 14:23:00'
-    },
-    {
-      appointmentId: 3,
-      userId: userId,
-      doctorId: 3,
-      scheduleId: 3,
-      date: '2025-07-05',
-      time: '10:15',
-      appointmentNum: 'APT20250705003',
-      status: 'rejected',
-      createdAt: '2025-07-01 10:05:00'
-    }
-  ]
-  
-  appointments.value = mockAppointments
-  console.log('加载本地降级预约数据:', appointments.value.length, '条')
-}
-*/
-
 // 状态文本转换
 const getStatusText = (status) => {
   const statusMap = {
@@ -251,6 +201,67 @@ onMounted(() => {
   color: #666;
 }
 
+.empty-tip {
+  font-size: 14px;
+  color: #999;
+  margin-top: 8px;
+}
+
+.booking-card {
+  background: #f7fafd;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(41,122,184,0.08);
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-left: 6px solid #1976d2;
+  transition: box-shadow 0.2s;
+}
+.booking-card:hover {
+  box-shadow: 0 4px 24px rgba(41,122,184,0.16);
+}
+.booking-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+}
+.booking-label {
+  color: #305aa2;
+  font-weight: 600;
+  min-width: 100px;     /* 保持左侧部分宽度不变，与病例记录一致 */
+  display: inline-block;
+}
+.booking-value {
+  color: #222;
+  font-weight: 500;
+}
+.booking-status {
+  font-weight: bold;
+  padding: 2px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  background: #e3f0ff;
+  color: #1976d2;
+  border: 1.5px solid #b6d0f7;
+  transition: background 0.2s, color 0.2s;
+}
+.booking-status.pending {
+  background: #fffbe6;
+  color: #fbc02d;
+  border-color: #ffe082;
+}
+.booking-status.approved {
+  background: #e8f5e9;
+  color: #43a047;
+  border-color: #a5d6a7;
+}
+.booking-status.rejected {
+  background: #ffebee;
+  color: #d32f2f;
+  border-color: #ffcdd2;
+}
 .empty-tip {
   font-size: 14px;
   color: #999;
