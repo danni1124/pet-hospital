@@ -945,6 +945,9 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
+  background: linear-gradient(135deg, #3498db, #8e44ad);
+  color: white;
+  border-radius: 10px 10px 0 0;
 }
 
 .modal-header h2 {

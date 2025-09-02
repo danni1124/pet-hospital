@@ -1814,10 +1814,10 @@ setup() {
                       gender: pet.gender,
                       weight: pet.weight,
                       disease: pet.disease || '',
-                      image: imageUrl,
+                      image: imageUrl || pet.image,
                       adoptionStatus: pet.adoptionStatus,
                       description: pet.description || '',
-                      pdfCase: pdfUrl
+                      pdfCase: pdfUrl || pet.pdfCase 
                     };
                     console.log(pet);
                     const response = await axios.post(`${apiBaseUrl.value}/addPetList`, [petData]);
