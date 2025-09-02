@@ -246,12 +246,29 @@
 import { Calendar } from 'v-calendar';
 import axios from 'axios';
 import { API_BASE_URL } from '@/config/index';
-
+import { ref, onMounted, nextTick } from 'vue';
 export default {
   name: 'PetAppointment',
   components: {
     VCalendar: Calendar
   },
+  setup() {
+    const currentUserId = ref(null);
+    const currentUsername = ref('');
+
+     onMounted(() => { 
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      currentUserId.value = user.userId || 1;
+      currentUsername.value = user.username || '游客';
+      
+    });
+
+    return {
+      currentUserId,
+      currentUsername
+    };
+
+  },
   mounted() {
     const deptId = Number(this.$route.query.departmentId || this.$route.params.departmentId);
     this.departmentId = deptId;
@@ -529,7 +546,7 @@ export default {
         console.log('当前登录用户ID:', userId);
         
         const appointmentData = {
-          userId: userId,
+          userId: this.currentUserId,
           doctorId: this.selectedDoctor.id,
           scheduleId: this.selectedSlot.id,
           date: this.formatDate(this.selectedDateItem.date),

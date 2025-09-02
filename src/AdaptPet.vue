@@ -9,16 +9,16 @@
     </div>
 
     <!-- 搜索区域 -->
-    <div class="search-section">
+    <div class="search-section3">
       <div class="search-box">
         <input 
           type="text" 
-          class="search-input" 
+          class="search-input3" 
           v-model="searchQuery"
           placeholder="搜索宠物名称、品种或描述..."
           @keyup.enter="applyFilters"
         >
-        <button class="search-btn" @click="applyFilters">
+        <button class="search-btn3" @click="applyFilters">
           <i class="fas fa-search"></i> 搜索
         </button>
       </div>
@@ -432,6 +432,7 @@ export default {
       try {
         // 从本地存储获取用户ID或从登录状态获取
         const currentUserStr = localStorage.getItem('currentUser')
+        console.log(currentUserStr)
         if (!currentUserStr) {
           console.error('未找到登录用户信息')
           return
@@ -634,7 +635,7 @@ export default {
   margin: 0 auto;
 }
 
-.search-section {
+.search-section3 {
   background: white;
   border-radius: 10px;
   padding: 25px;
@@ -651,7 +652,7 @@ export default {
   overflow: hidden;
 }
 
-.search-input {
+.search-input3 {
   flex: 1;
   padding: 15px 25px;
   border: none;
@@ -660,7 +661,7 @@ export default {
   outline: none;
 }
 
-.search-btn {
+.search-btn3 {
   background: #2ecc71;
   color: white;
   border: none;
@@ -671,7 +672,7 @@ export default {
   transition: background 0.3s;
 }
 
-.search-btn:hover {
+.search-btn3:hover {
   background: #27ae60;
 }
 
@@ -1165,11 +1166,11 @@ export default {
     border-radius: 10px;
   }
   
-  .search-input {
+  .search-input3 {
     padding: 15px;
   }
   
-  .search-btn {
+  .search-btn3 {
     padding: 15px;
   }
   

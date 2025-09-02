@@ -1596,28 +1596,32 @@ body {
 .modal-body {
   padding: 24px;
   overflow-y: auto;
+  text-align: center;
 }
 
 .info-section {
   margin-bottom: 20px;
-  &:last-child {
-    margin-bottom: 0;
-  }
-  .section-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #6c5ce7;
-    margin-bottom: 6px;
-  }
-  p {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: #333;
-    &.intro {
-      text-align: justify;
-    }
-  }
+  text-align: center; /* 确保标题和内容都居中 */
 }
+
+.info-section .section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #6c5ce7;
+  margin-bottom: 8px;
+  display: block; /* 确保是块级元素 */
+  text-align: center;
+}
+
+.info-section p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #333;
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto; /* 让段落本身居中 */
+}
+
 
 
 

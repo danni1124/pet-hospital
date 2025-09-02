@@ -3,7 +3,7 @@
     
       <div class="search-section">
         <div class="search-container">
-          <div class="search-box">
+          <div class="searchs-boxs">
             <svg class="search-icon" viewBox="0 0 24 24">
               <path fill="currentColor" d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
             </svg>
@@ -559,7 +559,7 @@
         </svg>
       </span>
       
-      <div class="modal-header">
+      <div class="modal-heade">
         <h2 class="modal-title">分享你的宠物故事</h2>
         <p class="modal-subtitle">与社区分享你的经验、问题或可爱瞬间</p>
       </div>
@@ -640,7 +640,7 @@
               <svg viewBox="0 0 24 24" class="upload-icon">
                 <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M8,15V13H16V15H8M8,11V9H16V11H8Z" />
               </svg>
-              <span>选择图片 (最多8张)</span>
+              <span>选择图片 (最多5张)</span>
             </button>
             <div class="preview-images" v-if="newPostImages.length > 0">
               <div class="image-preview" v-for="(image, index) in newPostImages" :key="index">
@@ -2467,7 +2467,7 @@ export default {
   width: 100%;
 }
 
-.search-box {
+.searchs-boxs {
   position: relative;
   display: flex;
   align-items: center;
@@ -2478,7 +2478,7 @@ export default {
   border: 1px solid #e5e7eb;
 }
 
-.search-box:hover {
+.searchs-boxs:hover {
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
@@ -2489,7 +2489,7 @@ export default {
   color: #6b7280;
 }
 
-.search-box input {
+.searchs-boxs input {
   flex: 1;
   padding: 10px 15px 10px 10px;
   border: none;
@@ -2499,7 +2499,7 @@ export default {
   outline: none;
 }
 
-.search-box input::placeholder {
+.searchs-boxs input::placeholder {
   color: #9ca3af;
 }
 
@@ -2938,7 +2938,7 @@ export default {
     max-width: 90%;
   }
   
-  .modal-header {
+  .modal-heade {
     padding: 20px;
   }
   
@@ -3177,6 +3177,7 @@ export default {
   width: 100%;
   height: 300px;
   overflow: hidden;
+  
 }
 .carousel-track {
   display: flex;
@@ -4069,7 +4070,7 @@ textarea {
     /* 其他样式保持不变 */
   }
   
-  .search-box input {
+  .searchs-boxs input {
     padding: 8px 12px 8px 8px;
     font-size: 13px;
   }
@@ -4203,13 +4204,13 @@ textarea {
   
 }
 
-.modal-header {
+.modal-heade {
   padding: 25px 30px;
   background: linear-gradient(135deg, #FF7043, #FFA726);
   color: white;
   position: relative;
 }
-.modal-header::after {
+.modal-heade::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -4966,13 +4967,13 @@ textarea {
   padding: 0 20px;
 }
 
-.search-box {
+.searchs-boxs {
   width: 100%; /* 使用相对宽度 */
   max-width: 350px; /* 设置最大宽度 */
   /* 其他样式保持不变 */
 }
 
-.search-box {
+.searchs-boxs {
   position: relative;
   display: flex;
   align-items: center;
@@ -4984,7 +4985,7 @@ textarea {
   padding: 5px;
 }
 
-.search-box:focus-within {
+.searchs-boxs:focus-within {
   border-color: #fd79a8;
   box-shadow: 0 8px 25px rgba(253, 121, 168, 0.3);
   transform: translateY(-2px);
@@ -4998,7 +4999,7 @@ textarea {
   flex-shrink: 0;
 }
 
-.search-box input {
+.searchs-boxs input {
   flex: 1;
   padding: 12px 15px;
   border: none;
@@ -5008,7 +5009,7 @@ textarea {
   outline: none;
 }
 
-.search-box input::placeholder {
+.searchs-boxs input::placeholder {
   color: #b2bec3;
 }
 
@@ -5071,13 +5072,13 @@ textarea {
     font-size: 2rem;
   }
   
-  .search-box {
+  .searchs-boxs {
     flex-direction: column;
     border-radius: 20px;
     padding: 10px;
   }
   
-  .search-box input {
+  .searchs-boxs input {
     width: 100%;
     margin: 10px 0;
   }
