@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <header class="header">
       <div class="logo-area">
-        <div class="logo">
+        <div class="logo_qian">
           <i class="fas fa-paw"></i>
           <h1>爱宠健康商城</h1>
         </div>
@@ -21,13 +21,6 @@
           商品列表
         </button>
         <button 
-          @click="switchView('add-product')" 
-          :class="{ active: currentView === 'add-product' }"
-        >
-          <i class="fas fa-plus-circle"></i>
-          新增商品
-        </button>
-        <button 
           @click="switchView('cart')" 
           :class="{ active: currentView === 'cart' }"
           class="cart-btn"
@@ -40,7 +33,7 @@
     </header>
 
     <!-- 主内容区 -->
-    <main class="main-content">
+    <main class="main-content_qian">
       <!-- 商品列表视图 -->
       <div v-if="currentView === 'products'" class="product-view">
         <!-- 横幅区域 - 左右布局 -->
@@ -53,7 +46,7 @@
             </div>
             
             <!-- 右侧搜索框 -->
-            <div class="search-box">
+            <div class="search-box_qian">
               <input 
                 type="text" 
                 placeholder="搜索商品名称或描述..." 
@@ -104,7 +97,7 @@
         <div v-if="searchQuery" class="search-results">
           <div class="results-header">
             <h3>搜索"<span class="search-query">{{ searchQuery }}</span>"的结果</h3>
-            <button @click="clearSearch" class="clear-search-btn">
+            <button @click="clearSearch" class="clear-search-btn_qian">
               <i class="fas fa-times"></i> 清除搜索
             </button>
           </div>
@@ -115,15 +108,21 @@
               <div class="product-info">
                 <div class="title-tags">
                     <h3 class="product-title">{{ product.name }}</h3>
-                    <span v-if="product.hot" class="hot-tag">热卖</span>
+                    <span v-if="product.hot === '是'" class="hot-tag">热卖</span>
                   </div>
                 
                 <p class="description">{{ product.description }}</p>
                 <div class="price-area">
                   <p class="price">¥{{ product.price }}</p>
-                  <button @click="addToCart(product)" class="add-btn">
+                  <!-- <p class="stock">库存: {{ product.stock }}</p> -->
+                  <button 
+                    @click="addToCart(product)" 
+                    class="add-btn"
+                    :disabled="product.stock <= 0"
+                    :class="{ disabled: product.stock <= 0 }"
+                  >
                     <i class="fas fa-cart-plus"></i>
-                    加入购物车
+                    {{ product.stock <= 0 ? '缺货中' : '加入购物车' }}
                   </button>
                 </div>
               </div>
@@ -148,14 +147,20 @@
                 <div class="product-info">
                   <div class="title-tags">
                     <h3 class="product-title">{{ product.name }}</h3>
-                    <span v-if="product.hot" class="hot-tag">热卖</span>
+                    <span v-if="product.hot === '是'" class="hot-tag">热卖</span>
                   </div>
                   <p class="description">{{ product.description }}</p>
                   <div class="price-area">
                     <p class="price">¥{{ product.price }}</p>
-                    <button @click="addToCart(product)" class="add-btn">
+                    <!-- <p class="stock">库存: {{ product.stock }}</p> -->
+                    <button 
+                      @click="addToCart(product)" 
+                      class="add-btn"
+                      :disabled="product.stock <= 0"
+                      :class="{ disabled: product.stock <= 0 }"
+                    >
                       <i class="fas fa-cart-plus"></i>
-                      加入购物车
+                      {{ product.stock <= 0 ? '缺货中' : '加入购物车' }}
                     </button>
                   </div>
                 </div>
@@ -172,14 +177,20 @@
                 <div class="product-info">
                   <div class="title-tags">
                     <h3 class="product-title">{{ product.name }}</h3>
-                    <span v-if="product.hot" class="hot-tag">热卖</span>
+                    <span v-if="product.hot === '是'" class="hot-tag">热卖</span>
                   </div>
                   <p class="description">{{ product.description }}</p>
                   <div class="price-area">
                     <p class="price">¥{{ product.price }}</p>
-                    <button @click="addToCart(product)" class="add-btn">
+                    <!-- <p class="stock">库存: {{ product.stock }}</p> -->
+                    <button 
+                      @click="addToCart(product)" 
+                      class="add-btn"
+                      :disabled="product.stock <= 0"
+                      :class="{ disabled: product.stock <= 0 }"
+                    >
                       <i class="fas fa-cart-plus"></i>
-                      加入购物车
+                      {{ product.stock <= 0 ? '缺货中' : '加入购物车' }}
                     </button>
                   </div>
                 </div>
@@ -188,115 +199,7 @@
           </div>
         </div>
       </div>
-      <!-- 添加商品视图 -->
-      <div v-if="currentView === 'add-product'" class="add-product-view">
-        <div class="add-product-container">
-          <h2><i class="fas fa-plus-circle"></i> 添加新商品</h2>
-          
-          <div class="form-container">
-            <form @submit.prevent="submitProductForm" class="product-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="name">商品名称 *</label>
-                  <input
-                    type="text"
-                    id="name"
-                    v-model="newProduct.name"
-                    required
-                    placeholder="输入商品名称"
-                  >
-                </div>
-
-                <div class="form-group">
-                  <label for="price">价格 (¥) *</label>
-                  <input
-                    type="number"
-                    id="price"
-                    v-model.number="newProduct.price"
-                    min="0"
-                    step="0.01"
-                    required
-                    placeholder="0.00"
-                  >
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="description">商品描述 *</label>
-                <textarea
-                  id="description"
-                  v-model="newProduct.description"
-                  required
-                  rows="3"
-                  placeholder="输入商品详细描述"
-                ></textarea>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="category">商品分类 *</label>
-                  <select id="category" v-model="newProduct.category" required>
-                    <option value="" disabled>选择分类</option>
-                    <option value="medicine">药品/营养品</option>
-                    <option value="consumables">消耗品</option>
-                    <option value="toys">玩具零食</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label for="stock">库存数量 *</label>
-                  <input
-                    type="number"
-                    id="stock"
-                    v-model.number="newProduct.stock"
-                    min="0"
-                    required
-                    placeholder="0"
-                  >
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="imageUrl">商品图片URL</label>
-                <input
-                  type="url"
-                  id="imageUrl"
-                  v-model="newProduct.imageUrl"
-                  placeholder="https://example.com/image.jpg"
-                >
-                <div class="image-preview" v-if="newProduct.imageUrl">
-                  <img :src="newProduct.imageUrl" alt="预览图">
-                  <p>图片预览</p>
-                </div>
-              </div>
-
-              <div class="form-group checkbox-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="newProduct.isHot">
-                  <span class="checkmark"></span>
-                  标记为热卖商品
-                </label>
-              </div>
-
-              <div class="form-actions">
-                <button type="button" @click="resetProductForm" class="btn-secondary">
-                  <i class="fas fa-redo"></i> 重置
-                </button>
-                <button type="submit" :disabled="addingProduct" class="btn-primary">
-                  <i class="fas fa-plus" v-if="!addingProduct"></i>
-                  <i class="fas fa-spinner fa-spin" v-if="addingProduct"></i>
-                  {{ addingProduct ? '添加中...' : '添加商品' }}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div v-if="productMessage" :class="['message', productMessageType]">
-            <i :class="productMessageIcon"></i>
-            <span>{{ productMessage }}</span>
-          </div>
-        </div>
-      </div>
+      
       <!-- 购物车视图 -->
       <div v-if="currentView === 'cart'" class="cart-view">
         <div class="cart-container">
@@ -308,7 +211,7 @@
           </div>
           
           <div v-if="cart.length === 0" class="empty-cart">
-            <div class="empty-icon">
+            <div class="empty-icon_qian">
               <i class="fas fa-cart-arrow-down"></i>
             </div>
             <p>您的购物车还是空的</p>
@@ -324,6 +227,11 @@
                   <h3>{{ item.name }}</h3>
                   <div class="item-meta">
                     <p class="price">¥{{ item.price }}/件</p>
+                    <!-- <p class="stock">库存: {{ item.stock }}</p> -->
+                  </div>
+                  <div v-if="item.quantity > item.stock" class="stock-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    库存不足，最多可购买{{ item.stock }}件
                   </div>
                   <div class="item-actions">
                     <div class="quantity-control">
@@ -332,7 +240,8 @@
                       </button>
                       <input 
                         type="number" 
-                        min="1" 
+                        :min="1" 
+                        :max="item.stock"
                         v-model.number="item.quantity"
                         @change="updateQuantity({ id: item.id, quantity: item.quantity })"
                       >
@@ -368,11 +277,7 @@
                   <span>¥{{ cartTotal - discountAmount }}</span>
                 </div>
                 
-                <!-- <div class="coupon-area">
-                  <input type="text" placeholder="输入优惠码" v-model="couponCode">
-                  <button @click="applyCoupon">应用</button>
-                </div> -->
-                 <!-- 优惠券选择区域 -->
+                <!-- 优惠券选择区域 -->
                 <div class="coupon-area">
                   <div v-if="!selectedCoupon">
                     <button @click="openCouponModal" class="coupon-select-btn">
@@ -387,11 +292,17 @@
                   </div>
                 </div>
 
-                
-                
-                <button @click="switchView('checkout')" class="checkout-btn">
+                <button 
+                  @click="switchView('checkout')" 
+                  class="checkout-btn"
+                  :disabled="hasInsufficientStock"
+                >
                   去结算 <i class="fas fa-arrow-right"></i>
                 </button>
+                <div v-if="hasInsufficientStock" class="checkout-warning">
+                  <i class="fas fa-exclamation-circle"></i>
+                  部分商品库存不足，请调整数量后再结算
+                </div>
               </div>
             </div>
           </div>
@@ -482,9 +393,8 @@
             </div>
           </div>
         </transition>
-
-
       </div>  
+      
       <!-- 结算视图 -->
       <div v-if="currentView === 'checkout'" class="checkout-view">
         <div class="checkout-container">
@@ -519,6 +429,11 @@
                   <div class="item-info">
                     <h4>{{ item.name }}</h4>
                     <p>¥{{ item.price }} × {{ item.quantity }}</p>
+                    <!-- <p class="stock-info">库存: {{ item.stock }}</p> -->
+                    <div v-if="item.quantity > item.stock" class="stock-warning">
+                      <i class="fas fa-exclamation-triangle"></i>
+                      库存不足，最多可购买{{ item.stock }}件
+                    </div>
                   </div>
                   <div class="item-price">¥{{ formatPrice(item.price * item.quantity)  }}</div>
                 </div>
@@ -564,9 +479,17 @@
                 </div>
               </div>
               
-              <button @click="submitPayment" class="pay-now-btn">
+              <button 
+                @click="submitPayment" 
+                class="pay-now-btn"
+                :disabled="hasInsufficientStock"
+              >
                 <i class="fas fa-lock"></i> 立即支付 ¥{{ finalTotal  }}
               </button>
+              <div v-if="hasInsufficientStock" class="checkout-warning">
+                <i class="fas fa-exclamation-circle"></i>
+                部分商品库存不足，请返回购物车调整数量
+              </div>
             </div>
           </div>
         </div>
@@ -629,15 +552,27 @@
 <script>
 import { API_BASE_URL } from '@/config/index';
 import axios from 'axios';
+import { onMounted, ref } from 'vue'
 
-// 配置API基础URL
-//const API_BASE_URL = 'http://47.113.205.34:8085';
-//const API_BASE_URL = 'http://47.113.205.34:8085';
 export default {
+   setup() {
+    const currentUserId = ref(null);
+    const currentUsername = ref('');
+
+    onMounted(() => { 
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      currentUserId.value = user.userId || 1;
+      currentUsername.value = user.username || '游客';
+    });
+
+    return {
+      currentUserId,
+      currentUsername
+    };
+  },
   data() {
     return {
       showCouponModal:false,
-
       currentView: 'products',
       currentCategory: 'all',
       cart: [],
@@ -685,28 +620,11 @@ export default {
           icon: 'fas fa-money-bill-wave', 
           description: '就诊时现场支付' 
         }
-      ],
-
-      // 新增商品相关数据
-      newProduct: {
-
-        name: '',
-        description: '',
-        price: 0,
-        category: '',
-        imageUrl: '',
-        isHot: false,
-        stock: 0
-      },
-      addingProduct: false,
-      productMessage: '',
-      productMessageType: '',
-      productMessageIcon: '',
-      currentUser: null // 添加当前用户信息
+      ]
     }
   },
   computed: {
-     finalTotal() {
+    finalTotal() {
       const total = this.rawCartTotal - (this.discountAmount || 0);
       return this.formatPrice(total > 0 ? total : 0);
     },
@@ -724,7 +642,7 @@ export default {
       return this.products.filter(p => p.category === this.currentCategory)
     },
     hotProducts() {
-      return this.products.filter(p => p.hot)
+      return this.products.filter(p => p.hot === '是');
     },
     cartTotal() {
       // 返回格式化后的总价
@@ -753,31 +671,17 @@ export default {
       } else {
         return this.availableCoupons.filter(coupon => !this.isCouponApplicable(coupon));
       }
+    },
+    // 检查是否有库存不足的商品
+    hasInsufficientStock() {
+      return this.cart.some(item => item.quantity > item.stock);
     }
   },
   created() {
-    this.getCurrentUser();
     this.fetchProducts();
     this.fetchCart();
   },
   methods: {
-    // 获取当前登录用户
-    getCurrentUser() {
-      try {
-        const currentUserStr = localStorage.getItem('currentUser');
-        if (currentUserStr) {
-          this.currentUser = JSON.parse(currentUserStr);
-          console.log('当前登录用户:', this.currentUser);
-        } else {
-          console.warn('未找到登录用户信息');
-          this.currentUser = null;
-        }
-      } catch (error) {
-        console.error('获取用户信息失败:', error);
-        this.currentUser = null;
-      }
-    },
-    
     // API请求方法
     fetchProducts() {
       this.loading = true;
@@ -795,75 +699,10 @@ export default {
           this.loading = false;
         });
     },
-     openCouponModal() {
-      this.showCouponModal = true;
-      this.couponTab = 'available';
-      this.loadAvailableCoupons();
-    },
-     // 判断优惠券是否可用
-    isCouponApplicable(coupon) {
-        // 简单示例：检查购物车总金额是否达到优惠券最低要求
-        return this.cartTotal >= coupon.minAmount;
-    },
     
-    // 格式化日期
-    formatDate(dateString) {
-        const date = new Date(dateString);
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-    },
-     // 加载可用优惠券
-  async loadAvailableCoupons() {
-    this.loadingCoupons = true;
-    try {
-      // 使用当前登录用户的userId
-      if (!this.currentUser || !this.currentUser.userId) {
-        console.warn('未找到登录用户信息，无法加载优惠券');
-        this.availableCoupons = [];
-        return;
-      }
-      
-      const userId = this.currentUser.userId;
-      const response = await axios.get(`${API_BASE_URL}/getCouponByUserId`, {
-        params: { userId }
-      });
-      
-      if (response.data.code === 200) {
-        this.availableCoupons = response.data.data;
-        console.log('获取优惠卷');
-      } else {
-        console.error('获取优惠券失败:', response.data.msg);
-      }
-    } catch (error) {
-      console.error('获取优惠券失败:', error);
-    } finally {
-      this.loadingCoupons = false;
-    }
-  },
-  
-    // fetchCart() {
-    //   const userId = 1; // 假设用户ID为1
-    //   axios.get(`${API_BASE_URL}/getCartsByUserId`, {
-    //       params: {
-    //         userId: userId
-    //       }
-    //     })
-    //     .then((res) => {
-    //       this.cart = res.data.data;
-    //       console.log('获取购物车成功',res.data);
-    //     })
-    //     .catch((error) => {
-    //       console.error('获取购物车失败:', error);
-    //     });
-    // },
     fetchCart() {
-      // 检查是否有登录用户
-      if (!this.currentUser || !this.currentUser.userId) {
-        console.warn('未找到登录用户信息，无法获取购物车');
-        this.cart = [];
-        return;
-      }
-      
-      const userId = this.currentUser.userId;
+      const userId = this.currentUserId;
+      console.log('购物车',userId);
       axios.get(`${API_BASE_URL}/getCartsByUserId`, {
         params: { userId }
       })
@@ -885,7 +724,8 @@ export default {
                 price: product?.price || 0,
                 imageUrl: product?.imageUrl || '',
                 category: product?.category || '',
-                description: product?.description || ''
+                description: product?.description || '',
+                stock: product?.stock || 0 // 添加库存信息
               };
             });
 
@@ -899,92 +739,196 @@ export default {
         console.error('获取购物车失败:', error);
       });
     },
-    addToCart(product) {
-      // 检查是否有登录用户
-      if (!this.currentUser || !this.currentUser.userId) {
-        alert('请先登录再添加商品到购物车');
-        return;
-      }
-      
-      const userId = this.currentUser.userId;
-      // 检查商品是否已在购物车中
-      const existingItem = this.cart.find(item => item.productId === product.productId);
-      let request;
     
-      if (existingItem) {
-        // 更新数量
-       request = axios.post(`${API_BASE_URL}/updateQuantity`, null, {
-        params: {
-            cartId: existingItem.cartId,  // 使用购物车项的 ID
-            newQuantity: existingItem.quantity + 1
-        }
-      });
-        console.log('shuju1',existingItem.quantity);
-      } else {
-        // 添加新商品
-        const cartItem = {
-          // id: product.id,
-          // name: product.name,
-          // price: product.price,
-          // category: product.category,
-          // description: product.description,
-          userId: userId,
-          productId: product.productId,
-          quantity: 1
-        };
-        console.log('shuju',cartItem);
-        request = axios.post(`${API_BASE_URL}/addCart`, cartItem);
+    // addToCart(product) {
+    //   // 检查库存
+    //   if (product.stock <= 0) {
+    //     this.showNotification = true;
+    //     this.notificationMessage = `商品 ${product.name} 库存不足，无法添加`;
         
-     
-      } 
-       request
-        .then((res) => {
-          // if (existingItem) {
-          //   existingItem.quantity += 1;
-          // } else {
-          //   this.cart.push(res.data);
-          // }
-
-          console.log('购物车操作成功:', res.data);
+    //     setTimeout(() => {
+    //       this.showNotification = false;
+    //     }, 2000);
+    //     return;
+    //   }
       
-          // 重新获取购物车数据以保持同步
-          this.fetchCart();
-          
-          this.showNotification = true;
-          this.notificationMessage = `已添加 ${product.name} 到购物车`;
-          
-          setTimeout(() => {
-            this.showNotification = false;
-          }, 2000);
-        })
-        .catch((error) => {
-          console.error('添加到购物车失败:', error);
-          // 更详细的错误处理
-          if (error.response) {
-            console.error('错误状态:', error.response.status);
-            console.error('错误数据:', error.response.data);
-            
-            if (error.response.status === 500) {
-              this.notificationMessage = '服务器内部错误，请联系管理员';
-            }
-          } else if (error.request) {
-            console.error('没有收到响应:', error.request);
-            this.notificationMessage = '无法连接到服务器，请检查网络连接';
-          } else {
-            console.error('错误信息:', error.message);
-            this.notificationMessage = '添加到购物车失败，请重试';
-          }
-          this.showNotification = true;
-          this.notificationMessage = '添加到购物车失败，请重试';
-          
-          setTimeout(() => {
-            this.showNotification = false;
-          }, 2000);
-        });
-    },
+    //   const userId = this.currentUserId;
+    //   console.log('增加购物车',userId);
+    //   // 检查商品是否已在购物车中
+    //   const existingItem = this.cart.find(item => item.productId === product.productId);
+    //   let request;
     
+    //   if (existingItem) {
+    //     // 检查库存是否足够
+    //     if (existingItem.quantity >= existingItem.stock) {
+    //       this.showNotification = true;
+    //       this.notificationMessage = `已达到商品 ${product.name} 的最大库存限制`;
+          
+    //       setTimeout(() => {
+    //         this.showNotification = false;
+    //       }, 2000);
+    //       return;
+    //     }
+        
+    //     // 更新数量
+    //     request = axios.post(`${API_BASE_URL}/updateQuantity`, null, {
+    //       params: {
+    //           cartId: existingItem.cartId,  // 使用购物车项的 ID
+    //           newQuantity: existingItem.quantity + 1
+    //       }
+    //     });
+    //     console.log('shuju1',existingItem.quantity);
+    //   } else {
+    //     // 添加新商品
+    //     const cartItem = {
+    //       userId: userId,
+    //       productId: product.productId,
+    //       quantity: 1
+    //     };
+    //     console.log('shuju',cartItem);
+    //     request = axios.post(`${API_BASE_URL}/addCart`, cartItem);
+    //   } 
+      
+    //   request
+    //     .then((res) => {
+    //       console.log('购物车操作成功:', res.data);
+      
+    //       // 重新获取购物车数据以保持同步
+    //       this.fetchCart();
+          
+    //       this.showNotification = true;
+    //       this.notificationMessage = `已添加 ${product.name} 到购物车`;
+          
+    //       setTimeout(() => {
+    //         this.showNotification = false;
+    //       }, 2000);
+    //     })
+    //     .catch((error) => {
+    //       console.error('添加到购物车失败:', error);
+    //       // 更详细的错误处理
+    //       if (error.response) {
+    //         console.error('错误状态:', error.response.status);
+    //         console.error('错误数据:', error.response.data);
+            
+    //         if (error.response.status === 500) {
+    //           this.notificationMessage = '服务器内部错误，请联系管理员';
+    //         }
+    //       } else if (error.request) {
+    //         console.error('没有收到响应:', error.request);
+    //         this.notificationMessage = '无法连接到服务器，请检查网络连接';
+    //       } else {
+    //         console.error('错误信息:', error.message);
+    //         this.notificationMessage = '添加到购物车失败，请重试';
+    //       }
+    //       this.showNotification = true;
+          
+    //       setTimeout(() => {
+    //         this.showNotification = false;
+    //       }, 2000);
+    //     });
+    // },
+    async fetchCart() {
+  const userId = this.currentUserId;
+  if (!userId) return;
+
+  try {
+    // 1. 获取购物车原始数据
+    const { data: cartRes } = await axios.get(`${API_BASE_URL}/getCartsByUserId`, {
+      params: { userId }
+    });
+    const cartItems = cartRes.data || [];
+
+    // 2. 获取商品最新信息（含库存）
+    const { data: productRes } = await axios.get(`${API_BASE_URL}/getAllProducts`);
+    const allProducts = productRes.data || [];
+
+    // 3. 合并库存信息到购物车
+    this.cart = cartItems.map(item => {
+      const product = allProducts.find(p => p.productId === item.productId);
+      return {
+        ...item,
+        id: item.cartId,
+        name: product?.name || '未知商品',
+        price: product?.price || 0,
+        imageUrl: product?.imageUrl || '',
+        category: product?.category || '',
+        description: product?.description || '',
+        stock: product?.stock ?? 0 // 保留库存为 0 的情况
+      };
+    });
+  } catch (err) {
+    console.error('获取购物车失败:', err);
+  }
+},
+async addToCart(product) {
+  if (!product || product.stock <= 0) {
+    this.showNotification = true;
+    this.notificationMessage = `商品 ${product?.name || ''} 库存不足`;
+    setTimeout(() => (this.showNotification = false), 2000);
+    return;
+  }
+
+  const userId = this.currentUserId;
+  if (!userId) return;
+
+  // 1. 先同步购物车，确保数据最新
+  await this.fetchCart();
+
+  // 2. 判断是否已存在
+  const existing = this.cart.find(item => item.productId === product.productId);
+
+  let request;
+  if (existing) {
+    const newQty = existing.quantity + 1;
+    if (newQty > existing.stock) {
+      this.showNotification = true;
+      this.notificationMessage = `已达最大库存限制`;
+      setTimeout(() => (this.showNotification = false), 2000);
+      return;
+    }
+    // 更新数量
+    request = axios.post(`${API_BASE_URL}/updateQuantity`, null, {
+      params: { cartId: existing.cartId, newQuantity: newQty }
+    });
+  } else {
+    // 新增商品
+    request = axios.post(`${API_BASE_URL}/addCart`, {
+      userId,
+      productId: product.productId,
+      quantity: 1
+    });
+  }
+
+  try {
+    await request;
+    await this.fetchCart(); // 再次同步
+    this.showNotification = true;
+    this.notificationMessage = `已添加 ${product.name} 到购物车`;
+  } catch (err) {
+    console.error('添加失败:', err);
+    this.showNotification = true;
+    this.notificationMessage = '添加失败，请重试';
+  } finally {
+    setTimeout(() => (this.showNotification = false), 2000);
+  }
+},
     updateQuantity({ id, quantity }) {
       if (quantity < 1) quantity = 1;
+      
+      // 获取购物车项
+      const cartItem = this.cart.find(item => item.cartId === id);
+      if (!cartItem) return;
+      
+      // 检查库存
+      if (quantity > cartItem.stock) {
+        quantity = cartItem.stock;
+        this.showNotification = true;
+        this.notificationMessage = `库存不足，最大可购买数量为${cartItem.stock}`;
+        
+        setTimeout(() => {
+          this.showNotification = false;
+        }, 2000);
+      }
 
       axios.post(`${API_BASE_URL}/updateQuantity`, null, {
         params: {
@@ -1019,7 +963,6 @@ export default {
       });
     },
     
-    
     removeItem(id) {
       axios.post(`${API_BASE_URL}/deleteCartsById`, null, {
         params: {
@@ -1051,6 +994,35 @@ export default {
       });
     },
     
+    // 更新商品库存
+    async updateProductStock(productId, newStock) {
+      try {
+        // 首先获取当前商品信息
+        const { data } = await axios.get(`${API_BASE_URL}/getAllProducts`);
+        const product = data.data.find(p => p.productId === productId);
+        
+        if (product) {
+          // 更新库存
+          const updatedProduct = { ...product, stock: newStock };
+          const response = await axios.post(`${API_BASE_URL}/updateProduct`, updatedProduct);
+          
+          if (response.data.code === 200) {
+            console.log(`商品 ${productId} 库存更新成功，新库存: ${newStock}`);
+            return true;
+          } else {
+            console.error('库存更新失败:', response.data.msg);
+            return false;
+          }
+        } else {
+          console.error('未找到商品:', productId);
+          return false;
+        }
+      } catch (error) {
+        console.error('更新库存失败:', error);
+        return false;
+      }
+    },
+    
     applyCoupon(coupon) {
       // 检查购物车总金额是否满足优惠券最低使用条件
       if (this.cartTotal < coupon.minAmount) {
@@ -1080,18 +1052,20 @@ export default {
         this.showNotification = false;
       }, 2000);
     },
-    // 在methods中添加
+    
     formatPrice(price) {
       // 确保是数字类型，然后四舍五入到两位小数
       const num = typeof price === 'number' ? price : parseFloat(price);
       return parseFloat(num.toFixed(2));
     },
+    
     // 添加一个专门处理浮点数乘法的方法
     safeMultiply(a, b) {
       // 将数字转换为整数进行乘法运算，避免浮点数精度问题
       const multiplier = Math.pow(10, 2); // 保留2位小数
       return Math.round(a * multiplier * b) / multiplier;
     },
+    
     removeCoupon() {
       this.selectedCoupon = null;
       this.discountAmount = 0;
@@ -1102,6 +1076,7 @@ export default {
         this.showNotification = false;
       }, 2000);
     },
+    
     // 添加一个检查优惠券是否有效的方法
     checkCouponValidity() {
       if (this.selectedCoupon) {
@@ -1109,74 +1084,16 @@ export default {
       }
       return false;
     },
-//     submitPayment() {
-//   // 构建订单对象
-//   const order = {
-//     userId: 1, // 假设用户ID为1
-//     totalAmount: this.cartTotal - this.discountAmount,
-//     paymentMethod: this.selectedPayment,
-//     status: 1, // 假设1表示待支付状态，根据您的实际状态码调整
-//     createdAt: new Date().toISOString().split('T')[0] + ' ' + 
-//                new Date().toLocaleTimeString('zh-CN', {hour12: false})
-//   };
-  
-//   // 构建订单项列表
-//   const orderItems = this.cart.map(item => ({
-//     productId: item.productId,
-//     quantity: item.quantity,
-//     price: item.price
-//   }));
-  
-//   // 构建符合后端要求的请求数据
-//   const orderRequestDTO = {
-//     order: order,
-//     orderItem: orderItems
-//   };
-  
-//   console.log('提交的订单数据:', orderRequestDTO);
-  
-//   // 发送请求到正确的端点
-//   axios.post(`${API_BASE_URL}/addOrder`, orderRequestDTO)
-//     .then((response) => {
-//       console.log('订单创建成功:', response.data);
-      
-//       // 清空购物车（如果有清空购物车的接口）
-//       // 如果没有清空接口，可以逐个删除购物车项
-//       const deletePromises = this.cart.map(item => 
-//         axios.delete(`${API_BASE_URL}/deleteCartItem`, {
-//           params: { cartId: item.cartId }
-//         })
-//       );
-      
-//       return Promise.all(deletePromises);
-//     })
-//     .then(() => {
-//       // 清空本地购物车
-//       this.cart = [];
-//       this.showNotification = true;
-//       this.notificationMessage = '支付成功！订单正在处理中';
-      
-//       setTimeout(() => {
-//         this.showNotification = false;
-//         this.switchView('products');
-//       }, 2000);
-//     })
-//     .catch((error) => {
-//       console.error('提交订单失败:', error);
-//       console.error('错误详情:', error.response?.data);
-      
-//       this.showNotification = true;
-//       this.notificationMessage = '支付失败，请重试';
-      
-//       setTimeout(() => {
-//         this.showNotification = false;
-//       }, 2000);
-//     });
-// },
+        
     submitPayment() {
-      // 检查是否有登录用户
-      if (!this.currentUser || !this.currentUser.userId) {
-        alert('请先登录再进行购买');
+      // 检查库存是否足够
+      if (this.hasInsufficientStock) {
+        this.showNotification = true;
+        this.notificationMessage = '部分商品库存不足，请调整数量后再支付';
+        
+        setTimeout(() => {
+          this.showNotification = false;
+        }, 2000);
         return;
       }
       
@@ -1186,8 +1103,8 @@ export default {
       // 构建订单对象 - 确保字段名与Java类完全匹配
       const order = {
         orderNo: orderNo,
-        userId: this.currentUser.userId, // 使用当前登录用户的userId
-        totalAmount:this.finalTotal, // 使用 totalAmount 而不是 total
+        userId: this.currentUserId, // 假设用户ID为1
+        totalAmount: this.finalTotal, // 使用 totalAmount 而不是 total
         status: 1, // 假设1表示待支付状态
         paymentMethod: this.selectedPayment, // 确保字段名正确
         createdAt: new Date().toISOString().split('T')[0] + ' ' + 
@@ -1212,19 +1129,60 @@ export default {
       
       // 发送请求到正确的端点
       axios.post(`${API_BASE_URL}/addOrder`, orderRequestDTO)
-        .then((response) => {
+        .then(async (response) => {
           console.log('订单创建成功:', response.data);
           
-        // 替换原来的删除逻辑
-        const deletePromises = this.cart.map(item => 
-          axios.post(`${API_BASE_URL}/deleteCartsById`, null, {
-            params: { cartId: item.cartId }
-          }).catch(err => {
-            console.warn('删除购物车项失败:', err);
-            return Promise.resolve(); // 继续执行
-          })
+          // 订单创建成功后，更新库存
+          const updateStockPromises = this.cart.map(item => {
+            const newStock = item.stock - item.quantity;
+            return this.updateProductStock(item.productId, newStock);
+          });
           
-        );
+          // 等待所有库存更新完成
+          const results = await Promise.all(updateStockPromises);
+          const allSuccess = results.every(result => result === true);
+          
+          if (!allSuccess) {
+            console.warn('部分商品库存更新失败');
+            // 这里可以添加处理逻辑，比如记录日志或通知管理员
+          }
+          
+          // 在订单创建成功后，标记优惠券为已使用
+          if (this.selectedCoupon) {
+              const couponData = {
+                  couponId: this.selectedCoupon.couponId,
+                  userId: this.currentUserId, // 假设用户ID为1，实际应从登录状态获取
+                  status: '是' // 根据您的接口文档设置正确的状态值
+              };
+              console.log('couponData',couponData);
+              axios.post(`${API_BASE_URL}/updateCouponUsed`, null, {
+                  params: couponData
+              })
+              .then(response => {
+                 const index = this.availableCoupons.findIndex(c => 
+                    c.couponId === this.selectedCoupon.couponId
+                  );
+                  if (index !== -1) {
+                    this.availableCoupons[index].status = '是';
+                  }
+                  console.log('优惠券标记为已使用:', response.data);
+              })
+              .catch(error => {
+                  console.error('标记优惠券失败:', error);
+                  // 可以添加错误处理，但不影响主流程
+              });
+          }
+          
+          // 替换原来的删除逻辑
+          const deletePromises = this.cart.map(item => 
+            axios.post(`${API_BASE_URL}/deleteCartsById`, null, {
+              params: { cartId: item.cartId }
+            }).catch(err => {
+              console.warn('删除购物车项失败:', err);
+              return Promise.resolve(); // 继续执行
+            })
+          );
+          
           console.log('删除购物车成功');
           return Promise.all(deletePromises);
         })
@@ -1233,7 +1191,7 @@ export default {
           this.cart = [];
           this.showNotification = true;
           this.notificationMessage = '支付成功！订单正在处理中';
-          
+          this.fetchProducts(); // ✅ 强制刷新商品列表
           setTimeout(() => {
             this.showNotification = false;
             this.switchView('products');
@@ -1248,7 +1206,7 @@ export default {
             errorMessage = error.response.data.message || errorMessage;
             console.error('服务器返回的错误:', error.response.data);
           }
-          
+        
           this.showNotification = true;
           this.notificationMessage = errorMessage;
           
@@ -1260,144 +1218,90 @@ export default {
         
     // 其他方法保持不变
     switchView(view) {
+      this.searchQuery = '';
       this.currentView = view;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
-    // 新增商品相关方法
-    submitProductForm() {
-      this.addingProduct = true;
-      this.productMessage = '';
+    
+    openCouponModal() {
+      this.showCouponModal = true;
+      this.couponTab = 'available';
+      this.loadAvailableCoupons();
+    },
+    
+     // 判断优惠券是否可用
+    isCouponApplicable(coupon) {
+      // 检查优惠券是否已使用
+      if (coupon.used === "是") {
+        return false;
+      }
       
-     
-        // 根据Java类属性名构建请求数据
-        const productData = {
-          name: this.newProduct.name,
-          description: this.newProduct.description,
-          price: this.newProduct.price,
-          category: this.newProduct.category,
-          imageUrl: this.newProduct.imageUrl || this.getDefaultProductImage(),
-          // is_hot: this.newProduct.isHot,
-          hot: this.newProduct.isHot ? '是' : '否',
-          stock: this.newProduct.stock
-        };
-        
-        // 发送POST请求到服务器
-        
-       console.log('productData',productData);
-      
-       // 使用axios发送POST请求，采用Promise链式调用
-      axios.post(`${API_BASE_URL}/addProduct`, productData)
-        .then((res) => {
-          this.showProductMessage('商品添加成功!', 'success');
-          this.resetProductForm();
-          console.log('tianjiachenggong1',res);
-          // 2秒后自动切换回商品列表
-          setTimeout(() => {
-            this.switchView('products');
-          }, 2000);
-        })
-        .catch((error) => {
-          console.error('添加商品失败:', error);
-          const errorMsg = error.response?.data?.message || error.message;
-          this.showProductMessage(`添加失败: ${errorMsg}`, 'error');
-        })
-        .finally(() => {
-          this.addingProduct = false;
+      // 检查购物车总金额是否达到优惠券最低要求
+      return this.cartTotal >= coupon.minAmount;
+    },
+    
+    // 格式化日期
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    },
+    
+     // 加载可用优惠券
+    async loadAvailableCoupons() {
+      this.loadingCoupons = true;
+      try {
+        const userId = this.currentUserId; // 假设用户ID为2
+        console.log('youhuijuanid',userId);
+        // 首先获取用户的所有优惠券
+        const response = await axios.get(`${API_BASE_URL}/getCouponByUserId`, {
+          params: { userId }
         });
-    },
-    
-    resetProductForm() {
-      this.newProduct = {
-        name: '',
-        description: '',
-        price: 0,
-        category: '',
-        imageUrl: '',
-        isHot: false,
-        stock: 0
-      };
-      this.productMessage = '';
-    },
-    
-    getDefaultProductImage() {
-      // 根据分类返回默认图片
-      const defaultImages = {
-        medicine: 'https://images.unsplash.com/photo-1593369196682-6d8ec9ff3ae0?auto=format&fit=crop&w=300&q=80',
-        consumables: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=300&q=80',
-        toys: 'https://images.unsplash.com/photo-1559131397-f94da358a7b2?auto=format&fit=crop&w=300&q=80'
-      };
-      
-      return defaultImages[this.newProduct.category] || 'https://via.placeholder.com/300';
-    },
-    
-    showProductMessage(text, type) {
-      this.productMessage = text;
-      this.productMessageType = type;
-      this.productMessageIcon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
-      
-      // 5秒后自动清除消息
-      setTimeout(() => {
-        this.productMessage = '';
-      }, 5000);
-    },
-
-    
-    // selectCategory(category) {
-    //  console.log('选择分类:', category); // 添加日志
-    //   this.currentCategory = category;
-      
-    //   // 如果是"全部"分类，获取所有商品
-    //   if (category === 'all') {
-    //     this.fetchProducts();
-    //     return;
-    //   }
-      
-    //   // 否则调用分类API获取特定分类的商品
-    //   this.loading = true;
-    //   this.error = '';
-      
-    //   // 使用axios发送请求获取分类商品
-    //   axios.get(`${API_BASE_URL}/getProductsByCategory`, {
-    //     params: {
-    //       category: category
-    //     }
-    //   })
-    //   .then((res) => {
-    //     // 假设返回数据结构与/products相同
-    //     console.log('获取分类商品成功:', res.data)
-    //     this.products = res.data.data;
-    //   })
-    //   .catch((error) => {
-    //     console.error('获取分类商品失败:', error);
-    //     this.error = '获取分类商品失败，请稍后重试';
-    //   })
-    //   .finally(() => {
-    //     this.loading = false;
-    //   });
-      
-    //   // 滚动到商品列表区域
-    //   this.$nextTick(() => {
-    //     const headerHeight = document.querySelector('.header').offsetHeight;
-    //     let targetElement;
-    //     let scrollOffset = 70;
-
-    //     if (category === 'all') {
-    //       targetElement = document.getElementById('hot-section');
-    //     } else {
-    //       targetElement = document.getElementById('category-products');
-    //     }
         
-    //     if (targetElement) {
-    //       const elementPosition = targetElement.getBoundingClientRect().top;
-    //       const offsetPosition = elementPosition + window.pageYOffset - headerHeight - scrollOffset;
+        if (response.data.code === 200) {
+          // 对于每个优惠券，获取其使用状态
+          const couponPromises = response.data.data.map(async (coupon) => {
+            try {
+              // 调用获取用户优惠券详情的接口
+              const userCouponResponse = await axios.get(`${API_BASE_URL}/getUserCoupon`, {
+                params: {
+                  userId: userId,
+                  couponId: coupon.couponId
+                }
+              });
+              console.log('userCouponResponse',userCouponResponse);
+              console.log('优惠卷',userCouponResponse);
+              if (userCouponResponse.data.code === 200) {
+                // 合并优惠券基本信息和用户使用状态
+                return {
+                  ...coupon,
+                  used: userCouponResponse.data.data.used // 假设返回的数据中有used字段
+                };
+              }
+              return coupon; // 如果获取失败，返回原始优惠券信息
+            } catch (error) {
+              console.error(`获取优惠券 ${coupon.couponId} 使用状态失败:`, error);
+              return coupon; // 如果获取失败，返回原始优惠券信息
+            }
+          });
           
-    //       window.scrollTo({
-    //         top: offsetPosition,
-    //         behavior: 'smooth'
-    //       });
-    //     }
-    //   });
-    // },
+          // 等待所有优惠券状态查询完成
+          const couponsWithStatus = await Promise.all(couponPromises);
+          
+          // 过滤掉已使用的优惠券
+          this.availableCoupons = couponsWithStatus.filter(
+            coupon => coupon.used === "否"
+          );
+          console.log('获取可用优惠券', this.availableCoupons);
+        } else {
+          console.error('获取优惠券失败:', response.data.msg);
+        }
+      } catch (error) {
+        console.error('获取优惠券失败:', error);
+      } finally {
+        this.loadingCoupons = false;
+      }
+    },
+    
     selectCategory(category) {
       console.log('选择分类:', category);
       this.currentCategory = category;
@@ -1465,10 +1369,16 @@ export default {
         behavior: 'smooth'
       });
     },
+    
     getPlaceholderImage(product) {
-      if (product.imageUrl) {
+     if (product.imageUrl) {
+      // 如果图片URL是完整URL（包含http或https），直接返回
+      if (product.imageUrl.startsWith('http')) {
         return product.imageUrl;
       }
+      // 否则，添加API基础URL
+      return `${API_BASE_URL}${product.imageUrl}`;
+    }
       const images = {
         medicine: 'https://images.unsplash.com/photo-1593369196682-6d8ec9ff3ae0?auto=format&fit=crop&w=300&q=80',
         consumables: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=300&q=80',
@@ -1497,23 +1407,9 @@ export default {
     }
   },
   watch: {
-    cartTotal(newTotal, oldTotal) {
-      // 当总价变化且已应用优惠券时，重新计算折扣
-      if (this.selectedCoupon) {
-        let discount = 0;
-        if (this.selectedCoupon.discountType === 'percent') {
-          discount = newTotal * (this.selectedCoupon.discountValue / 100);
-        } else {
-          // 固定金额折扣
-          discount = this.selectedCoupon.discountValue;
-        }
-        
-        // 保留两位小数
-        this.discountAmount = this.formatPrice(discount);
-      }
+    currentUserId(id) {
+      if (id) this.fetchCart(id);
     },
-  //   deep:true
-  // }
     rawCartTotal: {
       handler(newTotal) {
         // 当总价变化且已应用优惠券时，重新计算折扣
@@ -1537,15 +1433,58 @@ export default {
 }
 </script>
 
-
-
-
-
-
 <style>
-/* 注释掉可能有问题的Google Fonts导入 */
-/* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap'); */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+/* 库存相关样式 */
+.stock {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 5px 0;
+}
+
+.stock-warning {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stock-info {
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  margin: 3px 0;
+}
+
+.checkout-warning {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  color: #856404;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-btn.disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.add-btn.disabled:hover {
+  background-color: #bdc3c7;
+  transform: none;
+}
+
+
+
+
 
 * {
   margin: 0;
@@ -1574,7 +1513,7 @@ export default {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Noto Sans SC', sans-serif;
   background-color: #f5f9f7;
   color: var(--dark);
   line-height: 1.6;
@@ -1604,18 +1543,18 @@ body {
   padding: 15px 5%;
 }
 
-.logo {
+.logo_qian {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.logo h1 {
+.logo_qian h1 {
   font-size: 1.8rem;
   font-weight: 700;
 }
 
-.logo i {
+.logo_qian i {
   font-size: 2rem;
   background: rgba(255, 255, 255, 0.9);
   color: var(--primary);
@@ -1735,7 +1674,7 @@ body {
 }
 
 /* 主内容区 */
-.main-content {
+.main-content_qian {
   flex: 1;
   padding: 20px 5%;
 }
@@ -1782,7 +1721,7 @@ body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.search-box {
+.search-box_qian {
   display: flex;
   max-width: 600px;
   margin: 0 auto;
@@ -1791,14 +1730,14 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.search-box input {
+.search-box_qian input {
   flex: 1;
   padding: 15px 20px;
   border: none;
   font-size: 1.1rem;
 }
 
-.search-box .clear-btn {
+.search-box_qian .clear-btn {
   background: var(--light-gray);
   color: var(--gray);
   padding: 0 15px;
@@ -1806,11 +1745,11 @@ body {
   cursor: pointer;
 }
 
-.search-box .clear-btn:hover {
+.search-box_qian .clear-btn:hover {
   background: #dcdcdc;
 }
 
-.search-box button:last-child {
+.search-box_qian button:last-child {
   background: var(--accent);
   color: white;
   border: none;
@@ -1819,7 +1758,7 @@ body {
   transition: var(--transition);
 }
 
-.search-box button:last-child:hover {
+.search-box_qian button:last-child:hover {
   background: var(--accent-dark);
 }
 
@@ -2082,7 +2021,7 @@ body {
   box-shadow: var(--shadow);
 }
 
-.empty-icon {
+.empty-icon_qian {
   font-size: 4rem;
   color: var(--light-gray);
   margin-bottom: 20px;
@@ -2760,7 +2699,7 @@ body {
   margin: 0 5px;
 }
 
-.clear-search-btn {
+.clear-search-btn_qian {
   background: var(--light-gray);
   border: none;
   border-radius: var(--radius-sm);
@@ -2773,7 +2712,7 @@ body {
   gap: 5px;
 }
 
-.clear-search-btn:hover {
+.clear-search-btn_qian:hover {
   background: #d8d8d8;
 }
 
@@ -2877,7 +2816,7 @@ body {
     text-align: center;
   }
   
-  .search-box {
+  .search-box_qian {
     width: 100%;
   }
 
@@ -2917,7 +2856,7 @@ body {
   border-bottom: 1px solid #eee;
 }
 
-.form-container {
+.form-container_qian {
   margin-bottom: 20px;
 }
 
@@ -3026,7 +2965,7 @@ body {
   color: #666;
 }
 
-.form-actions {
+.form-actions_qian {
   display: flex;
   justify-content: flex-end;
   gap: 15px;
@@ -3098,7 +3037,7 @@ body {
     gap: 15px;
   }
   
-  .form-actions {
+  .form-actions_qian {
     flex-direction: column;
   }
   
@@ -3499,5 +3438,60 @@ body {
     justify-content: center;
     border-top: 1px dashed #eee;
   }
+}
+.upload-area_qian {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s;
+  position: relative;
+}
+
+.upload-area_qian:hover {
+  border-color: #42b983;
+}
+
+.upload-area_qian.has-image {
+  border-style: solid;
+  padding: 0;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-placeholder {
+  color: #999;
+}
+
+.upload-placeholder i {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.upload-area_qian .image-preview {
+  position: relative;
+}
+
+.upload-area_qian .image-preview img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  color: #ff6b6b;
 }
 </style>

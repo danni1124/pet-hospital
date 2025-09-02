@@ -34,17 +34,17 @@
         <div v-if="mode === 'doctor'" class="section doctor-section">
           <div class="section-header">
             <h2><i class="fas fa-user-md"></i> 医生信息管理</h2>
-            <p>添加和管理医生基本信息</p>
+            <!-- <p>添加和管理医生基本信息</p> -->
           </div>
 
           <div class="form-card">
             <div class="form-grid">
-              <div class="form-group">
+              <div class="form-group_qian">
                 <label>姓名</label>
                 <input v-model="docForm.name" placeholder="例：张医生" class="form-input" />
               </div>
 
-              <div class="form-group">
+              <div class="form-group_qian">
                 <label>职称</label>
                 <select v-model="docForm.title" class="form-select">
                   <option disabled value="">请选择职称</option>
@@ -55,12 +55,12 @@
                 </select>
               </div>
 
-              <div class="form-group">
+              <div class="form-group_qian">
                 <label>挂号费（元）</label>
                 <input v-model.number="docForm.fee" type="number" placeholder="例：50" class="form-input" />
               </div>
 
-              <div class="form-group">
+              <div class="form-group_qian">
                 <label>所属科室</label>
                 <select v-model.number="docForm.departmentId" class="form-select">
                   <option disabled value="">请选择科室</option>
@@ -70,24 +70,24 @@
                 </select>
               </div>
 
-              <div class="form-group full-width">
+              <div class="form-group_qian full-width">
                 <label>专长（用中文逗号分隔）</label>
                 <input v-model="docForm.expertise" placeholder="例：心血管疾病,老年病" class="form-input" />
               </div>
 
-              <div class="form-group full-width">
+              <div class="form-group_qian full-width">
                 <label>诊室位置</label>
                 <input v-model="docForm.location" placeholder="例：门诊楼3楼305" class="form-input" />
               </div>
 
-              <div class="form-group full-width">
+              <div class="form-group_qian full-width">
                 <label>医生简介</label>
                 <textarea v-model="docForm.brief" placeholder="例：拥有20年临床经验，擅长疑难病症诊治" rows="3" class="form-textarea"></textarea>
               </div>
 
-              <div class="form-group full-width">
+              <div class="form-group_qian full-width">
                 <label>头像上传</label>
-                <div class="upload-area" @click="triggerUpload" :class="{ 'has-image': docForm.avatar }">
+                <div class="upload-area_qian" @click="triggerUpload" :class="{ 'has-image': docForm.avatar }">
                   <input 
                     type="file" 
                     accept="image/*" 
@@ -99,9 +99,9 @@
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>点击上传医生头像</p>
                   </div>
-                  <div v-else class="image-preview">
+                  <div v-else class="image-preview_qian">
                     <img :src="getFullImageUrl(docForm.avatar)" alt="预览">
-                    <button @click.stop="removeImage" class="remove-image-btn">
+                    <button @click.stop="removeImage" class="remove-image-btn_qian">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
@@ -109,9 +109,15 @@
               </div>
             </div>
 
-            <button @click="addDoctor" class="submit-btn">
-              <i class="fas fa-plus"></i> 添加医生
-            </button>
+            <div class="form-actions_qian">
+              <button v-if="editingDoctor" @click="cancelEdit" class="cancel-btn">
+                <i class="fas fa-times"></i> 取消编辑
+              </button>
+              <button @click="saveDoctor" class="submit-btn">
+                <i class="fas" :class="editingDoctor ? 'fa-save' : 'fa-plus'"></i> 
+                {{ editingDoctor ? '更新医生信息' : '添加医生' }}
+              </button>
+            </div>
           </div>
 
           <!-- 医生列表 -->
@@ -130,10 +136,10 @@
                   </div>
                 </div>
                 <div class="doctor-actions">
-                  <button @click="editDoctor(d)" class="action-btn edit">
+                  <button @click="editDoctor(d)" class="action-btn_qian edit">
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button @click="deleteDoctor(d.doctorId)" class="action-btn delete">
+                  <button @click="deleteDoctor(d.doctorId)" class="action-btn_qian delete">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -181,7 +187,7 @@
               </div>
               
               <div class="filter-buttons">
-                <button @click="applyFilters" class="submit-btn filter-btn">
+                <button @click="applyFilters" class="submit-btn_qian filter-btn">
                   <i class="fas fa-filter"></i> 应用筛选
                 </button>
                 
@@ -192,43 +198,54 @@
             </div>
           </div>
 
-          <!-- 添加排班表单 -->
-          <div class="form-card">
-            <h3>添加新排班</h3>
-            <div class="form-grid compact">
-              <div class="form-group">
-                <label>选择医生</label>
-                <select v-model.number="scheduleForm.doctorId" class="form-select">
-                  <option disabled value="">请选择医生</option>
-                  <option v-for="d in doctors" :key="d.doctorId" :value="d.doctorId">
-                    {{ d.name }} - {{ getDepartmentName(d.departmentId) }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>排班日期</label>
-                <input type="date" v-model="scheduleForm.scheduleDate" class="form-input" />
-              </div>
-
-              <div class="form-group">
-                <label>时间段</label>
-                <select v-model="scheduleForm.timeSlot" class="form-select">
-                  <option disabled value="">请选择时间段</option>
-                  <option v-for="time in timeSlots" :key="time" :value="time">{{ time }}</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>号源上限（人）</label>
-                <input v-model.number="scheduleForm.maxCapacity" type="number" min="1" placeholder="例：10" class="form-input" />
-              </div>
+         <!-- 添加/编辑排班表单 -->
+        <div class="form-card">
+          <h3>{{ editingSchedule ? '编辑排班' : '添加新排班' }}</h3>
+          <div v-if="editingSchedule" class="edit-notice">
+            <i class="fas fa-info-circle"></i>
+            正在编辑排班：{{ getDoctorName(editingSchedule.doctorId) }} - {{ formatDate(editingSchedule.scheduleDate) }} - {{ editingSchedule.timeSlot }}
+          </div>
+          <div class="form-grid compact">
+            <div class="form-group_qian">
+              <label>选择医生</label>
+              <select v-model.number="scheduleForm.doctorId" class="form-select" :disabled="editingSchedule">
+                <option disabled value="">请选择医生</option>
+                <option v-for="d in doctors" :key="d.doctorId" :value="d.doctorId">
+                  {{ d.name }} - {{ getDepartmentName(d.departmentId) }}
+                </option>
+              </select>
             </div>
 
-            <button @click="addSchedule" class="submit-btn">
-              <i class="fas fa-plus"></i> 添加排班
+            <div class="form-group_qian">
+              <label>排班日期</label>
+              <input type="date" v-model="scheduleForm.scheduleDate" class="form-input" />
+            </div>
+
+            <div class="form-group_qian">
+              <label>时间段</label>
+              <select v-model="scheduleForm.timeSlot" class="form-select">
+                <option disabled value="">请选择时间段</option>
+                <option v-for="time in timeSlots" :key="time" :value="time">{{ time }}</option>
+              </select>
+            </div>
+
+            <div class="form-group_qian">
+              <label>号源上限（人）</label>
+              <input v-model.number="scheduleForm.maxCapacity" type="number" min="1" placeholder="例：10" class="form-input" />
+            </div>
+          </div>
+
+          <div class="form-actions_qian">
+            <button v-if="editingSchedule" @click="cancelEditSchedule" class="cancel-btn">
+              <i class="fas fa-times"></i> 取消编辑
+            </button>
+            <button @click="editingSchedule ? updateSchedule() : addSchedule()" class="submit-btn_qian">
+              <i class="fas" :class="editingSchedule ? 'fa-save' : 'fa-plus'"></i> 
+              {{ editingSchedule ? '更新排班' : '添加排班' }}
             </button>
           </div>
+        </div>
+
 
           <!-- 排班列表 -->
           <div class="schedule-list" v-if="groupedSchedules.length">
@@ -268,10 +285,10 @@
                         <span class="max">{{ s.maxCapacity }}</span>
                       </div>
                       <div class="slot-actions">
-                        <button @click="editSchedule(s)" class="action-btn edit">
+                        <button @click="editSchedule(s)" class="action-btn_qian edit">
                           <i class="fas fa-edit"></i>
                         </button>
-                        <button @click="deleteSchedule(s.scheduleId)" class="action-btn delete">
+                        <button @click="deleteSchedule(s.scheduleId)" class="action-btn_qian delete">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -459,6 +476,112 @@ export default {
   },
   
   methods: {
+     // 添加获取医生姓名的方法
+    getDoctorName(doctorId) {
+      const doctor = this.doctors.find(d => d.doctorId === doctorId);
+      return doctor ? doctor.name : '未知医生';
+    },
+    
+    // 编辑排班
+    editSchedule(schedule) {
+      this.editingSchedule = schedule;
+      this.scheduleForm = { ...schedule };
+    },
+    
+    // 取消编辑排班
+    cancelEditSchedule() {
+      this.editingSchedule = null;
+      this.resetScheduleForm();
+    },
+    
+    // 重置排班表单
+    resetScheduleForm() {
+      const today = new Date().toISOString().slice(0, 10);
+      this.scheduleForm = {
+        doctorId: null,
+        scheduleDate: today,
+        timeSlot: '',
+        maxCapacity: 10
+      };
+    },
+    
+    // 更新排班（通过先删除再添加的方式）
+    async updateSchedule() {
+      if (!this.validateScheduleForm()) return;
+      
+      // 检查冲突（排除自身）
+      if (this.checkScheduleConflict(
+        this.scheduleForm.doctorId,
+        this.scheduleForm.scheduleDate,
+        this.scheduleForm.timeSlot,
+        this.editingSchedule.scheduleId // 排除当前正在编辑的排班
+      )) {
+        alert('该医生在此时间段已有其他排班，请选择其他时间');
+        return;
+      }
+      
+      try {
+        // 先删除旧排班
+        await axios.post(`${API_BASE_URL}/deleteScheduleById?scheduleId=${this.editingSchedule.scheduleId}`);
+        
+        // 再添加新排班
+        const payload = { 
+          doctorId: Number(this.scheduleForm.doctorId),
+          scheduleDate: this.scheduleForm.scheduleDate,
+          timeSlot: this.scheduleForm.timeSlot,
+          maxCapacity: Number(this.scheduleForm.maxCapacity),
+          booked: 0 
+        };
+        
+        const response = await axios.post(`${API_BASE_URL}/addSchedule`, payload);
+        
+        if (response.data.code === 200) {
+          // 更新成功后重新获取当前筛选条件下的排班
+          this.applyFilters();
+          this.editingSchedule = null;
+          this.resetScheduleForm();
+          alert('排班更新成功');
+        } else {
+          alert('排班更新失败: ' + response.data.msg);
+          // 如果添加失败，尝试恢复旧排班
+          await this.restoreOldSchedule();
+        }
+      } catch (error) {
+        console.error('更新排班失败:', error);
+        alert('更新排班失败，请检查网络连接');
+        // 如果出现异常，尝试恢复旧排班
+        await this.restoreOldSchedule();
+      }
+    },
+    
+    // 恢复旧排班（用于错误处理）
+    async restoreOldSchedule() {
+      try {
+        const payload = { 
+          doctorId: Number(this.editingSchedule.doctorId),
+          scheduleDate: this.editingSchedule.scheduleDate,
+          timeSlot: this.editingSchedule.timeSlot,
+          maxCapacity: Number(this.editingSchedule.maxCapacity),
+          booked: Number(this.editingSchedule.booked)
+        };
+        
+        await axios.post(`${API_BASE_URL}/addSchedule`, payload);
+        console.log('旧排班已恢复');
+      } catch (error) {
+        console.error('恢复旧排班失败:', error);
+        alert('更新排班失败且恢复旧排班也失败，请手动检查排班数据');
+      }
+    },
+    
+   // 修改冲突检测方法，支持排除特定排班
+    checkScheduleConflict(doctorId, date, timeSlot, excludeScheduleId = null) {
+      return this.rawSchedules.some(schedule => 
+        schedule.doctorId === doctorId && 
+        schedule.scheduleDate === date && 
+        schedule.timeSlot === timeSlot &&
+        (!excludeScheduleId || schedule.scheduleId !== excludeScheduleId)
+      );
+    },
     // 应用筛选条件
     applyFilters() {
       if (this.filterDate) {
@@ -590,14 +713,24 @@ export default {
         alert('头像上传失败，请检查网络连接');
       }
     },
-    
-    addDoctor() {
+     // 保存医生信息（新增或更新）
+    saveDoctor() {
+      if (!this.validateDoctorForm()) return;
+      
+      if (this.editingDoctor) {
+        this.updateDoctor();
+      } else {
+        this.addDoctor();
+      }
+    },
+   addDoctor() {
       if (!this.validateDoctorForm()) return;
       
       const payload = { 
         ...this.docForm
       };
-      
+      // 移除doctorId字段（如果是新增）
+      delete payload.doctorId;
       axios.post(`${API_BASE_URL}/addDoctor`, payload)
         .then((res) => {
           if (res.data.code === 200) {
@@ -613,12 +746,42 @@ export default {
           alert('添加医生失败，请检查网络连接');
         });
     },
-
+     // 更新医生信息
+    updateDoctor() {
+      const payload = { 
+        ...this.docForm
+      };
+      
+      axios.post(`${API_BASE_URL}/updateDoctor`, payload)
+        .then((res) => {
+          if (res.data.code === 200) {
+            this.fetchDoctors();
+            this.resetDoctorForm();
+            alert('医生信息更新成功');
+          } else {
+            alert('更新医生信息失败: ' + res.data.msg);
+          }
+        })
+        .catch((error) => {
+          console.error('更新医生信息失败:', error);
+          alert('更新医生信息失败，请检查网络连接');
+        });
+    },
     editDoctor(doctor) {
       this.editingDoctor = doctor;
       this.docForm = { ...doctor };
+       // 滚动到表单顶部
+      this.$nextTick(() => {
+        const formCard = document.querySelector('.form-card');
+        if (formCard) {
+          formCard.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
     },
-
+     // 取消编辑
+    cancelEdit() {
+      this.resetDoctorForm();
+    },
     deleteDoctor(doctorId) {
       if (!confirm('确定要删除这位医生吗？')) return;
       
@@ -725,7 +888,16 @@ export default {
     
     addSchedule() {
       if (!this.validateScheduleForm()) return;
-      
+       // 添加冲突检测
+        if (this.checkScheduleConflict(
+          this.scheduleForm.doctorId,
+          this.scheduleForm.scheduleDate,
+          this.scheduleForm.timeSlot
+        )) {
+          alert('该医生在此时间段已有排班，请选择其他时间');
+          return; // 阻止提交
+        }
+   
       const payload = { 
         doctorId: Number(this.scheduleForm.doctorId),
         scheduleDate: this.scheduleForm.scheduleDate,
@@ -805,7 +977,21 @@ export default {
 * {
   box-sizing: border-box;
 }
+/* 添加编辑状态提示样式 */
+.edit-notice {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
 
+.edit-notice i {
+  color: #2196f3;
+  margin-right: 8px;
+}
 .doctor-schedule-panel {
   min-height: 100vh;
   background-color: #f5f7fa;
@@ -944,12 +1130,12 @@ export default {
   grid-template-columns: repeat(2, 1fr);
 }
 
-.form-group {
+.form-group_qian {
   display: flex;
   flex-direction: column;
 }
 
-.form-group.full-width {
+.form-group_qian.full-width {
   grid-column: 1 / -1;
 }
 
@@ -979,7 +1165,7 @@ label {
   min-height: 80px;
 }
 /* 上传区域 */
-.upload-area {
+.upload-area_qian {
   border: 2px dashed #dcdfe6;
   border-radius: 8px;
   padding: 20px;
@@ -993,11 +1179,11 @@ label {
   justify-content: center;
 }
 
-.upload-area:hover {
+.upload-area_qian:hover {
   border-color: #42b983;
 }
 
-.upload-area.has-image {
+.upload-area_qian.has-image {
   border-style: solid;
   padding: 5px;
 }
@@ -1019,20 +1205,20 @@ label {
   margin: 0;
 }
 
-.image-preview {
+.image-preview_qian {
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-.image-preview img {
+.image-preview_qian img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 6px;
 }
 
-.remove-image-btn {
+.remove-image-btn_qian {
   position: absolute;
   top: -10px;
   right: -10px;
@@ -1050,7 +1236,7 @@ label {
 }
 
 /* 提交按钮 */
-.submit-btn {
+.submit-btn_qian {
   background: linear-gradient(135deg, #42b983 0%, #33a06f 100%);
   color: white;
   border: none;
@@ -1066,11 +1252,11 @@ label {
   margin-left: auto;
 }
 
-.submit-btn i {
+.submit-btn_qian i {
   margin-right: 8px;
 }
 
-.submit-btn:hover {
+.submit-btn_qian:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
 }
@@ -1213,7 +1399,7 @@ label {
   color: #495057;
 }
 
-.submit-btn.filter-btn {
+.submit-btn_qian.filter-btn {
   padding: 10px 15px;
   font-size: 0.9rem;
   margin-left: 0;
@@ -1397,7 +1583,7 @@ label {
   gap: 8px;
 }
 
-.action-btn {
+.action-btn_qian {
   width: 32px;
   height: 32px;
   border-radius: 6px;
@@ -1410,21 +1596,21 @@ label {
   font-size: 0.9rem;
 }
 
-.action-btn.edit {
+.action-btn_qian.edit {
   background: rgba(33, 150, 243, 0.1);
   color: #2196f3;
 }
 
-.action-btn.edit:hover {
+.action-btn_qian.edit:hover {
   background: rgba(33, 150, 243, 0.2);
 }
 
-.action-btn.delete {
+.action-btn_qian.delete {
   background: rgba(244, 67, 54, 0.1);
   color: #f44336;
 }
 
-.action-btn.delete:hover {
+.action-btn_qian.delete:hover {
   background: rgba(244, 67, 54, 0.2);
 }
 
@@ -1450,7 +1636,7 @@ label {
   gap: 8px;
 }
 
-.action-btn {
+.action-btn_qian {
   width: 32px;
   height: 32px;
   border-radius: 6px;
@@ -1463,21 +1649,21 @@ label {
   font-size: 0.9rem;
 }
 
-.action-btn.edit {
+.action-btn_qian.edit {
   background: #e3f2fd;
   color: #2196f3;
 }
 
-.action-btn.edit:hover {
+.action-btn_qian.edit:hover {
   background: #bbdefb;
 }
 
-.action-btn.delete {
+.action-btn_qian.delete {
   background: #ffebee;
   color: #ff5252;
 }
 
-.action-btn.delete:hover {
+.action-btn_qian.delete:hover {
   background: #ffcdd2;
 }
 /* 无数据提示样式 */
@@ -1581,7 +1767,7 @@ label {
     flex-direction: column;
   }
   
-  .action-btn {
+  .action-btn_qian {
     width: 100%;
   }
 }
