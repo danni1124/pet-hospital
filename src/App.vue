@@ -20,11 +20,7 @@
             <i class="fas fa-chart-bar"></i>  预约
          </router-link>
         <router-link to="/forum" class="nav-btn" active-class="active" exact>
-<<<<<<< HEAD
           <i class="fas fa-bullhorn"></i>论坛
-=======
-          <i class="fas fa-forum"></i>  论坛
->>>>>>> 9dac913427085c1ff25cff7182e36c5c14ff2fad
         </router-link>
         <router-link to="/introduction" class="nav-btn" active-class="active" exact>
           <i class="fas fa-info"></i>  概况
