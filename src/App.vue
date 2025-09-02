@@ -22,14 +22,14 @@
         <router-link to="/forum" class="nav-btn" active-class="active" exact>
           <i class="fas fa-bullhorn"></i>论坛
         </router-link>
-        <router-link to="/introduction" class="nav-btn" active-class="active" exact>
-          <i class="fas fa-info"></i>  概况
-        </router-link>
-        <router-link to="/adaptpet" class="nav-btn" active-class="active"  exact>
+        <router-link to="/adaptpet" class="nav-btn" active-class="active" v-if="!isManager" exact>
           <i class="fas fa-cat"></i>  领养
         </router-link>
         <router-link   router-link to="/manage" class="nav-btn" active-class="active" v-if="isManager">
           <i class="fas fa-paw"></i>  管理
+        </router-link>
+        <router-link to="/introduction" class="nav-btn" active-class="active" exact>
+          <i class="fas fa-info"></i>  概况
         </router-link>
       </div>
       
