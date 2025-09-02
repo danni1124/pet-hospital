@@ -1,36 +1,78 @@
 <template>
   <div class="forum-container">
-    <!-- 导航栏 -->
-    <div class="navbar">
-      <div class="header-search">
-        <div class="search-box">
-          <svg class="search-icon" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
-          </svg>
-          <input 
-            type="text" 
-            placeholder="搜索帖子、问题或关键词..." 
-            v-model="searchQuery" 
-            @keyup.enter="searchPosts"
-            @input="handleSearchInput"
-          >
-          <button class="search-button" @click="searchPosts">
-            <span>搜索</span>
-          </button>
+    
+      <div class="search-section">
+        <div class="search-container">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
+            </svg>
+            <input 
+              type="text" 
+              placeholder="搜索帖子、问题或关键词..." 
+              v-model="searchQuery" 
+              @keyup.enter="searchPosts"
+            >
+            <button 
+              v-if="searchQuery" 
+              class="clear-search-btn" 
+              @click="clearSearch"
+              type="button"
+              title="清除搜索"
+            >
+              <span class="clear-text">清除</span>
+            </button>
+            <button class="search-button" @click="searchPosts">
+              <span>搜索</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    
 
     <!-- 横幅 -->
-    <div class="header-banner">
-      <div class="banner-overlay">
-        <div class="banner-icon">
-          <svg viewBox="0 0 24 24">
-            <path fill="currentColor" d="M19,2H5A2,2 0 0,0 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4A2,2 0 0,0 19,2M12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,7H18V5H20V7Z" />
-          </svg>
+    <div class="decorative-banner">
+      <div class="pet-paws">
+        <span>🐾</span>
+        <span>🐾</span>
+        <span>🐾</span>
+        <span>🐾</span>
+        <span>🐾</span>
+      </div>
+    </div>
+    
+    <!-- 主头部区域 -->
+    <div class="header-main"style="justify-content: center;">
+      <!-- 左侧宠物图标 -->
+      <div class="header-pets">
+        <div class="floating-pet cat">
+          <span>🐱</span>
         </div>
-        <h1 class="banner-title">宠物交流社区</h1>
-        <p class="banner-subtitle">分享经验 · 获取专业建议 · 共同关爱宠物健康</p>
+        <div class="floating-pet dog">
+          <span>🐶</span>
+        </div>
+        <div class="floating-pet rabbit">
+          <span>🐰</span>
+        </div>
+      </div>
+      
+      <!-- 中间标题区域 -->
+      <div class="header-center">
+        <h1 class="forum-title" style = "font-size: 70px;">宠物交流社区</h1>
+        <p class="forum-subtitle" style = "font-size: 18px;">分享经验 · 获取专业建议 · 共同关爱宠物健康</p>
+      </div>
+      
+      <!-- 右侧宠物图标 -->
+      <div class="header-pets">
+        <div class="floating-pet bird">
+          <span>🐦</span>
+        </div>
+        <div class="floating-pet fish">
+          <span>🐠</span>
+        </div>
+        <div class="floating-pet hamster">
+          <span>🐹</span>
+        </div>
       </div>
     </div>
 
@@ -95,7 +137,7 @@
               </div>
               <div class="post-content">
                 <div class="post-header">
-                    <span class="post-title">{{ post.title || post.content.substring(0, 50) + (post.content.length > 50 ? '...' : '') }}</span>
+                    <span class="post-title">{{ post.title || post.content.substring(0, 20) + (post.content.length > 50 ? '...' : '') }}</span>
                   <div class="post-tags right-aligned" v-if="post.tags && post.tags.length > 0">
                     <span
                       v-for="tag in post.tags.split(',')"
@@ -118,7 +160,7 @@
                     {{ post.author }}
                   </span>
                   <span class="post-time">{{ formatTime(post.time) }}</span>
-                  <!-- <span class="post-views">
+                  <span class="post-views">
                     <svg viewBox="0 0 24 24" class="meta-icon">
                       <path fill="#3B82F6" d="M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M3.18,12C4.83,15.36 8.24,17.5 12,17.5C15.76,17.5 19.17,15.36 20.82,12C19.17,8.64 15.76,6.5 12,6.5C8.24,6.5 4.83,8.64 3.18,12Z" />
                     </svg>
@@ -129,45 +171,67 @@
                       <path fill="#EC4899" d="M12,23A1,1 0 0,1 11,22V19H7A2,2 0 0,1 5,17V7A2,2 0 0,1 7,5H21A2,2 0 0,1 23,7V17A2,2 0 0,1 21,19H16.9L13.2,22.71C13,22.89 12.76,23 12.5,23H12M13,17V20.08L16.08,17H21V7H7V17H13M3,15H1V3A2,2 0 0,1 3,1H19V3H3V15M9,9H19V11H9V9M9,13H17V15H9V13Z" />
                     </svg>
                     {{ post.comments }}
-                    <pre>{{ post }}</pre>
-                  </span> -->
+                    
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 修改分页信息显示 -->
-          <div class="pagination-info">
-            显示 {{ (currentPage - 1) * postsPerPage + 1 }}-{{ Math.min(currentPage * postsPerPage, totalPosts) }} 条，
-            共 {{ totalPosts }} 条帖子
-            <span v-if="searchQuery.trim()">(搜索结果)</span>
-            <span v-else-if="currentTag !== 'all'">(标签筛选结果)</span>
-          </div>
-         
-
-          <div class="pagination">
-            <button 
-              @click="debugPageChange(currentPage - 1, 'prev')"
-              :disabled="currentPage === 1"
-            >
-              &laquo; 上一页
-            </button>
-                      
-            <button 
-              v-for="page in totalPages" 
-              :key="page" 
-              :class="{ active: currentPage === page }"
-              @click="changePage(page)"
-            >
-              {{ page }}
-            </button>
-                      
-            <button 
-              @click="debugPageChange(currentPage + 1, 'next')"
-              :disabled="currentPage === totalPages"
-            >
-              下一页 &raquo;
-            </button>
+          <!-- 分页信息显示 -->
+          <div class="pagination-container">
+            <div class="pagination-info">
+              显示 {{ (currentPage - 1) * postsPerPage + 1 }}-{{ Math.min(currentPage * postsPerPage, totalPosts) }} 条，
+              共 {{ totalPosts }} 条帖子
+              <span v-if="searchQuery.trim()">(搜索结果)</span>
+              <span v-else-if="currentTag !== 'all'">(标签筛选结果)</span>
+            </div>
+            
+            <div class="pagination">
+              <button 
+                @click="changePage(currentPage - 1)"
+                :disabled="currentPage === 1"
+                class="page-btn"
+              >
+                &laquo; 上一页
+              </button>
+              
+              <button 
+                v-for="(page, index) in displayedPages" 
+                :key="index" 
+                :class="{ 
+                  'page-btn': true, 
+                  'active': currentPage === page,
+                  'ellipsis': page === '...'
+                }"
+                @click="page !== '...' ? changePage(page) : null"
+                :disabled="page === '...'"
+              >
+                {{ page }}
+              </button>
+              
+              <button 
+                @click="changePage(currentPage + 1)"
+                :disabled="currentPage === totalPages"
+                class="page-btn"
+              >
+                下一页 &raquo;
+              </button>
+            </div>
+            
+            <!-- 跳转页面功能 -->
+            <div class="page-jump" v-if="totalPages > 1">
+              <span>跳至</span>
+              <input 
+                type="number" 
+                v-model.number="gotoPage" 
+                :min="1" 
+                :max="totalPages"
+                @keyup.enter="gotoSpecificPage"
+              >
+              <span>页</span>
+              <button @click="gotoSpecificPage">确定</button>
+            </div>
           </div>
         </div>
       </div>
@@ -199,42 +263,51 @@
             </svg>
             {{ currentPost.time }}
           </span>
-          <!-- <span class="post-views">
+          <span class="post-views">
             <svg viewBox="0 0 24 24" class="meta-icon">
               <path fill="#3B82F6" d="M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M3.18,12C4.83,15.36 8.24,17.5 12,17.5C15.76,17.5 19.17,15.36 20.82,12C19.17,8.64 15.76,6.5 12,6.5C8.24,6.5 4.83,8.64 3.18,12Z" />
             </svg>
             {{ currentPost.views }}
-          </span> -->
+          </span>
         </div>
         
        
         <div class="post-detail-content">
           <!-- 图片轮播区域 -->
-          <div class="post-images-carousel" v-if="currentPost.images && currentPost.images.length > 1">
-            <div class="carousel-container">
+          <div class="post-images-carousel" v-if="currentPost.images && currentPost.images.length > 0">
+            <div class="carousel-container" 
+                @touchstart="handleTouchStart"
+                @touchmove="handleTouchMove"
+                @touchend="handleTouchEnd"
+                @mousedown="handleMouseDown"
+                @mousemove="handleMouseMove"
+                @mouseup="handleMouseEnd"
+                @mouseleave="handleMouseEnd">
               <div class="carousel-track" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
                 <div class="carousel-slide" v-for="(image, index) in currentPost.images" :key="index">
                   <img :src="image.url" :alt="'图片' + (index + 1)" @click="showImagePreview(image.url)">
                 </div>
               </div>
+              
+              <!-- 导航箭头 -->
               <button class="carousel-btn prev" @click="prevSlide" :disabled="currentSlide === 0">
                 <svg viewBox="0 0 24 24" width="24" height="24">
                   <path fill="currentColor" d="M15.41 16.58L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.42z" />
                 </svg>
               </button>
-
-              <!-- 右箭头 -->
               <button class="carousel-btn next" @click="nextSlide" :disabled="currentSlide === currentPost.images.length - 1">
                 <svg viewBox="0 0 24 24" width="24" height="24">
                   <path fill="currentColor" d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
                 </svg>
               </button>
-              <!-- <div class="carousel-dots" v-if="currentPost.images.length > 1">
+              
+              <!-- 指示器 -->
+              <div class="carousel-dots" v-if="currentPost.images.length > 1">
                 <span v-for="(image, index) in currentPost.images" 
                       :key="index" 
                       :class="{ active: index === currentSlide }"
                       @click="goToSlide(index)"></span>
-              </div> -->
+              </div>
             </div>
           </div>
           
@@ -250,19 +323,19 @@
         </div>
         
         <div class="post-actions">
-          <button @click="likePost" :class="{ liked: currentPost.isLiked }">
+          <button @click="likePost($event)" :class="{ liked: currentPost.isLiked }">
             <svg viewBox="0 0 24 24" class="action-icon">
               <path fill="currentColor" :d="currentPost.isLiked ? 'M23,10C23,8.89 22.1,8 21,8H14.68L15.64,3.43C15.66,3.33 15.67,3.22 15.67,3.11C15.67,2.7 15.5,2.32 15.23,2.05L14.17,1L7.59,7.58C7.22,7.95 7,8.45 7,9V19A2,2 0 0,0 9,21H18C18.83,21 19.54,20.5 19.84,19.78L22.86,12.73C22.95,12.5 23,12.26 23,12V10M1,21H5V9H1V21Z' : 'M5,9V21H1V9H5M9,21A2,2 0 0,1 7,19V9C7,8.45 7.22,7.95 7.59,7.59L14.17,1L15.23,2.06C15.5,2.33 15.67,2.7 15.67,3.11L15.64,3.43L14.69,8H21C22.11,8 23,8.9 23,10V12C23,12.26 22.95,12.5 22.86,12.73L19.84,19.78C19.54,20.5 18.83,21 18,21H9M9,19H18.03L21,12V10H12.21L13.34,4.68L9,9.03V19Z'" />
             </svg>
             <span>点赞 ({{ currentPost.likes }})</span>
           </button>
-          <button @click="collectPost" :class="{ collected: currentPost.isCollected }">
+          <button @click="collectPost($event)" :class="{ collected: currentPost.isCollected }">
             <svg viewBox="0 0 24 24" class="action-icon">
               <path fill="currentColor" :d="currentPost.isCollected ? 'M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z' : 'M12,15.39L8.24,17.66L9.23,13.38L5.91,10.5L10.29,10.13L12,6.09L13.71,10.13L18.09,10.5L14.77,13.38L15.76,17.66M22,9.24L14.81,8.63L12,2L9.19,8.63L2,9.24L7.45,13.97L5.82,21L12,17.27L18.18,21L16.54,13.97L22,9.24Z'" />
             </svg>
             <span>收藏 ({{ currentPost.collections }})</span>
           </button>
-          <button v-if="isCurrentUserPost" @click="confirmDeletePost" class="delete-btn">
+          <button v-if="canDeletePost" @click="confirmDeletePost" class="deletes-btns">
             <svg viewBox="0 0 24 24" class="action-icon">
               <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
             </svg>
@@ -387,9 +460,9 @@
 
                 <!-- 删除评论 -->
                   <button 
-                    v-if="isCurrentUserComment(comment)" 
+                    v-if="canDeleteComment(comment)" 
                     @click.stop="confirmDeleteComment(comment)" 
-                    class="delete-btn"
+                    class="deletes-btns"
                   >
                     <svg viewBox="0 0 24 24" class="action-icon">
                       <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
@@ -567,7 +640,7 @@
               <svg viewBox="0 0 24 24" class="upload-icon">
                 <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M8,15V13H16V15H8M8,11V9H16V11H8Z" />
               </svg>
-              <span>选择图片 (最多5张)</span>
+              <span>选择图片 (最多8张)</span>
             </button>
             <div class="preview-images" v-if="newPostImages.length > 0">
               <div class="image-preview" v-for="(image, index) in newPostImages" :key="index">
@@ -608,16 +681,31 @@ import { getPostsByPage, getPostNum } from '@/api/post';
 import { addComment, getComments,updatePostStats,getFullImageUrl} from '@/api/post';
 import { deleteImage } from '@/api/post';
 import { deletePost, deleteComment ,updateCommentLikes} from '@/api/post';
+import { checkCommentStatus, checkPostStatus } from './api/post';
 import { ref, onMounted } from 'vue'
-const currentUserId = ref(null);
-const currentUsername = ref('');
 
-onMounted(() => {
-  const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
-  currentUserId.value = user.userId || 1
-  currentUsername.value = user.username || '游客'
-});
+
 export default {
+  name: 'ForumHeader',
+  setup() {
+    const currentUserId = ref(null);
+    const currentUsername = ref('');
+    const isManager = ref(false);
+
+    onMounted(() => {
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      currentUserId.value = user.userId || 1;
+      currentUsername.value = user.username || '游客';
+      isManager.value = user.isManager || false;
+    });
+
+    return {
+      currentUserId,
+      currentUsername,
+      isManager
+    };
+  },
+
   directives: {
     autoResize: {
       inserted(el) {
@@ -633,16 +721,28 @@ export default {
   data() {
     return {
 
+      isManager: false,
+
+      gotoPage: null,
+      searchQuery: '',
+      imageList: [] ,
+      //图片滑动
+      touchStartX: null,
+      touchStartY: null,
+      isSwiping: false,
+      swipeDistance: 0,
+      currentSlide: 0,
 
       currentUserId: null,
       currentUsername: '',
       currentTag: 'all',
       postsPerPage: 10, // 每页显示的帖子数量
       currentPage: 1,
-      totalPosts: 0,
+      //totalPosts: 0,
       totalPostsFromAPI: 0,
       isLoading: false,
 
+      //totalPages: 1,
       showNewPostModal: false,
       newPostTitle: '',
       newPostContent: '',
@@ -834,13 +934,13 @@ export default {
 
   
     paginatedPosts() {
-      // 如果有搜索词或标签筛选，使用filteredPosts进行前端分页
+      // 如果有搜索词或标签筛选，使用filteredPosts进行分页
       if (this.searchQuery.trim() || this.currentTag !== 'all') {
         const start = (this.currentPage - 1) * this.postsPerPage;
         const end = start + this.postsPerPage;
         return this.filteredPosts.slice(start, end);
       }
-      // 否则使用原始帖子数据（后端分页）
+      
       return this.originalPosts;
     },
       
@@ -870,9 +970,48 @@ export default {
       return flatten(this.comments);
     },
      
-    isCurrentUserPost() {
+    canDeletePost() {
       if (!this.currentPost || !this.currentUser) return false;
-      return this.currentPost.userId === this.currentUser.id;
+      return this.isManager || this.currentPost.userId === this.currentUser.id;
+    },
+
+     displayedPages() {
+      const total = this.totalPages;
+      const current = this.currentPage;
+      const pages = [];
+      
+      if (total <= 5) {
+        // 总页数小于等于7，显示所有页码
+        for (let i = 1; i <= total; i++) {
+          pages.push(i);
+        }
+      } else {
+        // 总页数大于7，添加省略号
+        pages.push(1);
+        
+        if (current > 4) {
+          pages.push('...');
+        }
+        
+        // 计算中间页码范围
+        const start = Math.max(2, current - 2);
+        const end = Math.min(total - 1, current + 2);
+        
+        for (let i = start; i <= end; i++) {
+          // 避免重复添加
+          if (i !== 1 && i !== total) {
+            pages.push(i);
+          }
+        }
+        
+        if (current < total - 3) {
+          pages.push('...');
+        }
+        
+        pages.push(total);
+      }
+      
+      return pages;
     }
   },
   methods: {
@@ -891,10 +1030,12 @@ export default {
 
   
 
-    clearSearch() {
+     clearSearch() {
       this.searchQuery = '';
-      this.posts = [...this.originalPosts];
       this.isSearching = false;
+      this.currentPage = 1;
+      // 重置到原始帖子列表
+      this.loadPage(1);
     },
 
     handleSearchInput() {
@@ -917,6 +1058,7 @@ export default {
       }
       
       this.isSearching = true;
+      this.$emit('search', this.searchQuery);
     },
 
     selectTag(tagId) {
@@ -956,16 +1098,23 @@ export default {
       }
     },
     
-    // 修改 handlePostImageUpload 方法
+   
     
 
 
     
-    removePostImage(index) {
+    async removePostImage(index) {
       const removed = this.newPostImages.splice(index, 1)[0];
       if (removed.uploadedPath) {
-        // 如果已经上传了，调用后端删除
-        this.deleteUploadedImage(removed.uploadedPath);
+        const success = await deleteImage(removed.uploadedPath);
+        if (success) {
+          //从图片地址字符串中移除
+          const remainingPaths = this.newPostImages.map(img => img.uploadedPath);
+          console.log('剩余图片地址:', remainingPaths.join(','));
+        } else {
+          // 失败后恢复
+          this.newPostImages.splice(index, 0, removed);
+        }
       }
     },
     
@@ -973,8 +1122,17 @@ export default {
       if (!this.canSubmitPost) return;
 
       try {
-        const filesToUpload = this.newPostImages.map(img => img.file);
-        const uploadedPaths = await uploadImages(filesToUpload); 
+        // 打印上传前的本地图片信息
+        console.log('准备上传的图片（本地）:', this.newPostImages.map(img => ({
+          name: img.file.name,
+          size: img.file.size,
+          preview: img.preview
+        })));
+
+        const uploadedPaths = this.newPostImages.map(img => img.uploadedPath);
+
+        // 打印后端返回的图片路径
+        console.log('后端返回的图片路径:', uploadedPaths);
 
         // 更新图片对象的上传路径
         this.newPostImages.forEach((img, index) => {
@@ -982,8 +1140,9 @@ export default {
         });
 
         const postData = {
-          userId: this.currentUserId, //当前登录用户
-          username: this.currentUsername, //用当前登录用户名
+          userId: this.currentUserId,
+          username: this.currentUsername,
+          title:this.newPostTitle,
           content: this.newPostContent.trim(),
           tags: this.newPostSelectedTag.map(id => this.tags.find(t => t.id === id)?.name).filter(Boolean).join(','),
           imagesUrl: uploadedPaths.join(','),
@@ -991,20 +1150,23 @@ export default {
           commentCount: 0,
           likeCount: 0,
           collectCount: 0,
-
         };
 
+        // 打印最终要传给后端的完整数据
+        console.log('📦 最终传给后端的postData:', postData);
+
         const res = await addPost(postData);
-        console.log('发布成功', res.data);
+        console.log('🎉 发布成功', res.data);
+        
         this.closeNewPostModal();
         this.resetPostForm();
         this.refreshPosts();
       } catch (err) {
-        console.error('发布失败', err);
+        console.error('❌ 发布失败', err);
       }
     },
 
-    // 修改 deleteUploadedImage 方法
+    
     async deleteUploadedImage(imagePath) {
       try {
         const success = await deleteImage(imagePath);
@@ -1069,7 +1231,7 @@ export default {
         }
 
         // 关键：根据总条数算总页数
-        this.totalPages = Math.ceil(this.totalPostsFromAPI / this.postsPerPage);
+        //this.totalPages = Math.ceil(this.totalPostsFromAPI / this.postsPerPage);
 
         // 加载第一页
         await this.loadPage(1);
@@ -1105,7 +1267,7 @@ export default {
 
         const newPosts = response.data.data.map(post => {
           const imageUrls = post.imagesUrl
-                ? getFullImageUrl(post.imagesUrl)   // ← 直接调用
+                ? getFullImageUrl(post.imagesUrl)   
                 : [];
           return {
             ...post,
@@ -1153,7 +1315,7 @@ export default {
     }, 
     
 
-    // 修改 changePage 方法
+    // 换页
     async changePage(page) {
       console.group('changePage方法调试');
       console.log('传入的页码:', page);
@@ -1224,7 +1386,7 @@ export default {
         // 模拟上传延迟
         setTimeout(() => {
           const result = images.map(img => ({
-            url: img.preview, // 实际项目中应该是服务器返回的URL
+            url: img.preview, 
             thumbnail: img.preview
           }));
           resolve(result);
@@ -1233,18 +1395,25 @@ export default {
     },
 
    
-    async toggleLike(comment) {
-      const isLiked = comment.isLiked;
-      const newLikes = isLiked ? Math.max(0, comment.likes - 1) : comment.likes + 1;
+    async toggleLike(comment, event) {
+      const isLiking = !comment.isLiked;
+      const action = isLiking ? '增加' : '取消';
+      const newLikes = isLiking ? comment.likes + 1 : Math.max(0, comment.likes - 1);
+      const userId = this.currentUserId;
 
       try {
-        const res = await updateCommentLikes(comment.commentId, newLikes);
+        const res = await updateCommentLikes(action, comment.commentId, userId, newLikes);
         if (res.data?.code === 200) {
-          // 更新本地状态
-          this.comments = this.updateCommentInTree(this.comments, comment.commentId, {
-            isLiked: !isLiked,
-            likes: newLikes
+          console.log('评论点赞后端返回',res.data);
+          this.updateCommentLikeStatus(comment.commentId, isLiking);
+          this.comments=this.updateCommentInTree(this.comments, comment.commentId, {
+          likes: newLikes,
+          
           });
+
+          if (isLiking) {
+            this.playLikeAnimation(event);
+          }
         } else {
           alert(`点赞失败：${res.data?.msg || '未知错误'}`);
         }
@@ -1253,6 +1422,29 @@ export default {
         alert('网络错误，点赞失败');
       }
     },
+
+    // 更新评论点赞状态
+    updateCommentLikeStatus(commentId, isLiked) {
+      const updateRecursive = (comments) => {
+        return comments.map(comment => {
+          if (comment.commentId === commentId || comment.id === commentId) {
+            return { ...comment, isLiked };
+          }
+          if (comment.replies && comment.replies.length > 0) {
+            return {
+              ...comment,
+              replies: updateRecursive(comment.replies)
+            };
+          }
+          return comment;
+        });
+      };
+      
+      this.comments = updateRecursive(this.comments);
+    },
+
+
+    //更新评论树
     updateCommentInTree(comments, targetId, updates) {
       return comments.map(c => {
         if (c.commentId === targetId) {
@@ -1291,10 +1483,16 @@ export default {
       });
     },
     
+    
+    // 评论点赞动画
     playLikeAnimation(event) {
       const heart = document.createElement('div');
       heart.className = 'heart-animation';
       heart.innerHTML = '❤️';
+      heart.style.position = 'fixed';
+      heart.style.fontSize = '20px';
+      heart.style.pointerEvents = 'none';
+      heart.style.zIndex = '9999';
       heart.style.left = `${event.clientX - 10}px`;
       heart.style.top = `${event.clientY - 10}px`;
       document.body.appendChild(heart);
@@ -1303,21 +1501,83 @@ export default {
         heart.remove();
       }, 1000);
     },
+  
 
-    
-    
-    
+    // 触摸事件处理
+    handleTouchStart(e) {
+      this.touchStartX = e.touches[0].clientX;
+      this.isDragging = true;
+    },
 
+    handleTouchMove(e) {
+      if (!this.isDragging) return;
+      this.touchCurrentX = e.touches[0].clientX;
+      this.calculateDrag();
+    },
+
+    handleTouchEnd() {
+      if (!this.isDragging) return;
+      this.isDragging = false;
+      this.finalizeDrag();
+    },
+
+    // 鼠标事件处理
+    handleMouseDown(e) {
+      this.touchStartX = e.clientX;
+      this.isDragging = true;
+      e.preventDefault();
+    },
+
+    handleMouseMove(e) {
+      if (!this.isDragging) return;
+      this.touchCurrentX = e.clientX;
+      this.calculateDrag();
+    },
+
+    handleMouseEnd() {
+      if (!this.isDragging) return;
+      this.isDragging = false;
+      this.finalizeDrag();
+    },
+
+    // 计算拖动
+    calculateDrag() {
+      const diff = this.touchStartX - this.touchCurrentX;
+      const threshold = 50; // 滑动阈值
+      
+      if (Math.abs(diff) > threshold) {
+        if (diff > 0) {
+          this.nextSlide();
+        } else {
+          this.prevSlide();
+        }
+        this.isDragging = false;
+      }
+    },
+
+    // 完成拖动
+    finalizeDrag() {
+      this.touchStartX = null;
+      this.touchCurrentX = null;
+    },
+
+    // 切换幻灯片
     prevSlide() {
-      if (this.currentSlide > 0) this.currentSlide--;
+      if (this.currentSlide > 0) {
+        this.currentSlide--;
+      }
     },
+
     nextSlide() {
-      if (this.currentSlide < this.currentPost.images.length - 1) this.currentSlide++;
+      if (this.currentSlide < this.currentPost.images.length - 1) {
+        this.currentSlide++;
+      }
     },
-    
+
     goToSlide(index) {
       this.currentSlide = index;
     },
+    
 
     async viewPost(postId) {
       console.log('尝试查看帖子ID:', postId);
@@ -1347,6 +1607,7 @@ export default {
       }
       
       console.log('找到帖子:', post);
+      console.log('尝试查看帖子ID:', post.id);
       console.log('帖子原始imagesUrl:', post.imagesUrl);
       console.log('解析后的图片URLs:', getFullImageUrl(post.imagesUrl));
       this.currentPost = {
@@ -1370,25 +1631,103 @@ export default {
       this.currentSlide = 0;
       this.showPostDetail = true;
       document.body.style.overflow = 'hidden';
+
       
-      // 增加浏览量并更新后端
-      this.currentPost.views++;
-      await this.updateViewCount(postId,'view');
+      const userId = this.currentUserId;
+      await this.updateViewCount(post.postId || post.id,userId);
+
+      // 检查帖子和评论的点赞/收藏状态
+      await this.checkPostStatus();
+      await this.checkCommentStatus();
+
     },
 
   
-    async likePost() {
+    // 检查帖子点赞和收藏状态
+    async checkPostStatus() {
+      if (!this.currentPost.postId || !this.currentUserId) return;
+      
+      try {
+        // 检查点赞状态
+        const likeRes = await checkPostStatus('like', this.currentPost.postId, this.currentUserId);
+        if (likeRes.data?.code === 200) {
+          this.currentPost.isLiked = true;
+        } else {
+          this.currentPost.isLiked = false;
+        }
+        
+        // 检查收藏状态
+        const collectRes = await checkPostStatus('collect', this.currentPost.postId, this.currentUserId);
+        if (collectRes.data?.code === 200) {
+          this.currentPost.isCollected = true;
+        } else {
+          this.currentPost.isCollected = false;
+        }
+      } catch (error) {
+        console.error('检查帖子状态失败:', error);
+        // 失败时保持默认状态
+        this.currentPost.isLiked = false;
+        this.currentPost.isCollected = false;
+      }
+    },
+
+    // 检查评论点赞状态
+    async checkCommentStatus() {
+      if (!this.comments.length || !this.currentUserId) return;
+      
+      try {
+        // 获取所有评论ID（包括嵌套回复）
+        const allCommentIds = this.getAllCommentIds();
+        
+        // 批量检查点赞状态
+        for (const commentId of allCommentIds) {
+          const res = await checkCommentStatus(commentId, this.currentUserId);
+          if (res.data?.code === 200) {
+            // 更新评论的点赞状态
+            this.updateCommentLikeStatus(commentId, true);
+          }
+        }
+      } catch (error) {
+        console.error('检查评论状态失败:', error);
+      }
+    },
+
+    // 获取所有评论ID（递归获取嵌套评论）
+    getAllCommentIds() {
+      const ids = [];
+      const traverse = (comments) => {
+        comments.forEach(comment => {
+          ids.push(comment.commentId || comment.id);
+          if (comment.replies && comment.replies.length > 0) {
+            traverse(comment.replies);
+          }
+        });
+      };
+      traverse(this.comments);
+      return ids;
+    },
+
+
+    async likePost(event) {
       const postId = this.currentPost.postId || this.currentPost.id;
-      const newLikes = this.currentPost.isLiked
-        ? this.currentPost.likes - 1
-        : this.currentPost.likes + 1;
+      const userId = this.currentUserId;
+      const isLiking = !this.currentPost.isLiked; // 当前是要点赞还是取消点赞
 
       try {
-        const res = await updatePostStats('like',postId, newLikes);
+        const type = 'like';
+        const action = isLiking ? '增加' : '取消';
+        const newLikes = isLiking ? this.currentPost.likes + 1 : Math.max(0, this.currentPost.likes - 1);
+
+        const res = await updatePostStats(type, action, postId, userId, newLikes);
+
         if (res.data?.code === 200) {
+          // 更新本地状态
           this.currentPost.likes = newLikes;
-          this.currentPost.isLiked = !this.currentPost.isLiked;
-          if (this.currentPost.isLiked) this.createLikeEffect();
+          this.currentPost.isLiked = isLiking;
+
+          if (isLiking) {
+            this.createLikeEffect(event);
+          }
         } else {
           alert('点赞操作失败');
         }
@@ -1396,18 +1735,28 @@ export default {
         console.error('点赞请求失败:', err);
       }
     },
-    async collectPost() {
+
+    // 修改收藏帖子方法
+    async collectPost(event) {
       const postId = this.currentPost.postId || this.currentPost.id;
-      const newCollections = this.currentPost.isCollected
-        ? this.currentPost.collections - 1
-        : this.currentPost.collections + 1;
+      const userId = this.currentUserId;
+      const isCollecting = !this.currentPost.isCollected; // 当前是要收藏还是取消收藏
 
       try {
-        const res = await updatePostStats('collect',postId, newCollections);
+        const action = isCollecting ? '增加' : '取消';
+        const newCollections = isCollecting ? 
+          this.currentPost.collections + 1 : 
+          Math.max(0, this.currentPost.collections - 1);
+
+        const res = await updatePostStats('collect', action, postId, userId, newCollections);
+        
         if (res.data?.code === 200) {
           this.currentPost.collections = newCollections;
-          this.currentPost.isCollected = !this.currentPost.isCollected;
-          if (this.currentPost.isCollected) this.createCollectEffect();
+          this.currentPost.isCollected = isCollecting;
+
+          if (isCollecting) {
+            this.createCollectEffect(event);
+          }
         } else {
           alert('收藏操作失败');
         }
@@ -1416,32 +1765,41 @@ export default {
       }
     },
 
-    createLikeEffect() {
+
+      // 创建点赞动画效果
+    createLikeEffect(event) {
       const effect = document.createElement('div');
       effect.className = 'like-effect';
       effect.innerHTML = '❤️';
       effect.style.position = 'fixed';
-      effect.style.fontSize = '30px';
+      effect.style.fontSize = '24px';
       effect.style.pointerEvents = 'none';
-      effect.style.left = (event.clientX - 15) + 'px';
-      effect.style.top = (event.clientY - 15) + 'px';
+      effect.style.zIndex = '9999';
+      effect.style.left = (event.clientX - 12) + 'px';
+      effect.style.top = (event.clientY - 12) + 'px';
       effect.style.animation = 'likeAnimation 1s forwards';
       document.body.appendChild(effect);
+      
+      // 动画结束后移除元素
       setTimeout(() => {
         effect.remove();
       }, 1000);
     },
-    createCollectEffect() {
+      // 创建收藏动画效果
+    createCollectEffect(event) {
       const effect = document.createElement('div');
       effect.className = 'collect-effect';
       effect.innerHTML = '⭐';
       effect.style.position = 'fixed';
-      effect.style.fontSize = '30px';
+      effect.style.fontSize = '24px';
       effect.style.pointerEvents = 'none';
-      effect.style.left = (event.clientX - 15) + 'px';
-      effect.style.top = (event.clientY - 15) + 'px';
+      effect.style.zIndex = '9999';
+      effect.style.left = (event.clientX - 12) + 'px';
+      effect.style.top = (event.clientY - 12) + 'px';
       effect.style.animation = 'collectAnimation 1s forwards';
       document.body.appendChild(effect);
+      
+      // 动画结束后移除元素
       setTimeout(() => {
         effect.remove();
       }, 1000);
@@ -1451,6 +1809,9 @@ export default {
       this.showPostDetail = false;
       document.body.style.overflow = '';
       this.commentImages = [];
+
+      // 重新加载当前页数据，刷新列表
+      this.loadPage(this.currentPage);
     },
 
     openReplyDialog(comment) {
@@ -1466,77 +1827,101 @@ export default {
       this.replyContent = '';
       this.replyImages = [];
     },
-    handlePostImageUpload(e) {
+    async handlePostImageUpload(e) {
       const files = Array.from(e.target.files);
       if (!files.length) return;
 
       const remainingSlots = 5 - this.newPostImages.length;
       const validFiles = files.slice(0, remainingSlots);
 
-      validFiles.forEach(file => {
+      for (const file of validFiles) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          this.newPostImages.push({
-            file,
-            preview: e.target.result,
-            uploadedPath: null // 先不上传，等发布时再统一上传
-          });
+        reader.onload = async (e) => {
+          const preview = e.target.result;
+
+          // 立即上传
+          try {
+            const [uploadedUrl] = await uploadImages([file]);
+            this.newPostImages.push({
+              file,
+              preview,
+              uploadedPath: uploadedUrl, // 保存地址
+            });
+          } catch (err) {
+            console.error('图片上传失败:', err);
+            alert(`图片上传失败：${file.name}`);
+          }
         };
         reader.readAsDataURL(file);
-      });
+      }
 
-      this.$refs.postFileInput.value = ''; // 允许重复选同一张图
+      this.$refs.postFileInput.value = '';
     },
 
-    handleCommentImageUpload(e) {
+    async handleCommentImageUpload(e) {
       const files = Array.from(e.target.files);
       if (!files.length) return;
 
       const remainingSlots = 5 - this.commentImages.length;
       const validFiles = files.slice(0, remainingSlots);
 
-      validFiles.forEach(file => {
+      for (const file of validFiles) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          this.commentImages.push({
-            file,
-            preview: e.target.result,
-            uploadedPath: null // 先不上传，等发布时再统一上传
-          });
+        reader.onload = async (e) => {
+          const preview = e.target.result;
+          try {
+            const [uploadedUrl] = await uploadImages([file]);
+            this.commentImages.push({
+              file,
+              preview,
+              uploadedPath: uploadedUrl,
+            });
+          } catch (err) {
+            console.error('评论图片上传失败:', err);
+            alert(`评论图片上传失败：${file.name}`);
+          }
         };
         reader.readAsDataURL(file);
-      });
+      }
 
-     // this.$refs.commentImages.value = ''; // 允许重复选同一张图
+      this.$refs.commentFileInput.value = '';
     },
-    handleReplyImageUpload(e) {
+    async handleReplyImageUpload(e) {
       const files = Array.from(e.target.files);
       if (!files.length) return;
 
       const remainingSlots = 5 - this.replyImages.length;
       const validFiles = files.slice(0, remainingSlots);
 
-      validFiles.forEach(file => {
+      for (const file of validFiles) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          this.replyImages.push({
-            file,
-            preview: e.target.result,
-            uploadedPath: null // 先不上传，等发布时再统一上传
-          });
+        reader.onload = async (e) => {
+          const preview = e.target.result;
+          try {
+            const [uploadedUrl] = await uploadImages([file]);
+            this.replyImages.push({
+              file,
+              preview,
+              uploadedPath: uploadedUrl,
+            });
+          } catch (err) {
+            console.error('评论图片上传失败:', err);
+            alert(`评论图片上传失败：${file.name}`);
+          }
         };
         reader.readAsDataURL(file);
-      });
+      }
 
-      //this.$refs.replyImages.value = ''; // 允许重复选同一张图
+      this.$refs.commentFileInput.value = '';
     },
 
 
-    // 修改 removeCommentImage 方法
+    // 删除预览区图片
     removeCommentImage(index) {
       const removed = this.commentImages.splice(index, 1)[0];
       if (removed.uploadedPath) {
         this.deleteUploadedImage(removed.uploadedPath);
+        //console.log('剩余图片地址:', remainingPaths.join(','));
       }
     },
 
@@ -1591,41 +1976,47 @@ export default {
       }
 
       try {
-        const imageUrls = await uploadImages(this.commentImages.map(img => img.file));
+        // 打印上传前的本地图片信息
+        console.log('准备上传的评论图片（本地）:', this.commentImages.map(img => ({
+          name: img.file.name,
+          size: img.file.size,
+          preview: img.preview
+        })));
 
-        this.commentImages.forEach((img, index) => {
-          img.uploadedPath = imageUrls[index];
-        });
+        const imageString = this.commentImages.map(img => img.uploadedPath).join(',');
+
+        // 打印后端返回的图片路径
+        console.log('后端返回的评论图片路径:', imageString);
+
         const payload = {
           postId: this.currentPost.postId,
-          userId: this.currentUserId, 
-          username: this.currentUsername, 
+          userId: this.currentUserId,
+          username: this.currentUsername,
           content: this.newComment.trim(),
-          image: imageUrls.join(','),
+          image: imageString,
           parentComment: null,
           likeCount: 0
         };
 
-        // ✅ 打印传给后端的内容
-        console.log('传给后端的评论内容：', payload);
-        
+        // 打印最终传给后端的评论数据
+        console.log('最终传给后端的评论数据:', payload);
+
         await addComment(payload);
-        //console.log('后端返回：', res);
-        //alert('评论成功');
+        const userId = this.currentUserId;
+        await updatePostStats('comment','增加', this.currentPost.postId, userId, this.currentPost.comments + 1);
+        
         this.newComment = '';
         this.commentImages = [];
         this.refreshComments();
       } catch (error) {
         console.error('评论失败：', error);
       }
-      // 发布评论后
-      await updatePostStats(this.currentPost.postId, 'comment', this.currentPost.comments + 1);
     },
     
     async refreshComments() {
       try {
         const res = await getComments(this.currentPost.postId);
-        console.log('📦 后端返回评论：', res.data);
+        console.log('后端返回评论：', res.data);
 
         if (res.data?.code === 200) {
           // 将平铺的评论列表转换为嵌套结构
@@ -1647,7 +2038,7 @@ export default {
           ...comment,
           // 确保有isLiked和likes字段
           isLiked: comment.isLiked || false,
-          likes: comment.likes || 0,
+          likes: comment.likeCount || 0,
           replies: [],
           imageList: comment.image ? comment.image.split(',').map(url => getFullImageUrl(url)) : []
         };
@@ -1699,8 +2090,8 @@ export default {
       return result;
     },
     // 检查是否是当前用户的评论
-    isCurrentUserComment(comment) {
-      return comment.userId === this.currentUser.id;
+    canDeleteComment(comment) {
+      return this.isManager || comment.userId === this.currentUser.id;
     },
     
     // 确认删除帖子
@@ -1749,6 +2140,8 @@ export default {
         if (res.data?.code === 200) {
           //alert('评论删除成功');
           await this.refreshComments(); // 刷新评论
+          const userId = this.currentUserId;
+          await updatePostStats('comment', '取消', this.currentPost.postId,userId,this.currentPost.comments);
         } else {
           alert('删除失败：' + (res.data?.msg || '未知错误'));
         }
@@ -1756,7 +2149,7 @@ export default {
         console.error('删除评论失败:', err);
         alert('网络错误，删除失败');
       }
-      await updatePostStats(this.currentPost.postId, 'comment', this.currentPost.comments - 1);
+      
     },
 
      // 取消删除
@@ -1783,7 +2176,7 @@ export default {
       await this.initializePagination(); // 重新加载帖子
     },
 
-    // 修改提交回复方法
+    //提交回复方法
     async submitReply() {
       if (!this.replyContent.trim() && this.replyImages.length === 0) {
         alert('请输入回复内容或上传图片');
@@ -1791,29 +2184,39 @@ export default {
       }
 
       try {
-        const imageUrls = await uploadImages(this.replyImages.map(img => img.file));
+        // 打印上传前的本地图片信息
+        console.log('准备上传的回复图片（本地）:', this.replyImages.map(img => ({
+          name: img.file.name,
+          size: img.file.size,
+          preview: img.preview
+        })));
 
-        this.commentImages.forEach((img, index) => {
-            img.uploadedPath = imageUrls[index];
-          });
+        const imageString = this.replyImages.map(img => img.uploadedPath).join(',');
+
+        // 打印后端返回的图片路径
+        console.log('后端返回的回复图片路径:',imageString);
+
         const payload = {
           postId: this.currentPost.postId,
-          userId: this.currentUserId, 
-          username: this.currentUsername, 
+          userId: this.currentUserId,
+          username: this.currentUsername,
           content: this.replyContent.trim(),
-          image: imageUrls.join(','),
-          parentComment: this.replyingTo.commentId || this.replyingTo.id, // 关键：被回复评论的ID
+          image: imageString,
+          parentComment: this.replyingTo.commentId || this.replyingTo.id,
           likeCount: 0
         };
 
-        console.log('回复传给后端：', payload);
-        await addComment(payload);
+        // 打印最终传给后端的回复数据
+        console.log('最终传给后端的回复数据:', payload);
 
-        //alert('回复成功');
+        await addComment(payload);
+        const userId = this.currentUserId;
+        await updatePostStats('comment','增加' ,this.currentPost.postId, userId,this.currentPost.comments + 1);
+        
         this.replyContent = '';
         this.replyImages = [];
         this.closeReplyDialog();
-        this.refreshComments(); // 刷新评论列表
+        this.refreshComments();
       } catch (err) {
         console.error('回复失败：', err);
       }
@@ -1844,20 +2247,24 @@ export default {
     },
 
 
-    // 更新浏览量的方法
-    // async updateViewCount(postId) {
-    //   const newViews = this.currentPost.views + 1;
-    //   try {
-    //     const res = await updatePostStats(postId, 'view', newViews);
-    //     if (res.data?.code === 200) {
-    //       //this.currentPost.views = newViews;
-    //     } else {
-    //      // alert('浏览量更新失败');
-    //     }
-    //   } catch (err) {
-    //     //console.error('浏览量请求失败:', err);
-    //   }
-    // },
+    //更新浏览量的方法
+    async updateViewCount(postId,userId) {
+      const newViews = this.currentPost.views + 1;
+
+      
+      try {
+        
+        const res = await updatePostStats('view', '增加',postId, userId, newViews);
+        if (res.data?.code === 200) {
+          // 只有后端返回成功，才更新前端
+          this.currentPost.views = newViews;
+        } else {
+          console.warn('浏览量更新失败');
+        }
+      } catch (err) {
+        console.error('浏览量请求失败:', err);
+      }
+    },
     splitImagePaths(imageString) {
       if (!imageString) return [];
       return imageString.split(',').filter(path => path.trim() !== '');
@@ -1867,9 +2274,50 @@ export default {
       return imageArray.filter(path => path).join(',');
     },
    
+    //跳页
 
-  
-  
+      async gotoSpecificPage() {
+        // 验证输入是否有效
+        if (!this.gotoPage || this.gotoPage < 1 || this.gotoPage > this.totalPages) {
+          alert(`请输入有效的页码 (1-${this.totalPages})`);
+          this.gotoPage = null;
+          return;
+        }
+        
+        // 转换为整数
+        const targetPage = parseInt(this.gotoPage);
+        
+        // 如果已经是当前页，不需要操作
+        if (targetPage === this.currentPage) {
+          this.gotoPage = null;
+          return;
+        }
+        
+        try {
+          // 如果有搜索或标签筛选，使用本地过滤数据
+          if (this.searchQuery.trim() || this.currentTag !== 'all') {
+            this.currentPage = targetPage;
+          } else {
+            // 否则从API加载对应页码的数据
+            await this.loadPage(targetPage);
+          }
+          
+          // 清空输入框
+          this.gotoPage = null;
+          
+          // 滚动到页面顶部
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+          console.error('跳转页面失败:', error);
+          alert('跳转页面失败，请重试');
+        }
+      },
+      fixHorizontalScroll() {
+      // 防止内容溢出导致水平滚动
+      document.body.style.overflowX = 'hidden';
+      
+      
+    }
   },
   watch: {
     showPostDetail(newVal) {
@@ -1891,26 +2339,33 @@ export default {
       },
       totalPages(newVal, oldVal) {
         console.log('totalPages变化:', oldVal, '->', newVal);
-      }
+      },
 
+      
   },
+  
   mounted() {
-    const paginationEl = document.querySelector('.pagination');
-    if (paginationEl) {
-      paginationEl.addEventListener('click', (e) => {
-        console.log('分页区域点击事件:', e.target);
-        console.log('事件冒泡路径:', e.composedPath());
-      }, true); // 使用捕获阶段
-    }
-     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      this.currentUserId = user.userId || 1;
-      this.currentUsername = user.username || '游客';
-      this.currentUser = {
-        id: this.currentUserId,
-        name: this.currentUsername,
-        avatar: ''
-      };
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    this.currentUserId = user.userId || 1;
+    this.currentUsername = user.username || '游客';
+    this.currentUser = {
+      id: this.currentUserId,
+      name: this.currentUsername,
+      avatar: ''
+    };
+
+    //读取管理员状态
+    this.isManager = user.isManager || false;
+
+    this.fixHorizontalScroll();
+    window.addEventListener('resize', this.fixHorizontalScroll);
   },
+      
+  beforeUnmount() {
+    window.removeEventListener('resize', this.fixHorizontalScroll);
+  },
+
+ 
 }
 </script>
 
@@ -1942,20 +2397,41 @@ export default {
 }
 
 .clear-search-btn {
-  padding: 4px 10px;
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #EF4444;
+  position: absolute;
+  right: 100px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 8px; /* 减小内边距 */
+  background: #ef4444;
+  color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 4px; /* 减小圆角 */
   cursor: pointer;
-  font-size: 13px;
+  font-size: 11px; /* 适当调整字体大小 */
+  font-weight: 500; /* 增加字体粗细 */
   transition: all 0.3s ease;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3); /* 减小阴影 */
+  min-width: auto; /* 移除最小宽度 */
+  height: 22px; /* 固定高度 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .clear-search-btn:hover {
-  background-color: rgba(239, 68, 68, 0.2);
+  background: #dc2626;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
 }
 
+
+
+.clear-text {
+  display: inline-block;
+  color: rgb(150, 147, 147) !important; /* 确保文字是白色 */
+  font-weight: 500;
+  line-height: 1;
+}
 /* 基础样式 */
 .forum-container {
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -1963,7 +2439,12 @@ export default {
   color: #333;
   min-height: 100vh;
   line-height: 1.6;
-  padding-top: 59px;
+  padding-top: 10px;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  overflow-y: auto; 
+  height: 100vh;
+  position: relative;
 }
 
 /* 导航栏 */
@@ -2154,7 +2635,7 @@ export default {
 
 .content-wrapper {
   display: flex;
-  gap: 20px;
+  gap:40px;
   align-items: flex-start; /* 顶部对齐 */
 }
 
@@ -2166,6 +2647,7 @@ export default {
   align-self: flex-start; /* 确保只占用内容高度 */
   max-height: calc(100vh - 40px); /* 视口高度减去上下边距 */
   overflow-y: auto; /* 如果内容过长可以滚动 */
+  
 }
 
 .right-content {
@@ -2997,9 +3479,16 @@ export default {
   height: 16px;
 }
 
+.liked {
+  color: #ff4757 !important;
+}
+
+.collected {
+  color: #ffa502 !important;
+}
 
 
-
+/* 点赞动画 */
 @keyframes likeAnimation {
   0% {
     transform: scale(1);
@@ -3014,26 +3503,48 @@ export default {
   }
 }
 
-.heart-animation {
-  position: fixed;
-  font-size: 20px;
-  pointer-events: none;
-  animation: heartFloat 1s ease-out forwards;
-  z-index: 9999;
+.like-effect {
+  animation: likeAnimation 1s forwards;
 }
 
+.heart-animation {
+  animation: heartFloat 1s ease-out forwards;
+}
+
+/* 评论点赞动画 */
 @keyframes heartFloat {
-  0% { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+  0% { 
+    transform: translateY(0) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(-80px) scale(1.5); 
+    opacity: 0; 
+  }
 }
 
 /* 优化点赞按钮反馈 */
+.post-actions button:focus,
+.comment-actions button:focus,
+.reply-actions button:focus,
+.like-btn:focus,
+.reply-btn:focus,
+.deletes-btns:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .like-btn {
   transition: transform 0.2s;
 }
 
 .like-btn:active {
-  transform: scale(1.2);
+  transform: scale(1.1);
+}
+
+.post-actions button,
+.comment-actions button {
+  transition: all 0.3s ease;
 }
 
 .collect-effect {
@@ -3043,6 +3554,7 @@ export default {
   z-index: 9999;
 }
 
+/* 收藏动画 */
 @keyframes collectAnimation {
   0% {
     transform: scale(1) rotate(0deg);
@@ -3055,6 +3567,10 @@ export default {
     transform: scale(1) rotate(360deg) translateY(-50px);
     opacity: 0;
   }
+}
+
+.collect-effect {
+  animation: collectAnimation 1s forwards;
 }
 
 /* 评论区 */
@@ -4095,7 +4611,7 @@ textarea {
   border-color: #4F46E5;
 }
 /* 新增删除按钮样式 */
-.delete-btn {
+.deletes-btns {
   padding: 8px 16px;
   background-color: rgba(239, 68, 68, 0.1);
   color: #EF4444;
@@ -4110,11 +4626,11 @@ textarea {
   font-size: 14px;
 }
 
-.delete-btn:hover {
+.deletes-btns:hover {
   background-color: rgba(239, 68, 68, 0.2);
 }
 
-.delete-btn svg {
+.deletes-btns svg {
   width: 16px;
   height: 16px;
 }
@@ -4306,7 +4822,379 @@ textarea {
   font-size: 16px;
   margin: 0;
 }
+.carousel-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.3s ease;
+  /* 添加以下样式改善触摸体验 */
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.carousel-slide img {
+  /* 防止图片被长按选中 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 添加滑动指示器动画 */
+.carousel-track.swiping {
+  transition: none;
+}
+.forum-header {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  border-radius: 0 0 30px 30px;
+  padding: 15px 20px 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.decorative-banner {
+  position: absolute;
+  top: 0px;
+
+  left: 0;
+  right: 0;
+  height: 10px;
+  display: flex;
+  justify-content: center;
 
 
+}
 
+.pet-paws {
+  display: flex;
+  gap: 30px;
+  animation: bounce 2s infinite ease-in-out;
+  
+}
+
+.pet-paws span {
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+.header-main {
+  max-width: 100vw;
+  box-sizing: border-box;
+  padding: 0 20px;
+  margin: 0 auto;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  
+}
+
+.header-pets {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  max-width: 25%;
+}
+
+.floating-pet {
+  flex-shrink: 0;
+  font-size: clamp(20px, 2.5vw, 28px); /* 响应式字体大小 */
+  animation: float 3s infinite ease-in-out;
+}
+
+.floating-pet.cat {
+  animation-delay: 0s;
+  color: #ff6b6b;
+}
+
+.floating-pet.dog {
+  animation-delay: 0.5s;
+  color: #4ecdc4;
+}
+
+.floating-pet.rabbit {
+  animation-delay: 1s;
+  color: #ffbe76;
+}
+
+.floating-pet.bird {
+  animation-delay: 1.5s;
+  color: #a29bfe;
+}
+
+.floating-pet.fish {
+  animation-delay: 2s;
+  color: #74b9ff;
+}
+
+.floating-pet.hamster {
+  animation-delay: 2.5s;
+  color: #fd79a8;
+}
+
+.header-center {
+  text-align: center;
+  flex-grow: 1;
+  padding: 0 20px;
+}
+
+.forum-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #2d3436;
+  margin: 16px 0 10px;
+  text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.5);
+  background: linear-gradient(45deg, #6c5ce7, #fd79a8, #fdcb6e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.forum-subtitle {
+  font-size: 1rem;
+  color: #636e72;
+  margin: 0;
+  font-weight: 500;
+}
+
+.search-section {
+  display: flex;
+  justify-content: flex-end; /* 将搜索框靠右对齐 */
+  margin-bottom: 20px;
+  padding: 0 20px;
+}
+
+.search-box {
+  width: 100%; /* 使用相对宽度 */
+  max-width: 350px; /* 设置最大宽度 */
+  /* 其他样式保持不变 */
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  padding: 5px;
+}
+
+.search-box:focus-within {
+  border-color: #fd79a8;
+  box-shadow: 0 8px 25px rgba(253, 121, 168, 0.3);
+  transform: translateY(-2px);
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  margin-left: 15px;
+  color: #fd79a8;
+  flex-shrink: 0;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 12px 15px;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: #2d3436;
+  outline: none;
+}
+
+.search-box input::placeholder {
+  color: #b2bec3;
+}
+
+
+.search-button {
+  padding: 10px 24px;
+  background: linear-gradient(45deg, #6c5ce7, #fd79a8);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: 15px;
+  box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+}
+
+.search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(108, 92, 231, 0.4);
+}
+
+/* 动画 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  
+  .header-main {
+    gap: 20px; /* 在小屏幕上进一步减少间距 */
+  }
+
+  
+  .header-pets {
+    flex-direction: row;
+    order: 3;
+    margin-top: 15px;
+  }
+  
+  .forum-title {
+    font-size: 2rem;
+  }
+  
+  .search-box {
+    flex-direction: column;
+    border-radius: 20px;
+    padding: 10px;
+  }
+  
+  .search-box input {
+    width: 100%;
+    margin: 10px 0;
+  }
+  
+  .search-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+.pagination-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
+  gap: 15px;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-btn {
+  padding: 8px 16px;
+  min-width: 44px;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.page-btn:hover:not(:disabled):not(.ellipsis) {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.page-btn.active {
+  background: linear-gradient(135deg, #10B981, #0EA5E9);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 6px rgba(16,185,129,0.2);
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-btn.ellipsis {
+  cursor: default;
+  background: transparent;
+  border: none;
+  min-width: auto;
+}
+
+.page-btn.ellipsis:hover {
+  background: transparent;
+}
+
+.page-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.page-jump input {
+  width: 60px;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.page-jump button {
+  padding: 6px 12px;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.page-jump button:hover {
+  background-color: #e5e7eb;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .pagination {
+    gap: 6px;
+  }
+  
+  .page-btn {
+    padding: 6px 12px;
+    min-width: 40px;
+    font-size: 13px;
+  }
+  
+  .page-jump {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+.decorative-banner {
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .decorative-banner {
+    opacity: 0.6;
+  }
+}
 </style>

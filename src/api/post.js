@@ -1,6 +1,9 @@
 import api from './index';
 import axios from 'axios';
 
+
+const BASE_URL = 'http://47.113.205.34:8085';
+
 export const addPost = (data) => api.post('/addPost', data);
 export const getPostsByPage = (pageSize, offset) => api.get('/getPostsByPage', { params: { pageSize, offset } });
 export const getPostNum = () => api.get('/getPostNum');
@@ -12,12 +15,17 @@ export function getComments(postId) {
 }
 // 更新帖子统计数据（浏览量、点赞数、收藏数）
 // 修改后的 updatePostStats 方法
-export const updatePostStats = (type, postId, newNum) => {
-  console.log('请求参数', type, postId, newNum)
-  return api.post('/updateNumInPost', {
-    type: type,
-    id: postId,
-    newNum: newNum
+export const updatePostStats = (type, action, postId, userId, newNum) => {
+  console.log('帖子请求参数', type, action, postId, userId, newNum)
+  const formData = new URLSearchParams()
+  formData.append('type', type)
+  formData.append('action', action)
+  formData.append('postId', postId)
+  formData.append('userId', userId)
+  formData.append('newNum', newNum)
+
+  return api.post('/updateNumInPost', formData, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   }).then(response => {
     console.log('后端返回的数据:', response.data);
     return response;
@@ -25,7 +33,40 @@ export const updatePostStats = (type, postId, newNum) => {
     console.error('请求失败:', error);
     throw error;
   });
+}
+
+
+export const updateCommentLikes = (action,commentId, userId, newNum) => {
+  console.log('评论点赞请求参数', action, commentId, userId, newNum)
+  return api.post(
+    `/updateNumInComment?action=${action}&commentId=${commentId}&userId=${userId}&newNum=${newNum}`
+  );
 };
+
+
+// 检查帖子点赞/收藏状态
+export const checkPostStatus = (type, postId, userId) => {
+  const formData = new URLSearchParams();
+  formData.append('type', type);
+  formData.append('postId', postId);
+  formData.append('userId', userId);
+  
+  return api.post('/checkStatusInPost', formData, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  });
+};
+
+// 检查评论点赞状态 
+export const checkCommentStatus = (commentId, userId) => {
+  const formData = new URLSearchParams();
+  formData.append('commentId', commentId);
+  formData.append('userId', userId);
+  
+  return api.post('/checkStatusInComment', formData, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  });
+};
+
 
 // api/post.js
 export const deletePost = (postId) => api.get('/deletePost', { params: { postId: postId } });
@@ -52,30 +93,33 @@ export async function uploadImages(files) {
   return urls; // ["images/img1.png", "images/img2.png", ...]
 }
 
-// 删除图片
+
+
+
 export async function deleteImage(imagePath) {
   try {
-    const response = await request({
-     url: '/deleteImage',
-     method: 'post',
-     data: {
-       imagePath: imagePath
-     }
-   });
-   if (response.data.code === 200) {
-     console.log('图片删除成功');
-     return true; // 删除成功返回 true
-   } else {
-     console.error('图片删除失败:', response.data.msg);
-     return false; // 删除失败返回 false
+    const formData = new FormData();
+    formData.append('filePaths', imagePath);
+
+    const response = await api.post('/delete', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    if (response.data.code === 200) {
+      console.log('图片删除成功');
+      return true;
+    } else {
+      console.error('图片删除失败:', response.data.msg);
+      return false;
     }
   } catch (error) {
     console.error('删除图片时发生错误:', error);
-    return false; // 发生错误返回 false
+    return false;
   }
-};
+}
 
-const BASE_URL = 'http://47.113.205.34:8085';
 
 export function getFullImageUrl(path) {
   if (!path || typeof path !== 'string') return [];
@@ -85,10 +129,3 @@ export function getFullImageUrl(path) {
 }
 
 
-export const updateCommentLikes = (commentId, newNum) => {
-  console.log("API 请求参数：", { id: commentId, newNum });
-  return api.post('/updateNumInComment', {
-    id: commentId,
-    newNum: newNum
-  });
-};

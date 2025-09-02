@@ -115,28 +115,58 @@
                     <p class="dept-description">{{ getDepartmentDescription(activeDepartment) }}</p>
                   </div>
 
-                  <div class="doctor-list">
-                    <div class="doctor-card" :class="{ chief: doctor.title.includes('主任') }"
+                   <div class="doctor-list">
+                    <div class="doctor-card" 
+                        :class="{ chief: doctor.title.includes('主任') }"
                         v-for="(doctor, index) in filteredDoctors" 
                         :key="doctor.name"
                         :style="{ '--doctor-color': ['#6c5ce7', '#00cec9', '#fd79a8', '#fdcb6e', '#00b894', '#e17055', '#d63031', '#0984e3'][index] }">
+                      
                       <div class="doctor-card-content">
+                        <!-- 医生头像区域 -->
                         <div class="doctor-avatar-container">
-                          <div class="doctor-avatar">
-                            <img :src="doctor.avatar || defaultAvatar" :alt="doctor.name" @click="openDoctorModal(doctor)">
+                          <div class="doctor-avatar" @click="openDoctorModal(doctor)">
+                            <img :src="doctor.avatar || defaultAvatar" :alt="doctor.name">
+                            <div class="avatar-overlay">
+                              <i class="fas fa-eye"></i>
+                            </div>
+                            <div v-if="doctor.title.includes('主任')" class="chief-badge">
+                              <i class="fas fa-crown"></i>
+                            </div>
                           </div>
+                          
+                          <!-- 医生标签 -->
                           <div class="doctor-tags">
-                            <span v-for="tag in doctor.tags" :key="tag">{{ tag }}</span>
+                            <span v-for="tag in doctor.tags" :key="tag" class="tag">{{ tag }}</span>
                           </div>
                         </div>
+                        
+                        <!-- 医生信息区域 -->
                         <div class="doctor-info">
-                          <h4>{{ doctor.name }}</h4>
-                          <p class="title">{{ doctor.title }}</p>
-                          <p class="doctor-intro">{{ doctor.introduction || doctor.education }}</p>
+                          <div class="info-header">
+                            <h4>{{ doctor.name }}</h4>
+                            <p class="title">{{ doctor.title }}</p>
+                          </div>
+                          
+                          <div class="doctor-intro">
+                            <p>{{ doctor.introduction || doctor.education }}</p>
+                          </div>
+                          
+                          <div class="doctor-stats">
+                            <!-- <div class="stat-item">
+                              <i class="fas fa-award"></i>
+                              <span>{{'10年+' }}经验</span>
+                            </div> -->
+                            <!-- <div class="stat-item">
+                              <i class="fas fa-star"></i>
+                              <span>4.9评分</span>
+                            </div> -->
+                          </div>
+                          
                           <div class="doctor-action">
                             <button class="detail-btn" @click="openDoctorModal(doctor)">
                               <i class="fas fa-user-md"></i> 查看详情
-                            </button>
+                            </button> 
                           </div>
                         </div>
                       </div>
@@ -215,7 +245,7 @@
                   <div class="org-node top-node">
                     <div class="node-content">
                       <h4>院长</h4>
-                      <p>张明远 教授</p>
+                      <p>张明 教授</p>
                     </div>
                   </div>
                 </div>
@@ -386,10 +416,10 @@
                   <p>我们的使命是成为宠物健康最值得信赖的守护者，用专业和爱心创造宠物与主人更美好的生活</p>
                   <div class="quote-author">
                     <div class="author-avatar">
-                      <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&h=100&q=80" alt="院长">
+                      <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face" alt="院长">
                     </div>
                     <div class="author-info">
-                      <h4>张明远</h4>
+                      <h4>张明</h4>
                       <p>德扬宠物医院院长</p>
                     </div>
                   </div>
@@ -419,12 +449,12 @@
     </section>
 
     <!-- 预约横幅 -->
-    <section class="appointment-banner">
+    <section class="appointments-banner">
       <div class="container">
         <div class="banner-content">
           <h2>立即预约专业宠物诊疗服务</h2>
           <p>我们的专业团队随时准备为您的爱宠提供最好的医疗服务</p>
-          <router-link to="/appointment" class="appointment-btn">
+          <router-link to="/appointment" class="appointments-btn">
             <i class="fas fa-calendar-check"></i> 在线预约
           </router-link>
         </div>
@@ -460,8 +490,9 @@
             <ul>
               <li><a href="/">首页</a></li>
               <li><a href="/forum">宠物论坛</a></li>
-              <li><a href="/appointment">在线预约</a></li>
+              <li><a href="/adaptpet">领养宠物</a></li>
               <li><a href="/questionnaire">问卷调查</a></li>
+              <li><a href="/shopment">购物</a></li>
             </ul>
           </div>
           
@@ -493,6 +524,11 @@
 import { departments} from '/src/doctorData.js';
 export default {
   name: 'PetHospitalOverview',
+  name: 'DoctorCards',
+  props: {
+    //filteredDoctors: Array,
+    //defaultAvatar: String
+  },
   data() {
     return {
       selectedDoctor: null,
@@ -593,6 +629,7 @@ export default {
     closeModal() {
         this.selectedDoctor = null;
     },
+    
   },
   mounted() {
     document.querySelector('.pet-hospital-page').style.opacity = '1';
@@ -1160,12 +1197,9 @@ body {
 
 .doctor-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-  padding-right: 10px;
-  margin-right: -10px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+  padding: 20px 0;
 }
 .doctor-list::-webkit-scrollbar {
   width: 6px;
@@ -1185,18 +1219,17 @@ body {
   background: #555;
 }
 .doctor-card {
-  display: flex;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
   background: white;
-  height: 192px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
   position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 .doctor-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
 }
 
 .doctor-card::before {
@@ -1206,7 +1239,8 @@ body {
   left: 0;
   width: 100%;
   height: 4px;
-  background: var(--doctor-color, var(--primary-color));
+  background: linear-gradient(90deg, var(--doctor-color, var(--primary-color)), #a29bfe);
+  z-index: 1;
 }
 
 
@@ -1215,26 +1249,29 @@ body {
   width: 100%;
   padding: 15px;
   position: relative;
+  
 }
 
 
 .doctor-avatar-container {
   display: flex;
   flex-direction: column;
-  margin-right: 15px;
-  width: 90px;
+  align-items: center;
+  margin-right: 20px;
+  flex-shrink: 0;
 }
 .doctor-avatar {
   width: 100px;
   height: 100px;
   border-radius: 50%;
   overflow: hidden;
-  flex-shrink: 0;
+  position: relative;
   border: 3px solid white;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  margin-bottom: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
-
 .doctor-card:hover .doctor-avatar {
   transform: scale(1.05);
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
@@ -1247,6 +1284,28 @@ body {
   transition: all 0.3s ease;
 }
 
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(108, 92, 231, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  color: white;
+  font-size: 1.5rem;
+}
+.doctor-avatar:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.doctor-avatar:hover img {
+  transform: scale(1.1);
+}
 .doctor-avatar::after {
   content: "";
   position: absolute;
@@ -1263,13 +1322,15 @@ body {
 .doctor-card.chief .doctor-avatar::after {
   --badge-display: block;
 }
-
+.doctor-card.chief {
+  border: 2px solid #fdcb6e;
+  box-shadow: 0 5px 20px rgba(253, 203, 110, 0.2);
+}
 .doctor-info {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
-
 
 .doctor-info h4 {
   font-size: 1.1rem;
@@ -1286,22 +1347,62 @@ body {
 }
 
 .doctor-intro {
-  font-size: 0.85rem;
+  margin-bottom: 15px;
+  flex-grow: 1;
+}
+.doctor-intro p {
+  font-size: 0.9rem;
   color: #555;
   line-height: 1.5;
-  margin: 0 0 auto 0;
+  margin: 0;
   display: -webkit-box;
- 
+  /* -webkit-line-clamp: 3; */
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.chief-badge {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #fdcb6e, #e17055);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8rem;
+  border: 2px solid white;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+.info-header {
+  margin-bottom: 12px;
+}
+
+.info-header h4 {
+  font-size: 1.2rem;
+  color: var(--dark-text);
+  margin: 0 0 5px 0;
+  font-weight: 700;
+}
+
+.info-header .title {
+  font-size: 0.9rem;
+  color: var(--doctor-color, var(--primary-color));
+  font-weight: 600;
+  margin: 0;
+}
+
 .doctor-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100px;
 }
 
 .doctor-tags span {
@@ -1372,7 +1473,7 @@ body {
 }
 
 .close-btn {
-  background: none;
+  background: rgb(213, 209, 209);
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
@@ -1402,15 +1503,14 @@ body {
   margin: 10px 0;
   font-size: 1rem;
 }
-
 .tag {
-  background: var(--primary-light);
-  color: var(--primary-color);
-  padding: 5px 10px;
-  border-radius: 15px;
-  margin: 5px;
-  font-size: 0.8rem;
-  display: inline-block;
+  background: rgba(var(--doctor-rgb, 108, 92, 231), 0.1);
+  color: var(--doctor-color, var(--primary-color));
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* ===== 弹窗动效与美化 ===== */
@@ -1423,15 +1523,7 @@ body {
   opacity: 0;
 }
 
-.doctor-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
+
 
 .modal-content {
   width: 95%;
@@ -1498,14 +1590,7 @@ body {
   }
 }
 
-.close-btn {
-  margin-left: auto;
-  background: transparent;
-  border: 0;
-  color: #fff;
-  font-size: 1.4rem;
-  cursor: pointer;
-}
+
 
 /* 主体 */
 .modal-body {
@@ -1894,7 +1979,8 @@ body {
 }
 
 /* 预约横幅 */
-.appointment-banner {
+/* 预约横幅 */
+.appointments-banner {
   background: linear-gradient(90deg, #6c5ce7 0%, #00cec9 50%, #fd79a8 100%);
   padding: 60px 0;
   color: white;
@@ -1903,7 +1989,7 @@ body {
   overflow: hidden;
 }
 
-.appointment-banner::before {
+.appointments-banner::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -1915,6 +2001,11 @@ body {
 }
 
 .banner-content {
+   display: flex;
+  flex-direction: column; /* 从上到下排列 */
+  align-items: center;    /* 水平居中 */
+  justify-content: center; /* 垂直居中 */
+  gap: 5px;              /* 元素间距 */
   position: relative;
   z-index: 2;
 }
@@ -1933,7 +2024,7 @@ body {
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-.appointment-btn {
+.appointments-btn {
   background: rgb(22, 21, 21);
   color: var(--primary-color);
   border: none;
@@ -1951,7 +2042,7 @@ body {
   overflow: hidden;
 }
 
-.appointment-btn::before {
+.appointments-btn::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1962,12 +2053,12 @@ body {
   transition: 0.5s;
 }
 
-.appointment-btn:hover {
+.appointments-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 
-.appointment-btn:hover::before {
+.appointments-btn:hover::before {
   left: 100%;
 }
 
@@ -1983,7 +2074,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 40px;
-  margin-bottom: 40px;
+  margin-bottom: 0px;
   position: relative;
   z-index: 2;
 }
@@ -2027,6 +2118,7 @@ body {
   padding-bottom: 10px;
   color: white;
   padding-left: 150px;
+ 
 }
 
 .footer-hours h4::after,
@@ -2211,10 +2303,10 @@ body {
   }
   
   .doctor-card-content {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+  display: flex;
+  padding: 20px;
+  position: relative;
+}
   
   .doctor-avatar {
     margin-right: 0;
@@ -2337,5 +2429,109 @@ body {
   gap: 20px;
   max-width: 500px;
   margin: 0 auto;
+}
+.doctor-stats {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.stat-item i {
+  color: var(--doctor-color, var(--primary-color));
+  font-size: 0.7rem;
+}
+
+.doctor-action {
+  display: flex;
+  gap: 10px;
+}
+
+.detail-btn{
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+}
+
+.detail-btn {
+  background: linear-gradient(to right, var(--doctor-color, var(--primary-color)), rgba(var(--doctor-rgb, 108, 92, 231), 0.8));
+  color: white;
+  border: none;
+  flex: 2;
+}
+
+
+
+.detail-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .doctor-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .doctor-card-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .doctor-avatar-container {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+  
+  .doctor-tags {
+    max-width: 100%;
+    justify-content: center;
+  }
+  
+  .doctor-stats {
+    justify-content: center;
+  }
+  
+  .doctor-action {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .doctor-card-content {
+    padding: 15px;
+  }
+  
+  .doctor-avatar {
+    width: 85px;
+    height: 85px;
+  }
+  
+  .doctor-action {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .detail-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>
