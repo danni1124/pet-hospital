@@ -7,29 +7,29 @@
       
       <div class="nav-buttons">
         <router-link to="/" class="nav-btn" active-class="active" exact>
-          <i class="fas fa-home"></i> 首页
+          <i class="fas fa-home"></i>  首页
         </router-link>
         <NearbyStores :isManager="isManager" />
         <button @click="handleQuestionnaireClick" class="nav-btn" :class="{ active: $route.path === '/questionnaire' }">
-          <i class="fas fa-question"></i> 问卷
+          <i class="fas fa-question"></i>  问卷
         </button>
-        <router-link to="/manage" class="nav-btn" active-class="active">
-          <i class="fas fa-tasks"></i> 管理
-        </router-link>
         <router-link to="/shopment" class="nav-btn" active-class="active">
-          <i class="fas fa-tasks"></i> 购物
+          <i class="fas fa-tasks"></i>  购物
         </router-link>
          <router-link to="/department" class="nav-btn" active-class="active">
-            <i class="fas fa-chart-bar"></i> 预约
+            <i class="fas fa-chart-bar"></i>  预约
          </router-link>
         <router-link to="/forum" class="nav-btn" active-class="active" exact>
-          <i class="fas fa-forum"></i>论坛
+          <i class="fas fa-forum"></i>  论坛
         </router-link>
         <router-link to="/introduction" class="nav-btn" active-class="active" exact>
-          <i class="fas fa-info"></i>概况
+          <i class="fas fa-info"></i>  概况
         </router-link>
-        <router-link to="/adaptpet" class="nav-btn" active-class="active" exact>
-          <i class="fas fa-info"></i>领养
+        <router-link to="/adaptpet" class="nav-btn" active-class="active"  exact>
+          <i class="fas fa-cat"></i>  领养
+        </router-link>
+        <router-link   router-link to="/manage" class="nav-btn" active-class="active" v-if="isManager">
+          <i class="fas fa-paw"></i>  管理
         </router-link>
       </div>
       
