@@ -189,20 +189,6 @@ const fetchUserInfo = async () => {
     
     if (!userId) {
       console.error('用户ID不存在，无法获取详细信息')
-      // 使用localStorage中的基本信息作为降级方案
-      userInfo.value = {
-        userId: 'unknown',
-        username: currentUser.username || 'unknown',
-        level: 1,
-        phone: '',
-        email: '',
-        avatar_url: '',
-        address: '',
-        isMember: false,
-        memberType: '',
-        freeBathCount: 0,
-        membershipExpiry: null
-      }
       return
     }
     
@@ -242,41 +228,8 @@ const fetchUserInfo = async () => {
       }
       
     } catch (apiError) {
-      console.log('真实API不可用，使用本地降级:', apiError.message)
-      
-      // API降级：使用localStorage中已保存的用户数据
-      if (currentUser.userData) {
-        userInfo.value = {
-          userId: currentUser.userData.userId || userId,
-          username: currentUser.userData.username || currentUser.username,
-          level: currentUser.userData.level || 1,
-          phone: currentUser.userData.phone || '',
-          email: currentUser.userData.email || '',
-          avatar_url: currentUser.userData.avatar_url || '',
-          address: currentUser.userData.address || '',
-          isMember: currentUser.userData.isMember || false,
-          memberType: currentUser.userData.memberType || '',
-          freeBathCount: currentUser.userData.freeBathCount || 0,
-          membershipExpiry: currentUser.userData.membershipExpiry || null
-        }
-      } else {
-        // 如果没有详细数据，使用基本信息，添加一个示例头像
-        userInfo.value = {
-          userId: userId,
-          username: currentUser.username || 'unknown',
-          level: 1,
-          phone: '',
-          email: '',
-          avatar_url: '/uploads/avatars/default-user.jpg', // 示例头像路径
-          address: '',
-          isMember: false,
-          memberType: '',
-          freeBathCount: 0,
-          membershipExpiry: null
-        }
-      }
-      
-      console.log('降级用户信息:', userInfo.value)
+      console.error('获取用户信息API调用失败:', apiError.message)
+      throw apiError
     }
     
   } catch (error) {

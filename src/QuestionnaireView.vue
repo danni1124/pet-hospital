@@ -329,7 +329,7 @@ export default {
         const oneWeekAgo = new Date()
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
         
-        // 1. 先检查后端API
+        // 1. 检查后端API
         try {
           // 调用后端API获取用户优惠券（检查一周限制）
           const response = await axios.get(`${API_BASE_URL}/getCouponByUserId`, {
@@ -349,30 +349,15 @@ export default {
               console.log('用户已拥有问卷优惠券，达到限制')
               return false
             }
+            
+            console.log('用户一周内未获得问卷优惠券，可以领取')
+            return true
           }
         } catch (apiError) {
-          console.log('后端API不可用，检查本地缓存:', apiError.message)
-        }
-        
-        // 2. API降级：检查本地存储
-        const userCouponsKey = `userCoupons_${userId}`
-        const localCoupons = JSON.parse(localStorage.getItem(userCouponsKey) || '[]')
-        
-        const recentLocalCoupons = localCoupons.filter(userCoupon => {
-          const acquiredDate = new Date(userCoupon.acquiredAt)
-          return acquiredDate > oneWeekAgo && 
-                 (userCoupon.source === 'questionnaire' || 
-                  userCoupon.coupon?.code?.startsWith('QUIZ'))
-        })
-        
-        if (recentLocalCoupons.length > 0) {
-          const lastCouponDate = new Date(recentLocalCoupons[0].acquiredAt)
-          console.log('用户在一周内已获得问卷优惠券（本地记录）:', lastCouponDate)
+          console.error('检查优惠券限制API调用失败:', apiError.message)
+          // API调用失败时，为了安全起见，不允许领取
           return false
         }
-        
-        console.log('用户一周内未获得问卷优惠券，可以领取')
-        return true
         
       } catch (error) {
         console.error('检查优惠券限制时发生错误:', error)
@@ -455,8 +440,7 @@ export default {
               
               if (addUserCouponResponse.data && addUserCouponResponse.data.code === 200) {
                 console.log('用户优惠券关联创建成功！')
-                // 只在完全成功时保存到本地存储
-                this.saveCouponToLocalStorage(couponCode, couponData, userId, couponId)
+                console.log('优惠券发放成功')
               } else {
                 console.error('用户优惠券关联创建失败:', addUserCouponResponse.data?.msg)
                 throw new Error('用户优惠券关联创建失败: ' + (addUserCouponResponse.data?.msg || '未知错误'))
@@ -479,48 +463,6 @@ export default {
       } catch (error) {
         console.error('发放优惠券时发生错误:', error)
         alert('优惠券发放失败，请稍后重试')
-      }
-    },
-    
-    // 将优惠券保存到本地存储（缓存方案）
-    saveCouponToLocalStorage(couponCode, couponData, userId, couponId) {
-      try {
-        console.log('保存优惠券到本地缓存')
-        
-        // 获取现有的用户优惠券列表
-        const userCouponsKey = `userCoupons_${userId}`
-        const existingCoupons = JSON.parse(localStorage.getItem(userCouponsKey) || '[]')
-        
-        // 创建新的用户优惠券记录（使用后端返回的数据）
-        const newUserCoupon = {
-          id: Date.now(), // 本地生成的ID
-          couponId: couponId, // 后端返回的couponId
-          userId: userId,
-          coupon: {
-            couponId: couponId,
-            code: couponCode,
-            discountType: couponData.discountType,
-            discountValue: couponData.discountValue,
-            minAmount: couponData.minAmount,
-            validFrom: couponData.validFrom,
-            validTo: couponData.validTo
-          },
-          acquiredAt: new Date().toISOString(),
-          used: "否", // 使用数据库的ENUM值 "否"
-          source: 'questionnaire', // 标记来源
-          localOnly: false // 已同步到后端
-        }
-        
-        // 添加到列表
-        existingCoupons.push(newUserCoupon)
-        
-        // 保存回localStorage
-        localStorage.setItem(userCouponsKey, JSON.stringify(existingCoupons))
-        
-        console.log('优惠券已保存到本地缓存:', newUserCoupon)
-        
-      } catch (error) {
-        console.error('保存优惠券到本地缓存失败:', error)
       }
     }
   },
