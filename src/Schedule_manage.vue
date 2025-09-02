@@ -113,7 +113,7 @@
               <button v-if="editingDoctor" @click="cancelEdit" class="cancel-btn">
                 <i class="fas fa-times"></i> 取消编辑
               </button>
-              <button @click="saveDoctor" class="submit-btn">
+              <button @click="saveDoctor" class="submit-btn_qian">
                 <i class="fas" :class="editingDoctor ? 'fa-save' : 'fa-plus'"></i> 
                 {{ editingDoctor ? '更新医生信息' : '添加医生' }}
               </button>
@@ -1000,7 +1000,7 @@ export default {
 
 /* 头部样式 */
 .header {
-  background: linear-gradient(135deg, #42b983 0%, #33a06f 100%);
+  background:  linear-gradient(90deg, #42b983, #0072bc,);
   color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 0;
@@ -1012,6 +1012,7 @@ export default {
   padding: 15px 20px;
   display: flex;
   align-items: center;
+ 
 }
 
 .back-btn {
