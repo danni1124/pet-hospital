@@ -69,7 +69,7 @@
               <div class="detail-item">
                 <i class="fas fa-weight"></i> {{ pet.weight }}公斤
               </div>
-              <div class="detail-item">
+              <div class="detail-item1">
                 <i class="fas fa-stethoscope"></i> {{ pet.disease || '健康' }}
               </div>
             </div>
@@ -148,12 +148,107 @@
     <!-- 页脚 -->
     <div class="footer">
       <div class="footer-links">
-        <a href="#" class="footer-link">关于我们</a>
-        <a href="#" class="footer-link">领养流程</a>
-        <a href="#" class="footer-link">联系我们</a>
+        <a href="/introduction">关于我们</a>
+        <a href="#" @click.prevent="openProcessModal">领养流程</a>
+        <a href="#" @click.prevent="openContactModal">联系我们</a>
       </div>
-      <p>爱宠动物医院 &copy; 2023 宠物领养中心</p>
+      <p>德扬宠物医院 &copy; 2025 宠物领养中心</p>
       <p>领养代替购买，给生命一次机会</p>
+    </div>
+    <!-- 领养流程模态框 -->
+    <div class="modal-overlay" :class="{ active: showProcessModal }">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2>领养流程</h2>
+          <button class="modal-close" @click="closeProcessModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="process-steps">
+            <div class="step-item">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h3>提交申请</h3>
+                <p>填写领养申请表，提供个人信息和家庭环境描述</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h3>审核评估</h3>
+                <p>工作人员将在3个工作日内审核您的申请</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h3>家访考察</h3>
+                <p>通过初步审核后，将安排工作人员上门家访</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <h3>签订协议</h3>
+                <p>家访通过后，双方签订领养协议</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-number">5</div>
+              <div class="step-content">
+                <h3>宠物交接</h3>
+                <p>完成疫苗接种和绝育手术后，安排宠物交接</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 联系我们模态框 -->
+    <div class="modal-overlay" :class="{ active: showContactModal }">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2>联系我们</h2>
+          <button class="modal-close" @click="closeContactModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="contact-info">
+            <div class="contact-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <h3>地址</h3>
+                <p>北京市朝阳区西街路123号</p>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-phone"></i>
+              <div>
+                <h3>电话</h3>
+                <p>400-123-4567</p>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              <div>
+                <h3>邮箱</h3>
+                <p>contact@deyangpet.com</p>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-clock"></i>
+              <div>
+                <h3>工作时间</h3>
+                <p>周一至周五 8:30 - 20:00</p><p> 周六至周日 9:00 - 18:00</p>
+                  <p>急诊服务 24小时</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -161,6 +256,7 @@
 <script>
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
+import { read } from 'xlsx';
 
 export default {
   name: 'PetAdoption',
@@ -173,6 +269,9 @@ export default {
   },
   data() {
     return {
+       // ...原有数据...
+      showProcessModal: false,
+      showContactModal: false,
       loading: true,
       pets: [],
       searchQuery: '',
@@ -454,6 +553,7 @@ export default {
         console.log("111")
         // 提交领养申请
         const applicationData = {
+          read:'否',
           petId: this.selectedPet.petId,
           userId: this.currentUser.userId,
           username: this.adoptionForm.username,
@@ -480,7 +580,19 @@ export default {
     
     closeSuccessModal() {
       this.showSuccessModal = false;
-    }
+    },
+    openProcessModal() {
+      this.showProcessModal = true;
+    },
+    openContactModal() {
+      this.showContactModal = true;
+    },
+    closeProcessModal() {
+      this.showProcessModal = false;
+    },
+    closeContactModal() {
+      this.showContactModal = false;
+    },
   }
 };
 </script>
@@ -502,6 +614,7 @@ export default {
   border-radius: 10px;
   margin-bottom: 30px;
   text-align: center;
+  height: 135px;
 }
 
 .header h1 {
@@ -630,7 +743,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
 }
 
 .pet-item {
@@ -678,6 +791,7 @@ export default {
 
 .pet-info {
   padding: 20px;
+  height: 273px;
 }
 
 .pet-name {
@@ -708,11 +822,26 @@ export default {
   text-align: center;
 }
 
+.detail-item1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  grid-column: 1 / -1;
+}
+
+.detail-item1 i {
+  color: #3498db;
+  width: 16px;
+  text-align: center;
+}
 .pet-description {
   margin-bottom: 20px;
   color: #555;
   line-height: 1.5;
   font-size: 0.95rem;
+  height: 40px;
 }
 
 .adopt-btn {
@@ -799,7 +928,7 @@ export default {
   background: white;
   border-radius: 10px;
   width: 90%;
-  max-width: 500px;
+  max-width: 550px;
   padding: 30px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   transform: translateY(20px);
@@ -892,7 +1021,7 @@ export default {
 .success-icon {
   font-size: 4rem;
   color: #2ecc71;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .success-modal p {
@@ -938,7 +1067,17 @@ export default {
   margin-bottom: 15px;
   flex-wrap: wrap;
 }
+.footer-links a {
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  transition: var(--transition);
+  display: block;
+  padding: 5px 0;
+}
 
+.footer-links a:hover {
+  color: var(--secondary-color);
+}
 .footer-link {
   color: #bdc3c7;
   text-decoration: none;
@@ -948,7 +1087,74 @@ export default {
 .footer-link:hover {
   color: #3498db;
 }
-
+/* 领养流程样式 */
+.process-steps {
+  padding: 20px;
+}
+ 
+.step-item {
+  display: flex;
+  margin-bottom: 25px;
+  align-items: flex-start;
+}
+ 
+.step-number {
+  width: 40px;
+  height: 40px;
+  background: #3498db;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+ 
+.step-content h3 {
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+ 
+.step-content p {
+  color: #7f8c8d;
+  line-height: 1.6;
+}
+ 
+/* 联系我们样式 */
+.contact-info {
+  padding: 20px;
+}
+ 
+.contact-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+}
+ 
+.contact-item i {
+  width: 40px;
+  height: 40px;
+  background: #3498db;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  font-size: 1.2rem;
+}
+ 
+.contact-item h3 {
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+ 
+.contact-item p {
+  color: #7f8c8d;
+  margin: 0;
+}
 @media (max-width: 768px) {
   .header h1 {
     font-size: 2rem;

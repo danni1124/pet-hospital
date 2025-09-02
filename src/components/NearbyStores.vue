@@ -19,6 +19,16 @@
         <div class="stores-body">
           <!-- 获取门店按钮 -->
           <div class="fetch-stores-section">
+            <!-- 位置状态提示 -->
+            <div v-if="!userLocation.isLocationReady" class="location-status">
+              <i class="fas fa-map-marker-alt fa-spin"></i>
+              正在获取您的位置...
+            </div>
+            <div v-else class="location-status ready">
+              <i class="fas fa-map-marker-alt"></i>
+              位置获取成功，显示精确距离
+            </div>
+            
             <button 
               @click="fetchStoresFromAPI" 
               :disabled="isLoading"
@@ -31,6 +41,7 @@
             <button 
               @click="showAddStoreForm = true" 
               class="add-store-btn"
+              v-if="props.isManager"
             >
               <i class="fas fa-plus"></i>
               添加门店
@@ -252,6 +263,7 @@
                   @click="deleteStore(store.storeId)" 
                   class="delete-button"
                   title="删除门店"
+                  v-if="props.isManager"
                 >
                   <i class="fas fa-trash-alt"></i>
                   删除
@@ -284,11 +296,26 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/index.js'
 
+// 定义props
+const props = defineProps({
+  isManager: {
+    type: Boolean,
+    default: false
+  }
+})
+
 const showStoresModal = ref(false)
 const isLoading = ref(false)
 const isAdding = ref(false)
 const storesList = ref([])
 const showAddStoreForm = ref(false)
+
+// 用户位置状态
+const userLocation = ref({
+  latitude: 39.9042, // 默认位置（北京）
+  longitude: 116.4074,
+  isLocationReady: false
+})
 
 // 表单验证错误状态
 const latError = ref('')
@@ -312,40 +339,6 @@ const newStore = ref({
   rating: '',
   busyLevel: ''
 })
-
-// 模拟附近门店数据（作为备用）
-const nearbyStores = ref([
-  {
-    id: 1,
-    name: '宠物医院总院',
-    distance: '0.8km',
-    hours: '24小时营业',
-    rating: 4.8,
-    busyLevel: 'green',
-    address: '北京市朝阳区三里屯路12号',
-    coordinates: { lat: 39.9042, lng: 116.4074 }
-  },
-  {
-    id: 2,
-    name: '宠物医院分院(东)',
-    distance: '1.2km',
-    hours: '08:00-22:00',
-    rating: 4.6,
-    busyLevel: 'yellow',
-    address: '北京市朝阳区建国门外大街88号',
-    coordinates: { lat: 39.9030, lng: 116.4284 }
-  },
-  {
-    id: 3,
-    name: '宠物医院分院(西)',
-    distance: '2.1km',
-    hours: '09:00-21:00',
-    rating: 4.4,
-    busyLevel: 'red',
-    address: '北京市海淀区中关村大街100号',
-    coordinates: { lat: 39.9060, lng: 116.3974 }
-  }
-])
 
 // 从后端获取门店数据
 const fetchStoresFromAPI = async () => {
@@ -386,26 +379,7 @@ const fetchStoresFromAPI = async () => {
     
   } catch (error) {
     console.error('获取门店失败:', error)
-    
-    if (error.response && error.response.status === 404) {
-      console.log('使用模拟数据作为备选')
-      storesList.value = nearbyStores.value.map(store => ({
-        storeId: store.id,
-        name: store.name,
-        address: store.address,
-        phone: '',
-        businessHours: store.hours,
-        rating: store.rating,
-        busyLevel: store.busyLevel,
-        latitude: store.coordinates.lat,
-        longitude: store.coordinates.lng,
-        distance: store.distance,
-        coordinates: store.coordinates
-      }))
-      console.log('已加载模拟门店数据')
-    } else {
-      alert('获取门店数据失败，请稍后重试')
-    }
+    alert('获取门店数据失败，请稍后重试')
   } finally {
     isLoading.value = false
   }
@@ -703,11 +677,10 @@ const deleteStore = async (storeId) => {
   }
 }
 
-// 计算距离（简单的地理距离计算）
+// 计算距离（使用用户真实位置）
 const calculateDistance = (lat, lng) => {
-  // 这里使用固定位置计算距离（实际应用中可以获取用户位置）
-  const userLat = 39.9042 // 示例用户位置
-  const userLng = 116.4074
+  const userLat = userLocation.value.latitude
+  const userLng = userLocation.value.longitude
   
   const R = 6371 // 地球半径（公里）
   const dLat = (lat - userLat) * Math.PI / 180
@@ -732,6 +705,10 @@ const formatDistance = (distance) => {
 // 关闭弹窗
 const closeModal = () => {
   showStoresModal.value = false
+  // 关闭附近门店弹窗时自动关闭添加门店表单
+  if (showAddStoreForm.value) {
+    cancelAddStore()
+  }
 }
 
 // 获取繁忙状态的CSS类
@@ -777,10 +754,74 @@ const navigateToStore = (store) => {
   closeModal()
 }
 
-// 组件挂载时可以获取用户位置（可选）
+// 获取用户位置
+const getUserLocation = () => {
+  if (!navigator.geolocation) {
+    console.warn('浏览器不支持地理位置服务，使用默认位置')
+    userLocation.value.isLocationReady = true
+    return
+  }
+
+  const options = {
+    enableHighAccuracy: true, // 高精度定位
+    timeout: 10000, // 10秒超时
+    maximumAge: 300000 // 5分钟内的缓存位置有效
+  }
+
+  console.log('正在获取用户位置...')
+  
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      userLocation.value.latitude = position.coords.latitude
+      userLocation.value.longitude = position.coords.longitude
+      userLocation.value.isLocationReady = true
+      
+      console.log('用户位置获取成功:', {
+        latitude: userLocation.value.latitude,
+        longitude: userLocation.value.longitude,
+        accuracy: position.coords.accuracy
+      })
+      
+      // 如果门店列表已经加载，重新计算距离
+      if (storesList.value.length > 0) {
+        updateStoresDistance()
+      }
+    },
+    (error) => {
+      console.warn('获取用户位置失败:', error.message)
+      userLocation.value.isLocationReady = true // 即使失败也标记为已就绪，使用默认位置
+      
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          console.warn('用户拒绝了地理位置请求，使用默认位置')
+          break
+        case error.POSITION_UNAVAILABLE:
+          console.warn('位置信息不可用，使用默认位置')
+          break
+        case error.TIMEOUT:
+          console.warn('获取位置超时，使用默认位置')
+          break
+        default:
+          console.warn('获取位置时发生未知错误，使用默认位置')
+          break
+      }
+    },
+    options
+  )
+}
+
+// 更新门店距离
+const updateStoresDistance = () => {
+  storesList.value = storesList.value.map(store => ({
+    ...store,
+    distance: calculateDistance(store.latitude, store.longitude)
+  }))
+  console.log('门店距离已更新')
+}
+
 onMounted(() => {
-  // 这里可以添加获取用户位置的逻辑
-  // navigator.geolocation.getCurrentPosition(...)
+  // 获取用户位置
+  getUserLocation()
 })
 </script>
 
@@ -953,9 +994,36 @@ onMounted(() => {
   text-align: center;
   margin-bottom: 20px;
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* 位置状态提示 */
+.location-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #666;
+  background: #f8f9fa;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.location-status.ready {
+  color: #22543d;
+  background: #c6f6d5;
+  border-color: #68d391;
+}
+
+.location-status i {
+  color: #3182ce;
+}
+
+.location-status.ready i {
+  color: #22543d;
 }
 
 .fetch-stores-btn {
@@ -1418,6 +1486,11 @@ onMounted(() => {
   .fetch-stores-section {
     flex-direction: column;
     align-items: center;
+  }
+  
+  .location-status {
+    font-size: 12px;
+    padding: 6px 12px;
   }
   
   .fetch-stores-btn,
