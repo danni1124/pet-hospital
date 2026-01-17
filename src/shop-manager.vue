@@ -21,13 +21,11 @@
           商品列表
         </button>
         <button 
-          @click="switchView('cart')" 
-          :class="{ active: currentView === 'cart' }"
-          class="cart-btn"
+          @click="switchView('add-product')" 
+          :class="{ active: currentView === 'add-product' }"
         >
-          <i class="fas fa-shopping-cart"></i> 
-          购物车 
-          <span class="badge">{{ cartItemCount }}</span>
+          <i class="fas fa-plus-circle"></i>
+          商品管理
         </button>
       </nav>
     </header>
@@ -108,22 +106,27 @@
               <div class="product-info">
                 <div class="title-tags">
                     <h3 class="product-title">{{ product.name }}</h3>
-                    <span v-if="product.hot === '是'" class="hot-tag">热卖</span>
+                    <span v-if="isHotProduct(product)" class="hot-tag">热卖</span>
+                    <span v-if="product.stock < 5" class="low-stock-tag">低库存</span>
                   </div>
-                
+                 <!-- 添加库存数量显示 -->
+                <div class="stock-info">
+                  <span>库存: </span>
+                  <span :class="{ 'low-stock': product.stock < 5 }">{{ product.stock }}</span>
+                  <span v-if="product.stock < 5" class="stock-warning"> (库存不足)</span>
+                </div>
                 <p class="description">{{ product.description }}</p>
                 <div class="price-area">
                   <p class="price">¥{{ product.price }}</p>
-                  <!-- <p class="stock">库存: {{ product.stock }}</p> -->
-                  <button 
-                    @click="addToCart(product)" 
-                    class="add-btn"
-                    :disabled="product.stock <= 0"
-                    :class="{ disabled: product.stock <= 0 }"
-                  >
-                    <i class="fas fa-cart-plus"></i>
-                    {{ product.stock <= 0 ? '缺货中' : '加入购物车' }}
-                  </button>
+                </div>
+                <!-- 添加操作按钮区域 -->
+                <div class="action-area">
+                <button @click="editProduct(product)" class="edit-btn">
+                    <i class="fas fa-edit"></i> 修改
+                </button>
+                <button @click="deleteProduct(product)" class="delete-btn">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
                 </div>
               </div>
             </div>
@@ -147,22 +150,29 @@
                 <div class="product-info">
                   <div class="title-tags">
                     <h3 class="product-title">{{ product.name }}</h3>
-                    <span v-if="product.hot === '是'" class="hot-tag">热卖</span>
+                    <span v-if="isHotProduct(product)" class="hot-tag">热卖</span>
+                     <!-- 添加库存显示 -->
+                    <span v-if="product.stock < 5" class="low-stock-tag">低库存</span>
+                  </div>
+                   <!-- 添加库存数量显示 -->
+                  <div class="stock-info">
+                    <span>库存: </span>
+                    <span :class="{ 'low-stock': product.stock < 5 }">{{ product.stock }}</span>
+                    <span v-if="product.stock < 5" class="stock-warning"> (库存不足)</span>
                   </div>
                   <p class="description">{{ product.description }}</p>
                   <div class="price-area">
                     <p class="price">¥{{ product.price }}</p>
-                    <!-- <p class="stock">库存: {{ product.stock }}</p> -->
-                    <button 
-                      @click="addToCart(product)" 
-                      class="add-btn"
-                      :disabled="product.stock <= 0"
-                      :class="{ disabled: product.stock <= 0 }"
-                    >
-                      <i class="fas fa-cart-plus"></i>
-                      {{ product.stock <= 0 ? '缺货中' : '加入购物车' }}
-                    </button>
                   </div>
+                  <!-- 添加操作按钮区域 -->
+                <div class="action-area">
+                <button @click="editProduct(product)" class="edit-btn">
+                    <i class="fas fa-edit"></i> 修改
+                </button>
+                <button @click="deleteProduct(product)" class="delete-btn">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
+                </div>
                 </div>
               </div>
             </div>
@@ -177,320 +187,153 @@
                 <div class="product-info">
                   <div class="title-tags">
                     <h3 class="product-title">{{ product.name }}</h3>
-                    <span v-if="product.hot === '是'" class="hot-tag">热卖</span>
+                    <span v-if="isHotProduct(product)" class="hot-tag">热卖</span>
+                    <!-- 添加库存显示 -->
+                    <span v-if="product.stock < 5" class="low-stock-tag">低库存</span>
+                  </div>
+                  <!-- 添加库存数量显示 -->
+                  <div class="stock-info">
+                    <span>库存: </span>
+                    <span :class="{ 'low-stock': product.stock < 5 }">{{ product.stock }}</span>
+                    <span v-if="product.stock < 5" class="stock-warning"> (库存不足)</span>
                   </div>
                   <p class="description">{{ product.description }}</p>
                   <div class="price-area">
                     <p class="price">¥{{ product.price }}</p>
-                    <!-- <p class="stock">库存: {{ product.stock }}</p> -->
-                    <button 
-                      @click="addToCart(product)" 
-                      class="add-btn"
-                      :disabled="product.stock <= 0"
-                      :class="{ disabled: product.stock <= 0 }"
-                    >
-                      <i class="fas fa-cart-plus"></i>
-                      {{ product.stock <= 0 ? '缺货中' : '加入购物车' }}
-                    </button>
                   </div>
+                  <!-- 在商品项的价格区域下方添加操作按钮 -->
+                    <div class="action-area">
+                    <button @click="editProduct(product)" class="edit-btn">
+                        <i class="fas fa-edit"></i> 修改
+                    </button>
+                    <button @click="deleteProduct(product)" class="delete-btn">
+                        <i class="fas fa-trash"></i> 删除
+                    </button>
+                    </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
-      <!-- 购物车视图 -->
-      <div v-if="currentView === 'cart'" class="cart-view">
-        <div class="cart-container">
-          <div class="cart-header">
-            <h2><i class="fas fa-shopping-cart"></i> 我的购物车</h2>
-            <button @click="switchView('products')" class="continue-btn">
-              <i class="fas fa-arrow-left"></i> 继续购物
-            </button>
-          </div>
-          
-          <div v-if="cart.length === 0" class="empty-cart">
-            <div class="empty-icon_qian">
-              <i class="fas fa-cart-arrow-down"></i>
-            </div>
-            <p>您的购物车还是空的</p>
-            <p>快去挑选一些宠物用品吧！</p>
-            <button @click="switchView('products')">浏览商品</button>
-          </div>
-          
-          <div v-else class="cart-content">
-            <div class="cart-items">
-              <div v-for="item in cart" :key="item.id" class="cart-item">
-                <div class="item-image" :style="{ backgroundImage: `url(${getPlaceholderImage(item)})` }"></div>
-                <div class="item-details">
-                  <h3>{{ item.name }}</h3>
-                  <div class="item-meta">
-                    <p class="price">¥{{ item.price }}/件</p>
-                    <!-- <p class="stock">库存: {{ item.stock }}</p> -->
-                  </div>
-                  <div v-if="item.quantity > item.stock" class="stock-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    库存不足，最多可购买{{ item.stock }}件
-                  </div>
-                  <div class="item-actions">
-                    <div class="quantity-control">
-                      <button @click="updateQuantity({ id: item.id, quantity: item.quantity - 1 })">
-                        <i class="fas fa-minus"></i>
-                      </button>
-                      <input 
-                        type="number" 
-                        :min="1" 
-                        :max="item.stock"
-                        v-model.number="item.quantity"
-                        @change="updateQuantity({ id: item.id, quantity: item.quantity })"
-                      >
-                      <button @click="updateQuantity({ id: item.id, quantity: item.quantity + 1 })">
-                        <i class="fas fa-plus"></i>
-                      </button>
-                    </div>
-                    <button @click="removeItem(item.id)" class="remove-btn">
-                      <i class="fas fa-trash"></i> 删除
-                    </button>
-                  </div>
+      <!-- 添加商品视图 -->
+      <div v-if="currentView === 'add-product'" class="add-product-view">
+        <div class="add-product-container">
+          <h2>
+            <i class="fas" :class="isEditing ? 'fa-edit' : 'fa-plus-circle'"></i> 
+            {{ isEditing ? '编辑商品' : '添加新商品' }}
+          </h2>
+          <div class="form-container_qian">
+            <form @submit.prevent="submitProductForm" class="product-form">
+              <div class="form-row">
+                <div class="form-group_qian">
+                  <label for="name">商品名称 *</label>
+                  <input
+                    type="text"
+                    id="name"
+                    v-model="newProduct.name"
+                    required
+                    placeholder="输入商品名称"
+                  >
+                </div>
+
+                <div class="form-group_qian">
+                  <label for="price">价格 (¥) *</label>
+                  <input
+                    type="number"
+                    id="price"
+                    v-model.number="newProduct.price"
+                    min="0"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                  >
                 </div>
               </div>
-            </div>
-            
-            <div class="cart-summary">
-              <div class="summary-card">
-                <h3>订单摘要</h3>
-                <div class="summary-row">
-                  <span>商品数量</span>
-                  <span>{{ cartItemCount }} 件</span>
+
+              <div class="form-group_qian">
+                <label for="description">商品描述 *</label>
+                <textarea
+                  id="description"
+                  v-model="newProduct.description"
+                  required
+                  rows="3"
+                  placeholder="输入商品详细描述"
+                ></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group_qian">
+                  <label for="category">商品分类 *</label>
+                  <select id="category" v-model="newProduct.category" required>
+                    <option value="" disabled>选择分类</option>
+                    <option value="medicine">药品/营养品</option>
+                    <option value="consumables">消耗品</option>
+                    <option value="toys">玩具零食</option>
+                  </select>
                 </div>
-                <div class="summary-row">
-                  <span>商品总价</span>
-                  <span>¥{{ cartTotal }}</span>
+
+                <div class="form-group_qian">
+                  <label for="stock">库存数量 *</label>
+                  <input
+                    type="number"
+                    id="stock"
+                    v-model.number="newProduct.stock"
+                    min="0"
+                    required
+                    placeholder="0"
+                  >
                 </div>
-                <div class="summary-row discount">
-                  <span>优惠折扣</span>
-                  <span>-¥{{ discountAmount }}</span>
-                </div>
-                <div class="summary-row total">
-                  <span>应付总额</span>
-                  <span>¥{{ cartTotal - discountAmount }}</span>
-                </div>
-                
-                <!-- 优惠券选择区域 -->
-                <div class="coupon-area">
-                  <div v-if="!selectedCoupon">
-                    <button @click="openCouponModal" class="coupon-select-btn">
-                      <i class="fas fa-tag"></i> 选择优惠券
-                    </button>
+              </div>
+
+              <!-- 修改这里：将图片URL输入改为本地上传 -->
+              <div class="form-group_qian full-width">
+                <label>商品图片上传</label>
+                <div class="upload-area_qian" @click="triggerUpload" :class="{ 'has-image': newProduct.imageUrl }">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    ref="fileInput" 
+                    @change="uploadProductImage"
+                    class="file-input"
+                  >
+                  <div v-if="!newProduct.imageUrl" class="upload-placeholder">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>点击上传商品图片</p>
                   </div>
-                   <div v-else class="selected-coupon">
-                    <span>已选优惠券: {{ selectedCoupon.code }} ({{ selectedCoupon.discountType === 'percent' ? selectedCoupon.discountValue + '%' : '¥' + selectedCoupon.discountValue }})</span>
-                    <button @click="removeCoupon" class="remove-coupon-btn">
+                 <div v-else class="image-preview_qian">
+                    <img :src="getFullImageUrl(newProduct.imageUrl)" alt="预览">
+                    <button @click.stop="removeProductImage" class="remove-image-btn_qian">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
                 </div>
-
-                <button 
-                  @click="switchView('checkout')" 
-                  class="checkout-btn"
-                  :disabled="hasInsufficientStock"
-                >
-                  去结算 <i class="fas fa-arrow-right"></i>
-                </button>
-                <div v-if="hasInsufficientStock" class="checkout-warning">
-                  <i class="fas fa-exclamation-circle"></i>
-                  部分商品库存不足，请调整数量后再结算
-                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <transition name="fade">
-          <div v-if="showCouponModal" class="coupon-modal-overlay" @click.self="showCouponModal = false">
-            <div class="coupon-modal">
-              <div class="coupon-modal-header">
-                <h3><i class="fas fa-ticket-alt"></i> 我的优惠券</h3>
-                <button @click="showCouponModal = false" class="close-modal-btn">
-                  <i class="fas fa-times"></i>
+              <div class="form-group_qian checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="newProduct.isHot">
+                  <span class="checkmark"></span>
+                  标记为热卖商品
+                </label>
+              </div>
+
+              <div class="form-actions_qian">
+                <button type="button" @click="resetProductForm" class="btn-secondary">
+                  <i class="fas fa-redo"></i> {{ isEditing ? '取消编辑' : '重置' }}
+                </button>
+                <button type="submit" :disabled="addingProduct" class="btn-primary">
+                  <i class="fas" :class="isEditing ? 'fa-save' : 'fa-plus'"></i>
+                  <i class="fas fa-spinner fa-spin" v-if="addingProduct"></i>
+                  {{ addingProduct ? (isEditing ? '修改中...' : '添加中...') : (isEditing ? '修改商品' : '添加商品') }}
                 </button>
               </div>
-              
-              <div class="coupon-modal-body">
-                <div class="coupon-tabs">
-                  <button 
-                    :class="['tab-btn', { active: couponTab === 'available' }]"
-                    @click="couponTab = 'available'"
-                  >
-                    可用优惠券
-                  </button>
-                  <button 
-                    :class="['tab-btn', { active: couponTab === 'unavailable' }]"
-                    @click="couponTab = 'unavailable'"
-                  >
-                    不可用优惠券
-                  </button>
-                </div>
-                
-                <div v-if="loadingCoupons" class="coupon-loading">
-                  <i class="fas fa-spinner fa-spin"></i>
-                  <p>加载优惠券中...</p>
-                </div>
-                
-                <div v-else-if="filteredCoupons.length === 0" class="no-coupons">
-                  <i class="fas fa-ticket-alt"></i>
-                  <p>{{ couponTab === 'available' ? '暂无可用优惠券' : '暂无不可用优惠券' }}</p>
-                </div>
-                
-                <div v-else class="coupons-container">
-                  <div 
-                    v-for="coupon in filteredCoupons" 
-                    :key="coupon.couponId" 
-                    class="coupon-card"
-                    :class="{ 
-                      'selected': selectedCoupon && selectedCoupon.couponId === coupon.couponId,
-                      'unavailable': !isCouponApplicable(coupon)
-                    }"
-                  >
-                    <div class="coupon-left">
-                      <div class="coupon-value">
-                        <span v-if="coupon.discountType === 'percent'">{{ coupon.discountValue }}%</span>
-                        <span v-else>¥{{ coupon.discountValue }}</span>
-                        <span class="off-text">OFF</span>
-                      </div>
-                    </div>
-                    
-                    <div class="coupon-content">
-                      <h4 class="coupon-title">{{ coupon.code }}</h4>
-                      <p class="coupon-desc">满¥{{ coupon.minAmount }}可用</p>
-                      <p class="coupon-validity">
-                        有效期至 {{ formatDate(coupon.validTo) }}
-                      </p>
-                    </div>
-                    
-                    <div class="coupon-actions">
-                      <button 
-                        v-if="isCouponApplicable(coupon)"
-                        @click="applyCoupon(coupon)" 
-                        class="apply-coupon-btn"
-                        :class="{ 'applied': selectedCoupon && selectedCoupon.couponId === coupon.couponId }"
-                      >
-                        {{ selectedCoupon && selectedCoupon.couponId === coupon.couponId ? '已应用' : '立即使用' }}
-                      </button>
-                      <div v-else class="not-applicable">
-                        不满足条件
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="coupon-modal-footer">
-                <button @click="showCouponModal = false" class="cancel-btn">取消</button>
-              </div>
-            </div>
+            </form>
           </div>
-        </transition>
-      </div>  
-      
-      <!-- 结算视图 -->
-      <div v-if="currentView === 'checkout'" class="checkout-view">
-        <div class="checkout-container">
-          <div class="checkout-header">
-            <h2><i class="fas fa-cash-register"></i> 结算订单</h2>
-            <button @click="switchView('cart')" class="back-btn">
-              <i class="fas fa-arrow-left"></i> 返回购物车
-            </button>
-          </div>
-          
-          <div class="checkout-steps">
-            <div class="step active">
-              <div class="step-number">1</div>
-              <div class="step-title">确认订单</div>
-            </div>
-            <div class="step active">
-              <div class="step-number">2</div>
-              <div class="step-title">支付方式</div>
-            </div>
-            <div class="step">
-              <div class="step-number">3</div>
-              <div class="step-title">完成支付</div>
-            </div>
-          </div>
-          
-          <div class="checkout-content">
-            <div class="order-section">
-              <h3><i class="fas fa-clipboard-list"></i> 订单详情</h3>
-              <div class="order-items">
-                <div v-for="item in cart" :key="item.id" class="order-item">
-                  <div class="item-image" :style="{ backgroundImage: `url(${getPlaceholderImage(item)})` }"></div>
-                  <div class="item-info">
-                    <h4>{{ item.name }}</h4>
-                    <p>¥{{ item.price }} × {{ item.quantity }}</p>
-                    <!-- <p class="stock-info">库存: {{ item.stock }}</p> -->
-                    <div v-if="item.quantity > item.stock" class="stock-warning">
-                      <i class="fas fa-exclamation-triangle"></i>
-                      库存不足，最多可购买{{ item.stock }}件
-                    </div>
-                  </div>
-                  <div class="item-price">¥{{ formatPrice(item.price * item.quantity)  }}</div>
-                </div>
-              </div>
-              
-              <div class="order-total">
-                <div class="total-row">
-                  <span>商品总价:</span>
-                  <span>¥{{ cartTotal }}</span>
-                </div>
-                <div class="total-row">
-                  <span>优惠折扣:</span>
-                  <span>-¥{{ discountAmount }}</span>
-                </div>
-                <div class="total-row grand-total">
-                  <span>应付总额:</span>
-                  <span>¥{{ finalTotal  }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="payment-section">
-              <h3><i class="fas fa-credit-card"></i> 选择支付方式</h3>
-              <div class="payment-options">
-                <div 
-                  v-for="method in paymentMethods" 
-                  :key="method.id"
-                  @click="selectedPayment = method.id"
-                  :class="['payment-card', { selected: selectedPayment === method.id }]"
-                >
-                  <div class="payment-icon">
-                    <i :class="method.icon"></i>
-                  </div>
-                  <div class="payment-info">
-                    <h4>{{ method.name }}</h4>
-                    <p>{{ method.description }}</p>
-                  </div>
-                  <div class="payment-selector">
-                    <div class="radio-selector" :class="{ selected: selectedPayment === method.id }">
-                      <i class="fas fa-check"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <button 
-                @click="submitPayment" 
-                class="pay-now-btn"
-                :disabled="hasInsufficientStock"
-              >
-                <i class="fas fa-lock"></i> 立即支付 ¥{{ finalTotal  }}
-              </button>
-              <div v-if="hasInsufficientStock" class="checkout-warning">
-                <i class="fas fa-exclamation-circle"></i>
-                部分商品库存不足，请返回购物车调整数量
-              </div>
-            </div>
+
+          <div v-if="productMessage" :class="['message', productMessageType]">
+            <i :class="productMessageIcon"></i>
+            <span>{{ productMessage }}</span>
           </div>
         </div>
       </div>
@@ -534,56 +377,69 @@
       </div>
     </footer>
     
-    <!-- 购物车浮动按钮 -->
-    <div class="floating-cart" @click="switchView('cart')">
-      <i class="fas fa-shopping-cart"></i>
-      <span class="cart-count">{{ cartItemCount }}</span>
-    </div>
-    
     <!-- 通知消息 -->
     <transition name="slide-fade">
       <div v-if="showNotification" class="notification">
         <i class="fas fa-check-circle"></i> {{ notificationMessage }}
       </div>
     </transition>
+
+    <!-- 低库存警告模态框 -->
+    <div v-if="showLowStockWarning" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>库存警告</h3>
+          <button @click="showLowStockWarning = false" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>以下商品库存不足，请及时补货：</p>
+          <ul>
+            <li v-for="product in lowStockProducts" :key="product.id">
+              {{ product.name }} - 当前库存: {{ product.stock }}
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button @click="showLowStockWarning = false" class="confirm-btn">确定</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { API_BASE_URL } from '@/config/index';
 import axios from 'axios';
-import { onMounted, ref } from 'vue'
+import { ref, onMounted, nextTick } from 'vue';
 
 export default {
-   setup() {
+  setup() {
     const currentUserId = ref(null);
     const currentUsername = ref('');
 
-    onMounted(() => { 
+     onMounted(() => { 
       const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
       currentUserId.value = user.userId || 1;
       currentUsername.value = user.username || '游客';
+      
     });
 
     return {
       currentUserId,
       currentUsername
     };
+
   },
   data() {
     return {
-      showCouponModal:false,
+      showLowStockWarning: false, // 控制低库存警告模态框显示
+      lowStockProducts: [], // 存储低库存商品
+      isEditing: false,
       currentView: 'products',
       currentCategory: 'all',
-      cart: [],
-      couponCode: '',
-      discountAmount: 0,
-      selectedPayment: 'wechat',
       showNotification: false,
-      couponTab: 'available', // 'available' 或 'unavailable'
-      availableCoupons: [],
-      selectedCoupon: null,
-      loadingCoupons: false,
       notificationMessage: '',
       searchQuery: '',
       loading: false,
@@ -595,58 +451,30 @@ export default {
         { value: 'consumables', label: '消耗品', icon: 'fas fa-toilet-paper' },
         { value: 'toys', label: '玩具零食', icon: 'fas fa-baseball-ball' }
       ],
-      paymentMethods: [
-        { 
-          id: 'wechat', 
-          name: '微信支付', 
-          icon: 'fab fa-weixin', 
-          description: '推荐使用，支付即时到账' 
-        },
-        { 
-          id: 'alipay', 
-          name: '支付宝', 
-          icon: 'fab fa-alipay', 
-          description: '安全便捷的支付方式' 
-        },
-        { 
-          id: 'card', 
-          name: '银行卡支付', 
-          icon: 'fas fa-credit-card', 
-          description: '支持所有主流银行' 
-        },
-        { 
-          id: 'cash', 
-          name: '到店支付', 
-          icon: 'fas fa-money-bill-wave', 
-          description: '就诊时现场支付' 
-        }
-      ]
+
+      // 新增商品相关数据
+      newProduct: {
+        name: '',
+        description: '',
+        price: 0,
+        category: '',
+        imageUrl: '',
+        isHot: false,
+        stock: 0
+      },
+      addingProduct: false,
+      productMessage: '',
+      productMessageType: '',
+      productMessageIcon: ''
     }
   },
   computed: {
-    finalTotal() {
-      const total = this.rawCartTotal - (this.discountAmount || 0);
-      return this.formatPrice(total > 0 ? total : 0);
-    },
-    cartItemCount() {
-      return this.cart.reduce((total, item) => total + item.quantity, 0)
-    },
-    rawCartTotal() {
-     // 使用安全乘法计算总价
-      return this.cart.reduce((total, item) => {
-        return total + this.safeMultiply(item.price, item.quantity);
-      }, 0);
-    },
     filteredProducts() {
       if (this.currentCategory === 'all') return this.products
       return this.products.filter(p => p.category === this.currentCategory)
     },
     hotProducts() {
-      return this.products.filter(p => p.hot === '是');
-    },
-    cartTotal() {
-      // 返回格式化后的总价
-       return this.formatPrice(this.rawCartTotal);
+      return this.products.filter(p => p.hot==='是')
     },
     currentCategoryLabel() {
       const cat = this.categories.find(c => c.value === this.currentCategory)
@@ -665,23 +493,160 @@ export default {
         product.description.toLowerCase().includes(query)
       )
     },
-    filteredCoupons() {
-      if (this.couponTab === 'available') {
-        return this.availableCoupons.filter(coupon => this.isCouponApplicable(coupon));
-      } else {
-        return this.availableCoupons.filter(coupon => !this.isCouponApplicable(coupon));
-      }
-    },
-    // 检查是否有库存不足的商品
-    hasInsufficientStock() {
-      return this.cart.some(item => item.quantity > item.stock);
-    }
+    
   },
   created() {
     this.fetchProducts();
-    this.fetchCart();
   },
   methods: {
+    // 添加图片上传相关方法
+    triggerUpload() {
+      this.$refs.fileInput.click();
+    },
+    // 修复热卖标签判断逻辑
+    isHotProduct(product) {
+        return product.hot === '是';
+    },
+    
+    async uploadProductImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('isAvatar', true);
+
+      try {
+        const { data } = await axios.post(
+          `${API_BASE_URL}/uploadImage`,
+          formData,
+          { 
+            headers: { 
+              'Content-Type': 'multipart/form-data'
+            } 
+          }
+        );
+
+        if (data.code === 200) {
+         // 确保返回的是完整URL
+          let imageUrl = data.data;
+          if (!imageUrl.startsWith('http')) {
+            imageUrl = `${API_BASE_URL}${imageUrl}`;
+          }
+          this.newProduct.imageUrl = imageUrl;
+          console.log("商品图片上传成功", imageUrl);
+        } else {
+          console.error('上传失败:', data.msg);
+          alert('图片上传失败: ' + data.msg);
+        }
+      } catch (err) {
+        console.error('上传图片失败:', err);
+        alert('图片上传失败，请检查网络连接');
+      }
+    },
+
+    removeProductImage() {
+      this.newProduct.imageUrl = '';
+    },
+    
+    getFullImageUrl(url) {
+      if (!url) return '';
+      if (url.startsWith('http')) return url;
+      return `${API_BASE_URL}${url}`;
+    },
+
+     // 检查低库存商品
+    checkLowStock(products) {
+      this.lowStockProducts = products.filter(product => product.stock < 5);
+      
+      // 如果有低库存商品，显示警告
+      if (this.lowStockProducts.length > 0 && !this.showLowStockWarning) {
+        // 延迟显示，避免界面加载时立即弹出
+        setTimeout(() => {
+          this.showLowStockWarning = true;
+        }, 2000);
+      }
+    },
+    // 更新商品库存
+    async updateProductStock(productId, newStock) {
+      try {
+        // 首先获取商品的完整信息
+        const product = this.products.find(p => p.productId === productId);
+        if (!product) {
+          console.error('未找到商品');
+          return false;
+        }
+        
+        // 更新库存信息
+        const updatedProduct = {
+          ...product,
+          stock: newStock
+        };
+        
+        // 调用更新接口
+        const response = await axios.post(`${API_BASE_URL}/updateProduct`, updatedProduct);
+        
+        if (response.data.code === 200) {
+          // 更新本地商品列表中的库存
+          const index = this.products.findIndex(p => p.productId === productId);
+          if (index !== -1) {
+            this.products[index].stock = newStock;
+          }
+          return true;
+        } else {
+          console.error('更新库存失败:', response.data.msg);
+          return false;
+        }
+      } catch (error) {
+        console.error('更新库存失败:', error);
+        return false;
+      }
+    },
+    
+    // 编辑商品
+    editProduct(product) {
+      // 切换到添加商品视图
+      this.switchView('add-product');
+      // 填充表单数据
+      this.newProduct = {
+        productId: product.productId,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        category: product.category,
+        imageUrl: product.imageUrl || '',
+        isHot: product.hot === '是',
+        stock: product.stock || 0
+      };
+      // 设置编辑模式标志
+      this.isEditing = true;
+    },
+
+// 删除商品
+deleteProduct(product) {
+  if (confirm(`确定要删除【${product.name}】吗？此操作无法撤销！`)) {
+    axios.post(`${API_BASE_URL}/deleteProduct`, null, {
+      params: { productId: product.productId }
+    })
+    .then(res => {
+      if (res.data.code === 200) {
+        // 从商品列表中移除
+        this.products = this.products.filter(p => p.productId !== product.productId);
+        this.showNotification = true;
+        this.notificationMessage = '商品已删除';
+        setTimeout(() => {
+          this.showNotification = false;
+        }, 2000);
+      } else {
+        alert('删除失败: ' + res.data.msg);
+      }
+    })
+    .catch(error => {
+      console.error('删除商品失败:', error);
+      alert('删除商品失败，请检查网络连接');
+    });
+  }
+},
     // API请求方法
     fetchProducts() {
       this.loading = true;
@@ -700,608 +665,91 @@ export default {
         });
     },
     
-    fetchCart() {
-      const userId = this.currentUserId;
-      console.log('购物车',userId);
-      axios.get(`${API_BASE_URL}/getCartsByUserId`, {
-        params: { userId }
-      })
-      .then((res) => {
-        const cartItems = res.data.data;
-
-        // 1. 获取所有商品
-        axios.get(`${API_BASE_URL}/getAllProducts`)
-          .then((productRes) => {
-            const allProducts = productRes.data.data;
-
-            // 2. 合并购物车数据与商品信息
-            this.cart = cartItems.map(item => {
-              const product = allProducts.find(p => p.productId === item.productId);
-              return {
-                ...item,
-                id: item.cartId, // 用于后续删除/更新
-                name: product?.name || '未知商品',
-                price: product?.price || 0,
-                imageUrl: product?.imageUrl || '',
-                category: product?.category || '',
-                description: product?.description || '',
-                stock: product?.stock || 0 // 添加库存信息
-              };
-            });
-
-            console.log('合并后的购物车数据:', this.cart);
-          })
-          .catch(err => {
-            console.error('获取商品失败:', err);
-          });
-      })
-      .catch((error) => {
-        console.error('获取购物车失败:', error);
-      });
-    },
+    // 修改提交表单的方法
+ submitProductForm() {
+    this.addingProduct = true;
+    this.productMessage = '';
     
-    // addToCart(product) {
-    //   // 检查库存
-    //   if (product.stock <= 0) {
-    //     this.showNotification = true;
-    //     this.notificationMessage = `商品 ${product.name} 库存不足，无法添加`;
-        
-    //     setTimeout(() => {
-    //       this.showNotification = false;
-    //     }, 2000);
-    //     return;
-    //   }
-      
-    //   const userId = this.currentUserId;
-    //   console.log('增加购物车',userId);
-    //   // 检查商品是否已在购物车中
-    //   const existingItem = this.cart.find(item => item.productId === product.productId);
-    //   let request;
+    const productData = {
+      name: this.newProduct.name,
+      description: this.newProduct.description,
+      price: this.newProduct.price,
+      category: this.newProduct.category,
+      imageUrl: this.newProduct.imageUrl || this.getDefaultProductImage(),
+      hot: this.newProduct.isHot ? '是' : '否',
+      stock: this.newProduct.stock
+    };
     
-    //   if (existingItem) {
-    //     // 检查库存是否足够
-    //     if (existingItem.quantity >= existingItem.stock) {
-    //       this.showNotification = true;
-    //       this.notificationMessage = `已达到商品 ${product.name} 的最大库存限制`;
-          
-    //       setTimeout(() => {
-    //         this.showNotification = false;
-    //       }, 2000);
-    //       return;
-    //     }
-        
-    //     // 更新数量
-    //     request = axios.post(`${API_BASE_URL}/updateQuantity`, null, {
-    //       params: {
-    //           cartId: existingItem.cartId,  // 使用购物车项的 ID
-    //           newQuantity: existingItem.quantity + 1
-    //       }
-    //     });
-    //     console.log('shuju1',existingItem.quantity);
-    //   } else {
-    //     // 添加新商品
-    //     const cartItem = {
-    //       userId: userId,
-    //       productId: product.productId,
-    //       quantity: 1
-    //     };
-    //     console.log('shuju',cartItem);
-    //     request = axios.post(`${API_BASE_URL}/addCart`, cartItem);
-    //   } 
-      
-    //   request
-    //     .then((res) => {
-    //       console.log('购物车操作成功:', res.data);
-      
-    //       // 重新获取购物车数据以保持同步
-    //       this.fetchCart();
-          
-    //       this.showNotification = true;
-    //       this.notificationMessage = `已添加 ${product.name} 到购物车`;
-          
-    //       setTimeout(() => {
-    //         this.showNotification = false;
-    //       }, 2000);
-    //     })
-    //     .catch((error) => {
-    //       console.error('添加到购物车失败:', error);
-    //       // 更详细的错误处理
-    //       if (error.response) {
-    //         console.error('错误状态:', error.response.status);
-    //         console.error('错误数据:', error.response.data);
-            
-    //         if (error.response.status === 500) {
-    //           this.notificationMessage = '服务器内部错误，请联系管理员';
-    //         }
-    //       } else if (error.request) {
-    //         console.error('没有收到响应:', error.request);
-    //         this.notificationMessage = '无法连接到服务器，请检查网络连接';
-    //       } else {
-    //         console.error('错误信息:', error.message);
-    //         this.notificationMessage = '添加到购物车失败，请重试';
-    //       }
-    //       this.showNotification = true;
-          
-    //       setTimeout(() => {
-    //         this.showNotification = false;
-    //       }, 2000);
-    //     });
-    // },
-    async fetchCart() {
-  const userId = this.currentUserId;
-  if (!userId) return;
-
-  try {
-    // 1. 获取购物车原始数据
-    const { data: cartRes } = await axios.get(`${API_BASE_URL}/getCartsByUserId`, {
-      params: { userId }
-    });
-    const cartItems = cartRes.data || [];
-
-    // 2. 获取商品最新信息（含库存）
-    const { data: productRes } = await axios.get(`${API_BASE_URL}/getAllProducts`);
-    const allProducts = productRes.data || [];
-
-    // 3. 合并库存信息到购物车
-    this.cart = cartItems.map(item => {
-      const product = allProducts.find(p => p.productId === item.productId);
-      return {
-        ...item,
-        id: item.cartId,
-        name: product?.name || '未知商品',
-        price: product?.price || 0,
-        imageUrl: product?.imageUrl || '',
-        category: product?.category || '',
-        description: product?.description || '',
-        stock: product?.stock ?? 0 // 保留库存为 0 的情况
-      };
-    });
-  } catch (err) {
-    console.error('获取购物车失败:', err);
-  }
-},
-async addToCart(product) {
-  if (!product || product.stock <= 0) {
-    this.showNotification = true;
-    this.notificationMessage = `商品 ${product?.name || ''} 库存不足`;
-    setTimeout(() => (this.showNotification = false), 2000);
-    return;
-  }
-
-  const userId = this.currentUserId;
-  if (!userId) return;
-
-  // 1. 先同步购物车，确保数据最新
-  await this.fetchCart();
-
-  // 2. 判断是否已存在
-  const existing = this.cart.find(item => item.productId === product.productId);
-
-  let request;
-  if (existing) {
-    const newQty = existing.quantity + 1;
-    if (newQty > existing.stock) {
-      this.showNotification = true;
-      this.notificationMessage = `已达最大库存限制`;
-      setTimeout(() => (this.showNotification = false), 2000);
-      return;
+    // 如果是编辑模式，添加productId并使用更新API
+    let url = `${API_BASE_URL}/addProduct`;
+    let successMessage = '商品添加成功!';
+    
+    if (this.isEditing) {
+      productData.productId = this.newProduct.productId;
+      url = `${API_BASE_URL}/updateProduct`;
+      successMessage = '商品更新成功!';
     }
-    // 更新数量
-    request = axios.post(`${API_BASE_URL}/updateQuantity`, null, {
-      params: { cartId: existing.cartId, newQuantity: newQty }
-    });
-  } else {
-    // 新增商品
-    request = axios.post(`${API_BASE_URL}/addCart`, {
-      userId,
-      productId: product.productId,
-      quantity: 1
-    });
-  }
-
-  try {
-    await request;
-    await this.fetchCart(); // 再次同步
-    this.showNotification = true;
-    this.notificationMessage = `已添加 ${product.name} 到购物车`;
-  } catch (err) {
-    console.error('添加失败:', err);
-    this.showNotification = true;
-    this.notificationMessage = '添加失败，请重试';
-  } finally {
-    setTimeout(() => (this.showNotification = false), 2000);
-  }
-},
-    updateQuantity({ id, quantity }) {
-      if (quantity < 1) quantity = 1;
-      
-      // 获取购物车项
-      const cartItem = this.cart.find(item => item.cartId === id);
-      if (!cartItem) return;
-      
-      // 检查库存
-      if (quantity > cartItem.stock) {
-        quantity = cartItem.stock;
-        this.showNotification = true;
-        this.notificationMessage = `库存不足，最大可购买数量为${cartItem.stock}`;
-        
-        setTimeout(() => {
-          this.showNotification = false;
-        }, 2000);
-      }
-
-      axios.post(`${API_BASE_URL}/updateQuantity`, null, {
-        params: {
-          cartId: id,
-          newQuantity: quantity
-        }
-      })
+    
+    axios.post(url, productData)
       .then((res) => {
-        console.log('更新数量成功:', res.data);
-        // 检查优惠券是否仍然有效
-        if (this.selectedCoupon && this.cartTotal < this.selectedCoupon.minAmount) {
-          // 如果购物车总价低于优惠券最低要求，移除优惠券
-          this.removeCoupon();
-          this.showNotification = true;
-          this.notificationMessage = '购物车金额已不满足优惠券使用条件';
-          
-          setTimeout(() => {
-            this.showNotification = false;
-          }, 2000);
-        }
-        // 可选：重新拉取购物车以同步数据
-        this.fetchCart();
+        this.showProductMessage(successMessage, 'success');
+        this.resetProductForm();
+        
+        // 刷新商品列表
+        this.fetchProducts();
+        
+        // 2秒后自动切换回商品列表
+        setTimeout(() => {
+          this.switchView('products');
+        }, 2000);
       })
       .catch((error) => {
-        console.error('更新数量失败:', error);
-        this.showNotification = true;
-        this.notificationMessage = '更新数量失败，请重试';
-
-        setTimeout(() => {
-          this.showNotification = false;
-        }, 2000);
-      });
-    },
-    
-    removeItem(id) {
-      axios.post(`${API_BASE_URL}/deleteCartsById`, null, {
-        params: {
-          cartId: id
-        }
+        console.error('操作失败:', error);
+        const errorMsg = error.response?.data?.message || error.message;
+        this.showProductMessage(`操作失败: ${errorMsg}`, 'error');
       })
-      .then(() => {
-        this.cart = this.cart.filter(item => item.cartId !== id);
-         // 检查优惠券是否仍然有效
-        if (this.selectedCoupon && this.cartTotal < this.selectedCoupon.minAmount) {
-          // 如果购物车总价低于优惠券最低要求，移除优惠券
-          this.removeCoupon();
-          this.showNotification = true;
-          this.notificationMessage = '购物车金额已不满足优惠券使用条件';
-          
-          setTimeout(() => {
-            this.showNotification = false;
-          }, 2000);
-        }
-      })
-      .catch((error) => {
-        console.error('删除商品失败:', error);
-        this.showNotification = true;
-        this.notificationMessage = '删除商品失败，请重试';
-
-        setTimeout(() => {
-          this.showNotification = false;
-        }, 2000);
+      .finally(() => {
+        this.addingProduct = false;
       });
+  },
+  
+    
+    resetProductForm() {
+      this.newProduct = {
+        name: '',
+        description: '',
+        price: 0,
+        category: '',
+        imageUrl: '',
+        isHot: false,
+        stock: 0
+      };
+      this.productMessage = '';
+      this.isEditing = false;
     },
     
-    // 更新商品库存
-    async updateProductStock(productId, newStock) {
-      try {
-        // 首先获取当前商品信息
-        const { data } = await axios.get(`${API_BASE_URL}/getAllProducts`);
-        const product = data.data.find(p => p.productId === productId);
-        
-        if (product) {
-          // 更新库存
-          const updatedProduct = { ...product, stock: newStock };
-          const response = await axios.post(`${API_BASE_URL}/updateProduct`, updatedProduct);
-          
-          if (response.data.code === 200) {
-            console.log(`商品 ${productId} 库存更新成功，新库存: ${newStock}`);
-            return true;
-          } else {
-            console.error('库存更新失败:', response.data.msg);
-            return false;
-          }
-        } else {
-          console.error('未找到商品:', productId);
-          return false;
-        }
-      } catch (error) {
-        console.error('更新库存失败:', error);
-        return false;
-      }
-    },
-    
-    applyCoupon(coupon) {
-      // 检查购物车总金额是否满足优惠券最低使用条件
-      if (this.cartTotal < coupon.minAmount) {
-        this.showNotification = true;
-        this.notificationMessage = `购物车金额未达到优惠券最低要求¥${coupon.minAmount}`;
-        return;
-      }
-      
-      // 根据优惠券类型计算折扣金额
-      let discount = 0;
-      if (coupon.discountType === 'percent') {
-        discount = this.safeMultiply(this.rawCartTotal, coupon.discountValue / 100);
-      } else {
-        // 固定金额折扣
-        discount = coupon.discountValue;
-      }
-      
-      // 应用折扣
-      this.selectedCoupon = coupon;
-      this.discountAmount = this.formatPrice(discount);
-      this.showCouponModal = false;
-      
-      this.showNotification = true;
-      this.notificationMessage = '优惠券已应用！';
-      
-      setTimeout(() => {
-        this.showNotification = false;
-      }, 2000);
-    },
-    
-    formatPrice(price) {
-      // 确保是数字类型，然后四舍五入到两位小数
-      const num = typeof price === 'number' ? price : parseFloat(price);
-      return parseFloat(num.toFixed(2));
-    },
-    
-    // 添加一个专门处理浮点数乘法的方法
-    safeMultiply(a, b) {
-      // 将数字转换为整数进行乘法运算，避免浮点数精度问题
-      const multiplier = Math.pow(10, 2); // 保留2位小数
-      return Math.round(a * multiplier * b) / multiplier;
-    },
-    
-    removeCoupon() {
-      this.selectedCoupon = null;
-      this.discountAmount = 0;
-      this.showNotification = true;
-      this.notificationMessage = '优惠券已移除';
-      
-      setTimeout(() => {
-        this.showNotification = false;
-      }, 2000);
-    },
-    
-    // 添加一个检查优惠券是否有效的方法
-    checkCouponValidity() {
-      if (this.selectedCoupon) {
-        return this.cartTotal >= this.selectedCoupon.minAmount;
-      }
-      return false;
-    },
-        
-    submitPayment() {
-      // 检查库存是否足够
-      if (this.hasInsufficientStock) {
-        this.showNotification = true;
-        this.notificationMessage = '部分商品库存不足，请调整数量后再支付';
-        
-        setTimeout(() => {
-          this.showNotification = false;
-        }, 2000);
-        return;
-      }
-      
-      // 生成订单号（可以使用时间戳+随机数）
-      const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
-      
-      // 构建订单对象 - 确保字段名与Java类完全匹配
-      const order = {
-        orderNo: orderNo,
-        userId: this.currentUserId, // 假设用户ID为1
-        totalAmount: this.finalTotal, // 使用 totalAmount 而不是 total
-        status: 1, // 假设1表示待支付状态
-        paymentMethod: this.selectedPayment, // 确保字段名正确
-        createdAt: new Date().toISOString().split('T')[0] + ' ' + 
-                  new Date().toLocaleTimeString('zh-CN', {hour12: false})
+    getDefaultProductImage() {
+      // 根据分类返回默认图片
+      const defaultImages = {
+        medicine: 'https://images.unsplash.com/photo-1593369196682-6d8ec9ff3ae0?auto=format&fit=crop&w=300&q=80',
+        consumables: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=300&q=80',
+        toys: 'https://images.unsplash.com/photo-1559131397-f94da358a7b2?auto=format&fit=crop&w=300&q=80'
       };
       
-      // 构建订单项列表
-      const orderItems = this.cart.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.price
-        // 注意：orderId 和 itemId 通常由后端生成，不需要在前端提供
-      }));
+      return defaultImages[this.newProduct.category] || 'https://via.placeholder.com/300';
+    },
+    
+    showProductMessage(text, type) {
+      this.productMessage = text;
+      this.productMessageType = type;
+      this.productMessageIcon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
       
-      // 构建符合后端要求的请求数据
-      const orderRequestDTO = {
-        order: order,
-        orderItem: orderItems // 注意字段名与Java类中的orderItem一致
-      };
-      
-      console.log('提交的订单数据:', JSON.stringify(orderRequestDTO, null, 2));
-      
-      // 发送请求到正确的端点
-      axios.post(`${API_BASE_URL}/addOrder`, orderRequestDTO)
-        .then(async (response) => {
-          console.log('订单创建成功:', response.data);
-          
-          // 订单创建成功后，更新库存
-          const updateStockPromises = this.cart.map(item => {
-            const newStock = item.stock - item.quantity;
-            return this.updateProductStock(item.productId, newStock);
-          });
-          
-          // 等待所有库存更新完成
-          const results = await Promise.all(updateStockPromises);
-          const allSuccess = results.every(result => result === true);
-          
-          if (!allSuccess) {
-            console.warn('部分商品库存更新失败');
-            // 这里可以添加处理逻辑，比如记录日志或通知管理员
-          }
-          
-          // 在订单创建成功后，标记优惠券为已使用
-          if (this.selectedCoupon) {
-              const couponData = {
-                  couponId: this.selectedCoupon.couponId,
-                  userId: this.currentUserId, // 假设用户ID为1，实际应从登录状态获取
-                  status: '是' // 根据您的接口文档设置正确的状态值
-              };
-              console.log('couponData',couponData);
-              axios.post(`${API_BASE_URL}/updateCouponUsed`, null, {
-                  params: couponData
-              })
-              .then(response => {
-                 const index = this.availableCoupons.findIndex(c => 
-                    c.couponId === this.selectedCoupon.couponId
-                  );
-                  if (index !== -1) {
-                    this.availableCoupons[index].status = '是';
-                  }
-                  console.log('优惠券标记为已使用:', response.data);
-              })
-              .catch(error => {
-                  console.error('标记优惠券失败:', error);
-                  // 可以添加错误处理，但不影响主流程
-              });
-          }
-          
-          // 替换原来的删除逻辑
-          const deletePromises = this.cart.map(item => 
-            axios.post(`${API_BASE_URL}/deleteCartsById`, null, {
-              params: { cartId: item.cartId }
-            }).catch(err => {
-              console.warn('删除购物车项失败:', err);
-              return Promise.resolve(); // 继续执行
-            })
-          );
-          
-          console.log('删除购物车成功');
-          return Promise.all(deletePromises);
-        })
-        .then(() => {
-          // 清空本地购物车
-          this.cart = [];
-          this.showNotification = true;
-          this.notificationMessage = '支付成功！订单正在处理中';
-          this.fetchProducts(); // ✅ 强制刷新商品列表
-          setTimeout(() => {
-            this.showNotification = false;
-            this.switchView('products');
-          }, 2000);
-        })
-        .catch((error) => {
-          console.error('提交订单失败:', error);
-          
-          // 更详细的错误信息
-          let errorMessage = '支付失败，请重试';
-          if (error.response && error.response.data) {
-            errorMessage = error.response.data.message || errorMessage;
-            console.error('服务器返回的错误:', error.response.data);
-          }
-        
-          this.showNotification = true;
-          this.notificationMessage = errorMessage;
-          
-          setTimeout(() => {
-            this.showNotification = false;
-          }, 3000);
-        });
+      // 5秒后自动清除消息
+      setTimeout(() => {
+        this.productMessage = '';
+      }, 5000);
     },
-        
-    // 其他方法保持不变
-    switchView(view) {
-      this.searchQuery = '';
-      this.currentView = view;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-    
-    openCouponModal() {
-      this.showCouponModal = true;
-      this.couponTab = 'available';
-      this.loadAvailableCoupons();
-    },
-    
-     // 判断优惠券是否可用
-    isCouponApplicable(coupon) {
-      // 检查优惠券是否已使用
-      if (coupon.used === "是") {
-        return false;
-      }
-      
-      // 检查购物车总金额是否达到优惠券最低要求
-      return this.cartTotal >= coupon.minAmount;
-    },
-    
-    // 格式化日期
-    formatDate(dateString) {
-        const date = new Date(dateString);
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-    },
-    
-     // 加载可用优惠券
-    async loadAvailableCoupons() {
-      this.loadingCoupons = true;
-      try {
-        const userId = this.currentUserId; // 假设用户ID为2
-        console.log('youhuijuanid',userId);
-        // 首先获取用户的所有优惠券
-        const response = await axios.get(`${API_BASE_URL}/getCouponByUserId`, {
-          params: { userId }
-        });
-        
-        if (response.data.code === 200) {
-          // 对于每个优惠券，获取其使用状态
-          const couponPromises = response.data.data.map(async (coupon) => {
-            try {
-              // 调用获取用户优惠券详情的接口
-              const userCouponResponse = await axios.get(`${API_BASE_URL}/getUserCoupon`, {
-                params: {
-                  userId: userId,
-                  couponId: coupon.couponId
-                }
-              });
-              console.log('userCouponResponse',userCouponResponse);
-              console.log('优惠卷',userCouponResponse);
-              if (userCouponResponse.data.code === 200) {
-                // 合并优惠券基本信息和用户使用状态
-                return {
-                  ...coupon,
-                  used: userCouponResponse.data.data.used // 假设返回的数据中有used字段
-                };
-              }
-              return coupon; // 如果获取失败，返回原始优惠券信息
-            } catch (error) {
-              console.error(`获取优惠券 ${coupon.couponId} 使用状态失败:`, error);
-              return coupon; // 如果获取失败，返回原始优惠券信息
-            }
-          });
-          
-          // 等待所有优惠券状态查询完成
-          const couponsWithStatus = await Promise.all(couponPromises);
-          
-          // 过滤掉已使用的优惠券
-          this.availableCoupons = couponsWithStatus.filter(
-            coupon => coupon.used === "否"
-          );
-          console.log('获取可用优惠券', this.availableCoupons);
-        } else {
-          console.error('获取优惠券失败:', response.data.msg);
-        }
-      } catch (error) {
-        console.error('获取优惠券失败:', error);
-      } finally {
-        this.loadingCoupons = false;
-      }
-    },
-    
+
     selectCategory(category) {
       console.log('选择分类:', category);
       this.currentCategory = category;
@@ -1369,16 +817,10 @@ async addToCart(product) {
         behavior: 'smooth'
       });
     },
-    
     getPlaceholderImage(product) {
-     if (product.imageUrl) {
-      // 如果图片URL是完整URL（包含http或https），直接返回
-      if (product.imageUrl.startsWith('http')) {
+      if (product.imageUrl) {
         return product.imageUrl;
       }
-      // 否则，添加API基础URL
-      return `${API_BASE_URL}${product.imageUrl}`;
-    }
       const images = {
         medicine: 'https://images.unsplash.com/photo-1593369196682-6d8ec9ff3ae0?auto=format&fit=crop&w=300&q=80',
         consumables: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=300&q=80',
@@ -1404,87 +846,93 @@ async addToCart(product) {
     
     clearSearch() {
       this.searchQuery = ''
+    },
+    
+    switchView(view) {
+      if (view !== 'add-product') {
+      this.isEditing = false;
+      this.resetProductForm();
     }
+      this.searchQuery = '';
+      this.currentView = view;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
   },
   watch: {
-    currentUserId(id) {
-      if (id) this.fetchCart(id);
-    },
-    rawCartTotal: {
-      handler(newTotal) {
-        // 当总价变化且已应用优惠券时，重新计算折扣
-        if (this.selectedCoupon) {
-          let discount = 0;
-          if (this.selectedCoupon.discountType === 'percent') {
-            // 百分比折扣 - 使用安全乘法计算
-            discount = this.safeMultiply(newTotal, this.selectedCoupon.discountValue / 100);
-          } else {
-            // 固定金额折扣
-            discount = this.selectedCoupon.discountValue;
-          }
-          
-          // 保留两位小数
-          this.discountAmount = this.formatPrice(discount);
-        }
+     // 监听商品列表变化，检查低库存情况
+    products: {
+      handler(newProducts) {
+        this.checkLowStock(newProducts);
       },
       deep: true
-    }
+    },
   },
 }
 </script>
-
 <style>
-
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
 
-/* 库存相关样式 */
-.stock {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 5px 0;
+/* 添加上传区域样式 */
+.upload-area_qian {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s;
+  position: relative;
 }
 
-.stock-warning {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin: 5px 0;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.upload-area_qian:hover {
+  border-color: #42b983;
 }
 
-.stock-info {
-  font-size: 0.85rem;
-  color: #7f8c8d;
-  margin: 3px 0;
+.upload-area_qian.has-image {
+  border-style: solid;
+  padding: 0;
 }
 
-.checkout-warning {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 4px;
-  color: #856404;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.file-input {
+  display: none;
 }
 
-.add-btn.disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
+.upload-placeholder {
+  color: #999;
 }
 
-.add-btn.disabled:hover {
-  background-color: #bdc3c7;
-  transform: none;
+.upload-placeholder i {
+  font-size: 2rem;
+  margin-bottom: 10px;
 }
 
+.upload-area_qian .image-preview_qian {
+  position: relative;
+}
 
+.upload-area_qian .image-preview_qian img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+}
 
+.remove-image-btn_qian {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  color: #ff6b6b;
+}
 
+.full-width {
+  width: 100%;
+}
 
 * {
   margin: 0;
@@ -2871,24 +2319,24 @@ body {
   gap: 20px;
 }
 
-.form-row .form-group {
+.form-row .form-group_qian {
   flex: 1;
 }
 
-.form-group {
+.form-group_qian {
   display: flex;
   flex-direction: column;
 }
 
-.form-group label {
+.form-group_qian label {
   font-weight: 600;
   margin-bottom: 8px;
   color: #2c3e50;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.form-group_qian input,
+.form-group_qian select,
+.form-group_qian textarea {
   padding: 12px 15px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -2896,9 +2344,9 @@ body {
   transition: border-color 0.3s;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.form-group_qian input:focus,
+.form-group_qian select:focus,
+.form-group_qian textarea:focus {
   border-color: #42b983;
   outline: none;
   box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.2);
@@ -2947,19 +2395,19 @@ body {
   transform: rotate(45deg);
 }
 
-.image-preview {
+.image-preview_qian {
   margin-top: 10px;
   text-align: center;
 }
 
-.image-preview img {
+.image-preview_qian img {
   max-width: 150px;
   max-height: 150px;
   border-radius: 8px;
   border: 1px solid #eee;
 }
 
-.image-preview p {
+.image-preview_qian p {
   margin: 5px 0 0;
   font-size: 14px;
   color: #666;
@@ -3439,59 +2887,163 @@ body {
     border-top: 1px dashed #eee;
   }
 }
-.upload-area_qian {
-  border: 2px dashed #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
+.action-area {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #eee;
+}
+
+.edit-btn, .delete-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
-  transition: border-color 0.3s;
-  position: relative;
+  font-size: 0.9rem;
+  transition: all 0.3s;
 }
 
-.upload-area_qian:hover {
-  border-color: #42b983;
+.edit-btn {
+  background: #ffc107;
+  color: #000;
 }
 
-.upload-area_qian.has-image {
-  border-style: solid;
-  padding: 0;
+.edit-btn:hover {
+  background: #e0a800;
 }
 
-.file-input {
-  display: none;
+.delete-btn {
+  background: #dc3545;
+  color: white;
 }
 
-.upload-placeholder {
+.delete-btn:hover {
+  background: #c82333;
+}
+
+
+/* 添加库存相关样式 */
+.stock-info {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.low-stock {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.stock-warning {
+  color: #e74c3c;
+  font-size: 0.8rem;
+}
+
+.low-stock-tag {
+  background: #e74c3c;
+  color: white;
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: 30px;
+  display: inline;
+  vertical-align: middle;
+  line-height: 1.4;
+  margin-left: 5px;
+}
+
+.disabled-btn {
+  background: #ccc !important;
+  cursor: not-allowed !important;
+}
+
+.disabled-btn:hover {
+  transform: none !important;
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #e74c3c;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
   color: #999;
 }
 
-.upload-placeholder i {
-  font-size: 2rem;
-  margin-bottom: 10px;
+.modal-body {
+  padding: 20px;
 }
 
-.upload-area_qian .image-preview {
-  position: relative;
+.modal-body ul {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0 0 0;
 }
 
-.upload-area_qian .image-preview img {
-  width: 100%;
-  max-height: 200px;
-  object-fit: cover;
-  border-radius: 6px;
+.modal-body li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.remove-image-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 255, 255, 0.8);
+.modal-body li:last-child {
+  border-bottom: none;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  text-align: right;
+}
+
+.confirm-btn {
+  background: #42b983;
+  color: white;
   border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  border-radius: 6px;
+  padding: 8px 20px;
   cursor: pointer;
-  color: #ff6b6b;
+  font-size: 1rem;
+}
+
+.confirm-btn:hover {
+  background: #359c70;
 }
 </style>
