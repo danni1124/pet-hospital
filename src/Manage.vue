@@ -2439,7 +2439,6 @@ setup() {
   width: 100%;
   max-width: 1920px;
   margin: 0;
-  padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
 }
